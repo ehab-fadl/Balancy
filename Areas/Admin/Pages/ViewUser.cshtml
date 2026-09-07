@@ -1,0 +1,149 @@
+﻿@page "{id}"
+@model Balancy.Areas.Admin.Pages.ViewUserModel
+@{
+    ViewData["Title"] = "بيانات المستخدم";
+}
+
+<div class="bg-shape bg-shape-1"></div>
+<div class="bg-shape bg-shape-2"></div>
+<div class="bg-shape bg-shape-3"></div>
+
+<div class="profile-wrapper">
+
+    <div class="page-header">
+        <h1>بيانات المستخدم</h1>
+        <p>عرض المعلومات الشخصية وتفاصيل الحساب</p>
+        <div class="tagline">رعاية · أمل · شفاء</div>
+    </div>
+
+    <div class="profile-card">
+
+        <div class="profile-banner"></div>
+
+        <div class="profile-avatar-wrap">
+            @if (!string.IsNullOrEmpty(Model.UserData.ProfilePicture))
+            {
+                <img src="/uploads/avatars/@Model.UserData.ProfilePicture" alt="صورة المستخدم" class="profile-avatar">
+            }
+            else
+            {
+                <img src="https://ui-avatars.com/api/?name=@Model.UserData.FirstName+@Model.UserData.LastName&background=0891b2&color=fff&size=256&font-size=0.4&rounded=24"
+                     alt="صورة المستخدم" class="profile-avatar">
+            }
+        </div>
+
+        <div class="profile-body">
+
+            <div class="profile-name">@Model.UserData.FirstName @Model.UserData.LastName</div>
+            <div class="profile-email">@Model.UserData.Email</div>
+
+            <div class="badges-row">
+                <span class="role-badge role-doctor">
+                    <i class="fa-solid fa-user-doctor"></i>
+                    @Model.UserData.Role
+                </span>
+
+                @if (Model.UserData.IsActive)
+                {
+                    <span class="status-badge status-active">
+                        <span class="status-dot"></span>
+                        الحساب نشط
+                    </span>
+                }
+                else
+                {
+                    <span class="status-badge status-inactive" style="background: #fee2e2; color: #991b1b;">
+                        <span class="status-dot" style="background: #ef4444;"></span>
+                        الحساب معطل
+                    </span>
+                }
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="info-grid">
+
+                <div class="info-item">
+                    <div class="info-icon name">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+                    <div>
+                        <div class="info-label">الاسم الأول</div>
+                        <div class="info-value">@Model.UserData.FirstName</div>
+                    </div>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-icon name">
+                        <i class="fa-solid fa-user-tag"></i>
+                    </div>
+                    <div>
+                        <div class="info-label">الاسم الثاني</div>
+                        <div class="info-value">@Model.UserData.LastName</div>
+                    </div>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-icon email">
+                        <i class="fa-solid fa-envelope"></i>
+                    </div>
+                    <div>
+                        <div class="info-label">البريد الإلكتروني</div>
+                        <div class="info-value">@Model.UserData.Email</div>
+                    </div>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-icon phone">
+                        <i class="fa-solid fa-phone"></i>
+                    </div>
+                    <div>
+                        <div class="info-label">رقم الهاتف</div>
+                        <div class="info-value">@(string.IsNullOrEmpty(Model.UserData.PhoneNumber) ? "غير متوفر" : Model.UserData.PhoneNumber)</div>
+                    </div>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-icon role">
+                        <i class="fa-solid fa-id-badge"></i>
+                    </div>
+                    <div>
+                        <div class="info-label">الدور</div>
+                        <div class="info-value">@Model.UserData.Role</div>
+                    </div>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-icon status">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </div>
+                    <div>
+                        <div class="info-label">حالة الحساب</div>
+                        <div class="info-value" style="color: @(Model.UserData.IsActive ? "var(--bn-success)" : "var(--bn-danger)");">
+                            @(Model.UserData.IsActive ? "نشط" : "معطل")
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="profile-actions">
+                <a asp-page="EditView" asp-route-id="@Model.UserData.Id" class="btn-primary-custom">
+                    <i class="fa-solid fa-pen-to-square"></i>
+                    تعديل البيانات
+                </a>
+                <a asp-page="Index" class="btn-primary-custom" style="background: var(--bn-gray-300); color: var(--bn-text);">
+                    <i class="fa-solid fa-arrow-right"></i>
+                    العودة للقائمة
+                </a>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="text-center mt-4" style="animation: slideUpFade 0.8s ease-out 0.5s both;">
+        <p style="font-size:0.8rem; font-weight:700; color:var(--bn-text-muted); letter-spacing:0.5px;">
+            نحو حياة خالية من الاكتئاب — نرافقك بكل خطوة نحو الأمل والشفاء
+        </p>
+    </div>
+</div>

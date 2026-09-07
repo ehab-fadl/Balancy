@@ -1,0 +1,43 @@
+﻿@page "{id}"
+@model Balancy.Areas.Admin.Pages.DeleteUserModel
+@{
+    Layout = null; // صفحة مستقلة أو نافذة تأكيد بالكامل
+}
+<link rel="stylesheet" href="~/css/admin/deleteuser.css" asp-append-version="true" />
+<div class="delete-modal">
+    <form method="post">
+        <!-- تمرير الـ Id كحقل مخفي (Hidden) لضمان وصوله مع الـ POST -->
+        <input type="hidden" asp-for="Id" />
+
+        <div class="delete-icon">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+        </div>
+
+        <h3 class="delete-title">تأكيد الحذف</h3>
+        <p class="delete-message">
+            هل أنت متأكد من حذف هذا المستخدم؟<br>
+            لن تتمكن من استعادته لاحقاً.
+        </p>
+
+        <div class="delete-user-name">
+            <i class="fa-solid fa-user" style="font-size: 0.7rem;"></i>
+            @Model.UserName
+        </div>
+
+        <div class="delete-warning">
+            <i class="fa-solid fa-circle-exclamation"></i>
+            هذا الإجراء نهائي ولا يمكن التراجع عنه
+        </div>
+
+        <div class="delete-actions">
+            <a asp-page="Index" class="btn-modal btn-cancel-modal">
+                <i class="fa-solid fa-xmark"></i>
+                إلغاء
+            </a>
+            <button type="submit" class="btn-modal btn-delete-confirm">
+                <i class="fa-solid fa-trash"></i>
+                نعم، احذف
+            </button>
+        </div>
+    </form>
+</div>

@@ -1,0 +1,16 @@
+name: Deploy Balancy to Home Server
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Run Docker Compose
+      run: docker compose up -d --build

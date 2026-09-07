@@ -1,0 +1,132 @@
+﻿@page "{id}"
+@model Balancy.Areas.Admin.Pages.AssignRoleModel
+@{
+    ViewData["Title"] = "تعيين الدور";
+}
+
+<div class="bg-shape bg-shape-1"></div>
+<div class="bg-shape bg-shape-2"></div>
+<div class="bg-shape bg-shape-3"></div>
+
+<div class="assign-wrapper">
+
+    <div class="page-header">
+        <div class="logo-icon">
+            <i class="fa-solid fa-user-shield"></i>
+        </div>
+        <h1>تعيين الدور</h1>
+        <p>إعطاء صلاحية محددة لمستخدم واحد</p>
+        <div class="tagline">رعاية · أمل · شفاء</div>
+    </div>
+
+    <div class="assign-card">
+
+        <div class="assign-card-header">
+            <img src="https://ui-avatars.com/api/?name=@Uri.EscapeDataString(Model.UserData.FullName)&background=0891b2&color=fff&size=256&font-size=0.4&rounded=24"
+                 alt="صورة المستخدم" class="user-avatar-lg">
+            <div class="user-name-lg">@Model.UserData.FullName</div>
+            <div class="user-email-lg">@Model.UserData.Email</div>
+        </div>
+
+        <div class="assign-card-body">
+
+            <form method="POST">
+
+                <!-- معلومات حالية -->
+                <div class="current-info">
+                    <div class="current-info-title">
+                        <i class="fa-solid fa-circle-info"></i>
+                        البيانات الحالية
+                    </div>
+                    <div class="current-info-row">
+                        <span class="current-info-label">الاسم الكامل</span>
+                        <span class="current-info-value">@Model.UserData.FullName</span>
+                    </div>
+                    <div class="current-info-row">
+                        <span class="current-info-label">البريد الإلكتروني</span>
+                        <span class="current-info-value">@Model.UserData.Email</span>
+                    </div>
+                    <div class="current-info-row">
+                        <span class="current-info-label">رقم الهاتف</span>
+                        <span class="current-info-value">@Model.UserData.PhoneNumber</span>
+                    </div>
+                    <div class="current-info-row">
+                        <span class="current-info-label">الدور الحالي</span>
+                        <span class="current-info-value">
+                            <span class="role-badge role-@(Model.UserData.Role.ToLower())">
+                                <i class="fa-solid fa-user-gear"></i>
+                                @Model.UserData.Role
+                            </span>
+                        </span>
+                    </div>
+                    <div class="current-info-row">
+                        <span class="current-info-label">حالة الحساب</span>
+                        <span class="current-info-value">
+                            @if (Model.UserData.IsActive)
+                            {
+                                <span class="status-badge status-active">
+                                    <span class="status-dot"></span>
+                                    نشط
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="status-badge status-inactive" style="background:#fee2e2; color:#991b1b;">
+                                    <span class="status-dot" style="background:#ef4444;"></span>
+                                    معطل
+                                </span>
+                            }
+                        </span>
+                    </div>
+                </div>
+
+                <div class="divider"></div>
+
+                <!-- تغيير الدور -->
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fa-solid fa-id-badge" style="margin-left: 0.4rem; color: var(--bn-primary);"></i>
+                        تعيين دور جديد <span class="required">*</span>
+                    </label>
+                    <div class="input-icon-wrap">
+                        <select class="form-control-custom" asp-for="Input.RoleName" required>
+                            <option value="" disabled>اختر الدور المناسب</option>
+                            <option value="Admin">مدير نظام</option>
+                            <option value="Doctor">طبيب</option>
+                            <option value="Searcher">باحث</option>
+                        </select>
+                        <i class="fa-solid fa-chevron-down field-icon"></i>
+                    </div>
+                    <span asp-validation-for="Input.RoleName" class="text-danger" style="font-size: 0.8rem;"></span>
+                </div>
+
+                <div class="divider"></div>
+
+                <!-- الأزرار -->
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary-custom">
+                        <i class="fa-solid fa-floppy-disk"></i>
+                        حفظ التغييرات
+                    </button>
+                    <a asp-page="ViewUser" asp-route-id="@Model.Id" class="btn-outline-custom" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center;">
+                        <i class="fa-solid fa-rotate-left"></i>
+                        إلغاء
+                    </a>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+
+    <div class="text-center mt-4" style="animation: slideUpFade 0.8s ease-out 0.4s both;">
+        <p style="font-size:0.8rem; font-weight:700; color:var(--bn-text-muted); letter-spacing:0.5px;">
+            نحو حياة خالية من الاكتئاب — نرافقك بكل خطوة نحو الأمل والشفاء
+        </p>
+    </div>
+</div>
+
+
+<partial name="_ValidationScriptsPartial" />
+<script src="~/js/admin/assignrole.js"></script>
+    

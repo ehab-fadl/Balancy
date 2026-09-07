@@ -1,0 +1,256 @@
+﻿@page
+@model Balancy.Areas.Admin.Pages.StatisticsModel
+@{
+    ViewData["Title"] = "إحصائيات المستخدمين";
+}
+
+<div class="bg-shape bg-shape-1"></div>
+<div class="bg-shape bg-shape-2"></div>
+<div class="bg-shape bg-shape-3"></div>
+
+<div class="stats-wrapper">
+
+    <!-- رأس الصفحة -->
+    <div class="page-header">
+        <div class="logo-icon">
+            <i class="fa-solid fa-chart-pie"></i>
+        </div>
+        <h1>إحصائيات المستخدمين</h1>
+        <p>نظرة شاملة على بيانات وتوزيع مستخدمي النظام</p>
+        <div class="tagline">رعاية · أمل · شفاء</div>
+    </div>
+
+    <!-- الكروت الإحصائية -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-6 col-lg-3">
+            <div class="stat-card total" style="animation-delay: 0.1s;">
+                <div class="stat-icon total"><i class="fa-solid fa-users"></i></div>
+                <div class="stat-info">
+                    <div class="stat-value">@Model.Stats.TotalUsers</div>
+                    <div class="stat-label">إجمالي المستخدمين</div>
+                    <div class="stat-change up">
+                        <i class="fa-solid fa-arrow-trend-up"></i> إجمالي النظام
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="stat-card active" style="animation-delay: 0.2s;">
+                <div class="stat-icon active"><i class="fa-solid fa-user-check"></i></div>
+                <div class="stat-info">
+                    <div class="stat-value">@Model.Stats.ActiveUsers</div>
+                    <div class="stat-label">مستخدم نشط</div>
+                    <div class="stat-change up">
+                        <i class="fa-solid fa-arrow-trend-up"></i> مفعل
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="stat-card inactive" style="animation-delay: 0.3s;">
+                <div class="stat-icon inactive"><i class="fa-solid fa-user-xmark"></i></div>
+                <div class="stat-info">
+                    <div class="stat-value">@Model.Stats.InactiveUsers</div>
+                    <div class="stat-label">مستخدم غير نشط</div>
+                    <div class="stat-change down">
+                        <i class="fa-solid fa-arrow-trend-down"></i> معطل
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="stat-card new" style="animation-delay: 0.4s;">
+                <div class="stat-icon new"><i class="fa-solid fa-user-plus"></i></div>
+                <div class="stat-info">
+                    <div class="stat-value">@Model.Stats.NewUsersThisWeek</div>
+                    <div class="stat-label">مستخدم جديد</div>
+                    <div class="stat-change up">
+                        <i class="fa-solid fa-arrow-trend-up"></i> المسجلين
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- توزيع الأدوار ونسبة الأدوار جنباً إلى جنب -->
+    <div class="row g-4 mb-4">
+        <!-- توزيع الأدوار -->
+        <div class="col-lg-5">
+            <div class="content-card h-100">
+                <div class="content-card-header">
+                    <h3><i class="fa-solid fa-chart-pie" style="background:#e0f2fe; color:#0284c7;"></i> توزيع الأدوار</h3>
+                </div>
+                <div class="content-card-body d-flex flex-column justify-content-center">
+                    <div class="pie-chart-wrap" style="display: flex; flex-direction: column; gap: 15px;">
+                        <div class="text-center p-2.5" style="background: var(--gray-50, #f8fafc); border-radius: 10px; border: 1px solid var(--gray-200, #e2e8f0);">
+                            <span style="font-size: 1.3rem; font-weight: 800; color: var(--primary, #0f172a);">@Model.Stats.RolesCount.Total</span>
+                            <span style="font-size: 0.85rem; color: var(--gray-500, #64748b); margin-right: 5px;">إجمالي المستخدمين</span>
+                        </div>
+
+                        <div class="pie-legend" style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
+                            <div class="legend-item" style="display: flex; align-items: center; justify-content: space-between; padding: 7px 10px; background: #fff; border-radius: 8px; border: 1px solid #f1f5f9;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <div class="legend-dot" style="width: 10px; height: 10px; border-radius: 50%; background:#5b21b6;"></div>
+                                    <div class="legend-label" style="font-size: 0.9rem; font-weight: 600; color: #334155;">مدير نظام</div>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <span style="font-size: 0.8rem; color: #64748b;">@Model.Stats.RolesCount.AdminCount مستخدم</span>
+                                    <span class="legend-percent" style="font-size: 0.9rem; font-weight: 700; color: #5b21b6;">@Model.Stats.RolesCount.AdminPercent%</span>
+                                </div>
+                            </div>
+
+                            <div class="legend-item" style="display: flex; align-items: center; justify-content: space-between; padding: 7px 10px; background: #fff; border-radius: 8px; border: 1px solid #f1f5f9;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <div class="legend-dot" style="width: 10px; height: 10px; border-radius: 50%; background:#1e40af;"></div>
+                                    <div class="legend-label" style="font-size: 0.9rem; font-weight: 600; color: #334155;">طبيب</div>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <span style="font-size: 0.8rem; color: #64748b;">@Model.Stats.RolesCount.DoctorCount مستخدم</span>
+                                    <span class="legend-percent" style="font-size: 0.9rem; font-weight: 700; color: #1e40af;">@Model.Stats.RolesCount.DoctorPercent%</span>
+                                </div>
+                            </div>
+
+                            <div class="legend-item" style="display: flex; align-items: center; justify-content: space-between; padding: 7px 10px; background: #fff; border-radius: 8px; border: 1px solid #f1f5f9;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <div class="legend-dot" style="width: 10px; height: 10px; border-radius: 50%; background:#d97706;"></div>
+                                    <div class="legend-label" style="font-size: 0.9rem; font-weight: 600; color: #334155;">باحث</div>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <span style="font-size: 0.8rem; color: #64748b;">@Model.Stats.RolesCount.SearcherCount مستخدم</span>
+                                    <span class="legend-percent" style="font-size: 0.9rem; font-weight: 700; color: #d97706;">@Model.Stats.RolesCount.SearcherPercent%</span>
+                                </div>
+                            </div>
+
+                            <div class="legend-item" style="display: flex; align-items: center; justify-content: space-between; padding: 7px 10px; background: #fff; border-radius: 8px; border: 1px solid #f1f5f9;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <div class="legend-dot" style="width: 10px; height: 10px; border-radius: 50%; background:#64748b;"></div>
+                                    <div class="legend-label" style="font-size: 0.9rem; font-weight: 600; color: #334155;">بدون صلاحيات</div>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <span style="font-size: 0.8rem; color: #64748b;">@Model.Stats.RolesCount.NullUserCount مستخدم</span>
+                                    <span class="legend-percent" style="font-size: 0.9rem; font-weight: 700; color: #64748b;">@Model.Stats.RolesCount.NullUserPercent%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- نسبة الأدوار -->
+        <div class="col-lg-7">
+            <div class="content-card h-100">
+                <div class="content-card-header">
+                    <h3><i class="fa-solid fa-chart-bar" style="background:#d1fae5; color:#065f46;"></i> نسبة الأدوار</h3>
+                </div>
+                <div class="content-card-body d-flex flex-column justify-content-center">
+                    <div class="bar-chart" style="display: flex; flex-direction: column; gap: 20px;">
+                        <div class="bar-row">
+                            <div class="bar-label">مدير نظام</div>
+                            <div class="bar-track">
+                                <div class="bar-fill admin" style="width: @Model.Stats.RolesCount.AdminPercent%;"><span>@Model.Stats.RolesCount.AdminPercent%</span></div>
+                            </div>
+                        </div>
+                        <div class="bar-row">
+                            <div class="bar-label">طبيب</div>
+                            <div class="bar-track">
+                                <div class="bar-fill doctor" style="width: @Model.Stats.RolesCount.DoctorPercent%;"><span>@Model.Stats.RolesCount.DoctorPercent%</span></div>
+                            </div>
+                        </div>
+                        <div class="bar-row">
+                            <div class="bar-label">باحث</div>
+                            <div class="bar-track">
+                                <div class="bar-fill searcher" style="width: @Model.Stats.RolesCount.SearcherPercent%;"><span>@Model.Stats.RolesCount.SearcherPercent%</span></div>
+                            </div>
+                        </div>
+                        <div class="bar-row">
+                            <div class="bar-label">بدون صلاحيات</div>
+                            <div class="bar-track">
+                                <div class="bar-fill null" style="width: @Model.Stats.RolesCount.NullUserPercent%;"><span>@Model.Stats.RolesCount.NullUserPercent%</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- جدول آخر المستخدمين المسجلين -->
+    <div class="content-card">
+        <div class="content-card-header">
+            <h3><i class="fa-solid fa-clock-rotate-left" style="background:#fef3c7; color:#92400e;"></i> آخر المستخدمين المسجلين</h3>
+            <span style="font-size:0.8rem; font-weight:700; color:var(--bn-text-muted);">آخر تسجيلات</span>
+        </div>
+        <div class="content-card-body p-0">
+            <div class="users-table-wrap">
+                <table class="users-table">
+                    <thead>
+                        <tr>
+                            <th>المستخدم</th>
+                            <th>البريد الإلكتروني</th>
+                            <th>الدور</th>
+                            <th>الحالة</th>
+                            <th>تاريخ التسجيل</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.RecentUsers != null && Model.RecentUsers.Any())
+                        {
+                            foreach (var user in Model.RecentUsers)
+                            {
+                                <tr>
+                                    <td>
+                                        <div class="table-user">
+                                            <img src="https://ui-avatars.com/api/?name=@Uri.EscapeDataString(user.Name)&background=0891b2&color=fff&size=128&rounded=12" class="table-avatar" alt="">
+                                            <div>
+                                                <div class="table-user-name">@user.Name</div>
+                                                <div class="table-user-email">@user.Email</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>@user.Email</td>
+                                    <td>
+                                        @if (user.Role == "Admin")
+                                        {
+                                            <span class="role-badge-inline role-admin"><i class="fa-solid fa-user-tie"></i> مدير نظام</span>
+                                        }
+                                        else if (user.Role == "Doctor")
+                                        {
+                                            <span class="role-badge-inline role-doctor"><i class="fa-solid fa-user-doctor"></i> طبيب</span>
+                                        }
+                                        else if (user.Role == "Searcher")
+                                        {
+                                            <span class="role-badge-inline role-searcher"><i class="fa-solid fa-magnifying-glass"></i> باحث</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="role-badge-inline role-null"><i class="fa-solid fa-user-slash"></i> بدون صلاحيات</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (user.IsActive)
+                                        {
+                                            <span class="status-badge-inline status-active"><span class="status-dot-inline"></span> نشط</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="status-badge-inline status-inactive"><span class="status-dot-inline"></span> غير نشط</span>
+                                        }
+                                    </td>
+                                    <td>@user.CreatedAtFormatted</td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="5" class="text-center p-4">لا توجد بيانات متاحة حالياً.</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>

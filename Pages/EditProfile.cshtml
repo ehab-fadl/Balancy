@@ -1,0 +1,145 @@
+﻿@page
+@model Balancy.Pages.EditProfileModel
+@{
+}
+
+<div class="profile-page-wrapper">
+    <!-- Profile Card -->
+    <div class="profile-card">
+
+        <!-- Body -->
+        <div class="profile-body">
+
+            <!-- عرض رسالة الخطأ إن وجدت من الـ Model -->
+            @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+            {
+                <div class="alert alert-danger text-center" role="alert">
+                    @Model.ErrorMessage
+                </div>
+            }
+
+            <!-- Name & Role -->
+            <div class="profile-name">
+                <!-- عرض الاسم الكامل من الـ Model -->
+                <h2>@(Model.ProfileData?.FirstName + " " + Model.ProfileData?.LastName)</h2>
+            </div>
+            <div class="profile-role">
+                <!-- عرض الدور (Role) من الـ Model -->
+                <span><i class="fa-solid fa-user-tag"></i> @(Model.ProfileData?.Role ?? "مستخدم")</span>
+            </div>
+
+           
+            <!-- Edit Form -->
+            <form method="post">
+                @Html.AntiForgeryToken()
+
+                <!-- Hidden fields لكل البيانات التي لا يتم تعديلها أو التي يجب الحفاظ على قيمتها -->
+                <input type="hidden" asp-for="ProfileData.Id" />
+                <input type="hidden" asp-for="ProfileData.Role" />
+              
+
+                <!-- باقي الحقول (الاسم الأول، الأخير، الهاتف) -->
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="fa-solid fa-user"></i>
+                                الاسم الأول
+                            </label>
+                            <div class="input-wrapper">
+                                <input type="text" asp-for="ProfileData.FirstName" class="form-control-custom" required>
+                                <span class="input-icon"><i class="fa-solid fa-signature"></i></span>
+                            </div>
+                            <span asp-validation-for="ProfileData.FirstName" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="fa-solid fa-user"></i>
+                                الاسم الأخير
+                            </label>
+                            <div class="input-wrapper">
+                                <input type="text" asp-for="ProfileData.LastName" class="form-control-custom" required>
+                                <span class="input-icon"><i class="fa-solid fa-signature"></i></span>
+                            </div>
+                            <span asp-validation-for="ProfileData.LastName" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Email -->
+                <div class="form-group">
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fa-solid fa-envelope"></i>
+                            البريد الإلكتروني
+                        </label>
+                        <div class="input-wrapper">
+                            <!-- يجب أن يكون type="email" وليس hidden لكي يظهر ويستقبل التعديل -->
+                            <input type="email" asp-for="ProfileData.Email" class="form-control-custom" required>
+                            <span class="input-icon"><i class="fa-solid fa-at"></i></span>
+                        </div>
+                        <span asp-validation-for="ProfileData.Email" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <!-- Phone -->
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fa-solid fa-phone"></i>
+                        رقم الهاتف
+                    </label>
+                    <div class="input-wrapper">
+                        <input type="tel" asp-for="ProfileData.PhoneNumber" class="form-control-custom" required>
+                        <span class="input-icon"><i class="fa-solid fa-mobile-screen"></i></span>
+                    </div>
+                    <span asp-validation-for="ProfileData.PhoneNumber" class="text-danger"></span>
+                </div>
+
+                <!-- ID -->
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fa-solid fa-fingerprint"></i>
+                        المعرف
+                    </label>
+                    <div class="input-wrapper">
+                        <input type="text" class="form-control-custom" value="@Model.ProfileData?.Id" readonly disabled>
+                        <span class="input-icon"><i class="fa-solid fa-lock"></i></span>
+                    </div>
+                </div>
+
+                <!-- Buttons -->
+                <button type="submit" class="btn-save">
+                    <i class="fa-solid fa-check"></i>
+                    <span>حفظ التعديلات</span>
+                </button>
+
+                <button type="button" class="btn-cancel" id="cancelBtn">
+                    <i class="fa-solid fa-rotate-left"></i>
+                    <span>إلغاء التعديلات</span>
+                </button>
+
+                @section Scripts {
+                    <script>
+                                        document.getElementById("cancelBtn").addEventListener("click", function() {
+                                            // الانتقال المباشر للرابط القادم من الـ C#
+                                            window.location.href = '@Model.CancelRedirectUrl';
+                                        });
+                    </script>
+                }
+            </form>
+
+        </div>
+    </div>
+</div>
+
+<!-- عرض رسالة النجاح إن وجدت -->
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success text-center" role="alert">
+        @TempData["SuccessMessage"]
+    </div>
+}
+
+<script src="~/js/editprofile.js"></script>

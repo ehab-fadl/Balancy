@@ -1,0 +1,48 @@
+﻿@page
+@model Balancy.Areas.Searcher.Pages.IndexModel
+@{
+}
+<div class="container">
+    <div class="bg-shape shape-1"></div>
+    <div class="bg-shape shape-2"></div>
+
+    <div class="welcome-card">
+        <div class="construction-tape">قيد التنفيذ</div>
+
+        <div class="role-badge">
+            <i class="fa-solid fa-microscope"></i>
+            باحث
+        </div>
+
+        <div class="icon-container">
+            <i class="fa-solid fa-magnifying-glass-chart"></i>
+        </div>
+
+        <h1 class="welcome-title">صفحات الباحث قيد التنفيذ</h1>
+        <p class="welcome-subtitle">نجهز لك لوحة بيانات متكاملة لتحليل ودراسة المعلومات</p>
+        <div class="welcome-divider"></div>
+
+        <p class="welcome-message">
+            <i class="fa-solid fa-circle-info" style="color: #d97706; margin-left: 6px;"></i>
+            ستتوفر قريباً أدوات استيراد ومعالجة بيانات المرضى، والتحليل الإحصائي، والتقارير العلمية.<br>
+            نقدّر اهتمامك بالمساهمة في البحث العلمي.
+        </p>
+
+        <div class="progress-dots">
+            <div class="progress-dot"></div>
+            <div class="progress-dot"></div>
+            <div class="progress-dot"></div>
+        </div>
+
+        <div class="btn-group-custom">
+            <a class="btn-welcome btn-login-action" onclick="switchView('home-view')">
+                <i class="fa-solid fa-rotate-left"></i>
+                العودة للرئيسية
+            </a>
+            <a class="btn-welcome btn-register-action" onclick="switchView('home-view')">
+                <i class="fa-solid fa-right-from-bracket"></i>
+                تسجيل الخروج
+            </a>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,70 @@
+﻿@page
+@model Balancy.Pages.OfflineErrorModel
+@{
+}
+<div class="bg-shape bg-shape-1"></div>
+<div class="bg-shape bg-shape-2"></div>
+<div class="bg-shape bg-shape-3"></div>
+
+<div class="offline-wrapper">
+
+    <div class="offline-card">
+
+        <div class="offline-banner"></div>
+
+        <div class="offline-icon">
+            <i class="fa-solid fa-wifi"></i>
+        </div>
+
+        <div class="offline-body">
+
+            <div class="offline-title">انقطاع الاتصال</div>
+            <div class="offline-subtitle">تعذر الاتصال بالنظام</div>
+
+            <!-- رسالة التنبيه -->
+            <div class="alert-box">
+                <ul>
+                    <li>
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        <span>يبدو أن هناك مشكلة في الاتصال بالإنترنت أو الخادم.</span>
+                    </li>
+                    <li>
+                        <i class="fa-solid fa-server"></i>
+                        <span>قد يكون الخادم غير متاح مؤقتاً. نعتذر عن الإزعاج.</span>
+                    </li>
+                    <li>
+                        <i class="fa-solid fa-clock"></i>
+                        <span>يرجى المحاولة مرة أخرى بعد بضع دقائق.</span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- نصائح -->
+            <div class="tips-box">
+                <h5><i class="fa-solid fa-lightbulb" style="color: var(--bn-accent);"></i> ما يمكنك فعله</h5>
+                <ul>
+                    <li><i class="fa-solid fa-circle"></i> التحقق من اتصالك بالإنترنت</li>
+                    <li><i class="fa-solid fa-circle"></i> إعادة تحميل الصفحة</li>
+                    <li><i class="fa-solid fa-circle"></i> التأكد من عدم وجود جدار ناري يحظر الاتصال</li>
+                    <li><i class="fa-solid fa-circle"></i> الانتظار قليلاً ثم المحاولة مجدداً</li>
+                </ul>
+            </div>
+
+            <!-- الأزرار -->
+            <!-- الأزرار -->
+            <div class="d-flex gap-3 justify-content-center flex-wrap">
+                <a href="javascript:history.back();" class="btn-primary-custom">
+                    <i class="fa-solid fa-rotate"></i>
+                    إعادة المحاولة
+                </a>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="tagline-footer">
+        <div class="logo-text">بالنسي</div>
+        <p>نحو حياة خالية من الاكتئاب — نرافقك بكل خطوة نحو الأمل والشفاء</p>
+    </div>
+
+</div>

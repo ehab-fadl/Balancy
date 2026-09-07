@@ -1,0 +1,286 @@
+﻿@page
+@model Balancy.Pages.SettingModel
+@{
+    ViewData["Title"] = "إعدادات الحساب";
+    var statusMessage = TempData["StatusMessage"] as string;
+}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<!-- الأشكال الخلفية -->
+<div class="bg-shape bg-shape-1"></div>
+<div class="bg-shape bg-shape-2"></div>
+<div class="bg-shape bg-shape-3"></div>
+
+<div class="settings-wrapper">
+
+    <!-- رأس الصفحة -->
+    <div class="page-header">
+        <div class="logo-icon">
+            <i class="fa-solid fa-gear"></i>
+        </div>
+        <h1>إعدادات الحساب</h1>
+        <p>إدارة كلمة المرور وأمان حسابك</p>
+        <div class="tagline">رعاية · أمل · شفاء</div>
+    </div>
+
+    <!-- بطاقة الإعدادات -->
+    <div class="settings-card">
+
+        
+        <!-- Radio buttons hidden -->
+        @if (Model.IsAuthenticated)
+        {
+            <input type="radio" name="settings-tab" id="tab-change" class="tab-radio" checked>
+        }
+        <input type="radio" name="settings-tab" id="tab-reset" class="tab-radio">
+        <input type="radio" name="settings-tab" id="tab-forgot" class="tab-radio" @(!Model.IsAuthenticated ? "checked" : "")>
+
+        <!-- التبويبات -->
+        <div class="settings-tabs">
+            @if (Model.IsAuthenticated)
+            {
+                <label for="tab-change">
+                    <i class="fa-solid fa-lock"></i>
+                    تغيير كلمة المرور
+                </label>
+            }
+            <label for="tab-reset">
+                <i class="fa-solid fa-rotate-right"></i>
+                إعادة التعيين
+            </label>
+            <label for="tab-forgot">
+                <i class="fa-solid fa-circle-question"></i>
+                نسيت كلمة المرور
+            </label>
+        </div>
+
+        <div class="tab-panels">
+            <!-- ═══════════════════════════════════════════════
+                 1. تغيير كلمة المرور
+                 ═══════════════════════════════════════════════ -->
+            <div class="tab-content" id="panel-change">
+                <h2>تغيير كلمة المرور</h2>
+
+                <partial name="_Notification" model="statusMessage" />
+
+                <form method="post" asp-page-handler="ChangePassword" id="changePasswordForm">
+                    <!-- كلمة المرور القديمة -->
+                    <div class="mb-3">
+                        <label asp-for="Input.OldPassword" class="form-label">كلمة المرور القديمة</label>
+                        <div class="password-field-wrapper">
+                            <input asp-for="Input.OldPassword" class="form-control" type="password" id="oldPasswordInput" />
+                            <button type="button" class="toggle-password-btn" data-target="oldPasswordInput">
+                                <i class="fa-solid fa-eye-slash"></i>
+                            </button>
+                        </div>
+                        <span asp-validation-for="Input.OldPassword" class="text-danger"></span>
+                    </div>
+
+                    <!-- كلمة المرور الجديدة -->
+                    <div class="mb-3">
+                        <label asp-for="Input.NewPassword" class="form-label">كلمة المرور الجديدة</label>
+                        <div class="password-field-wrapper">
+                            <input asp-for="Input.NewPassword" class="form-control" type="password" id="newPasswordInput" />
+                            <button type="button" class="toggle-password-btn" data-target="newPasswordInput">
+                                <i class="fa-solid fa-eye-slash"></i>
+                            </button>
+                        </div>
+                        <span asp-validation-for="Input.NewPassword" class="text-danger"></span>
+                    </div>
+
+                    <!-- تأكيد كلمة المرور الجديدة -->
+                    <div class="mb-3">
+                        <label asp-for="Input.ConfirmNewPassword" class="form-label">تأكيد كلمة المرور الجديدة</label>
+                        <div class="password-field-wrapper">
+                            <input asp-for="Input.ConfirmNewPassword" class="form-control" type="password" id="confirmPasswordInput" />
+                            <button type="button" class="toggle-password-btn" data-target="confirmPasswordInput">
+                                <i class="fa-solid fa-eye-slash"></i>
+                            </button>
+                        </div>
+                        <span id="passwordMatchError" class="text-danger small mt-1 d-block d-none">كلمات المرور غير متطابقة</span>
+                        <span asp-validation-for="Input.ConfirmNewPassword" class="text-danger"></span>
+                    </div>
+
+                    <!-- قائمة التحقق والشروط -->
+                    <div class="card p-3 bg-light mb-3">
+                        <p class="mb-2 fw-bold">يجب أن تحتوي كلمة المرور على:</p>
+                        <ul id="passwordConditions" class="list-unstyled">
+                            <li id="lengthCheck" class="text-danger mb-1"><i class="fa-solid fa-circle"></i> 8 أحرف على الأقل</li>
+                            <li id="caseCheck" class="text-danger mb-1"><i class="fa-solid fa-circle"></i> حرف كبير وحرف صغير</li>
+                            <li id="numberCheck" class="text-danger mb-1"><i class="fa-solid fa-circle"></i> رقم واحد على الأقل</li>
+                            <li id="specialCheck" class="text-danger mb-1"><i class="fa-solid fa-circle"></i> رمز خاص</li>
+                        </ul>
+                    </div>
+
+                    <button type="submit" asp-page-handler="ChangePassword" formnovalidate class="btn btn-primary" id="submitBtn" disabled>حفظ التغييرات</button>
+                </form>
+            </div>
+
+            <!-- ═══════════════════════════════════════════════
+                 2. إعادة تعيين كلمة المرور
+                 ═══════════════════════════════════════════════ -->
+            <div class="tab-content" id="panel-reset">
+                <div class="panel-title">
+                    <i class="fa-solid fa-rotate-right icon-reset"></i>
+                    إعادة تعيين كلمة المرور
+                </div>
+                <p class="panel-desc">
+                    أدخل رمز التحقق المرسل إلى بريدك الإلكتروني، ثم اضبط كلمة مرور جديدة.
+                </p>
+
+                @if (TempData["ErrorMessage"] != null)
+                {
+                    <div class="alert-box alert-danger">
+                        <i class="fa-solid fa-circle-exclamation"></i>
+                        <span>@TempData["ErrorMessage"]</span>
+                    </div>
+                }
+                @if (TempData["SuccessMessage"] != null)
+                {
+                    <div class="alert-box alert-success">
+                        <i class="fa-solid fa-circle-check"></i>
+                        <span>@TempData["SuccessMessage"]</span>
+                    </div>
+                }
+
+                <form method="post" asp-page-handler="ResetPassword">
+                    <input type="hidden" asp-for="ResetInput.Email" id="ResetInput_Email" />
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">
+                                    رمز التحقق <span class="required">*</span>
+                                </label>
+                                <div class="input-icon-wrap">
+                                    <input type="text" asp-for="ResetInput.Token" class="form-control-custom" placeholder="أدخل رمز التحقق المكون من 6 أرقام" maxlength="6" required>
+                                    <i class="fa-solid fa-hashtag field-icon"></i>
+                                </div>
+                                <span asp-validation-for="ResetInput.Token" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">
+                                    كلمة المرور الجديدة <span class="required">*</span>
+                                </label>
+                                <div class="password-field-wrapper">
+                                    <input type="password" asp-for="ResetInput.NewPassword" id="newPasswordResetInput" class="form-control-custom" placeholder="أدخل كلمة المرور الجديدة" required>
+                                    <button type="button" class="toggle-password-btn" data-target="newPasswordResetInput">
+                                        <i class="fa-solid fa-eye-slash"></i>
+                                    </button>
+                                </div>
+                                <span asp-validation-for="ResetInput.NewPassword" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">
+                                    تأكيد كلمة المرور الجديدة <span class="required">*</span>
+                                </label>
+                                <div class="password-field-wrapper">
+                                    <input type="password" asp-for="ResetInput.ConfirmNewPassword" id="confirmPasswordResetInput" class="form-control-custom" placeholder="أعد إدخال كلمة المرور الجديدة" required>
+                                    <button type="button" class="toggle-password-btn" data-target="confirmPasswordResetInput">
+                                        <i class="fa-solid fa-eye-slash"></i>
+                                    </button>
+                                </div>
+                                <span id="passwordResetMatchError" class="text-danger small mt-1 d-block d-none">كلمات المرور غير متطابقة</span>
+                                <span asp-validation-for="ResetInput.ConfirmNewPassword" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- قائمة التحقق والشروط الخاصة بإعادة التعيين -->
+                    <div class="card p-3 bg-light mb-3">
+                        <p class="mb-2 fw-bold">يجب أن تحتوي كلمة المرور على:</p>
+                        <ul id="passwordResetConditions" class="list-unstyled">
+                            <li id="lengthResetCheck" class="text-danger mb-1"><i class="fa-solid fa-circle"></i> 8 أحرف على الأقل</li>
+                            <li id="caseResetCheck" class="text-danger mb-1"><i class="fa-solid fa-circle"></i> حرف كبير وحرف صغير</li>
+                            <li id="numberResetCheck" class="text-danger mb-1"><i class="fa-solid fa-circle"></i> رقم واحد على الأقل</li>
+                            <li id="specialResetCheck" class="text-danger mb-1"><i class="fa-solid fa-circle"></i> رمز خاص</li>
+                        </ul>
+                    </div>
+
+                    <div class="d-flex gap-3 mt-4 flex-wrap">
+                        <button type="submit" id="submitResetBtn" class="btn-primary-custom" disabled>
+                            <i class="fa-solid fa-check"></i>
+                            تأكيد إعادة التعيين
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- ═══════════════════════════════════════════════
+                 3. نسيت كلمة المرور
+                 ═══════════════════════════════════════════════ -->
+            <div class="tab-content" id="panel-forgot">
+                <div class="panel-title">
+                    <i class="fa-solid fa-circle-question icon-forgot"></i>
+                    نسيت كلمة المرور
+                </div>
+                <p class="panel-desc">
+                    لا تقلق! أدخل بريدك الإلكتروني المسجل وسنرسل لك رمزاً آمناً (6 أرقام) لإعادة تعيين كلمة المرور.
+                </p>
+
+                <div class="alert-box alert-warning">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <span>تأكد من إدخال نفس البريد الإلكتروني المرتبط بحسابك.</span>
+                </div>
+
+                <div id="forgotAlertContainer"></div>
+
+                <form id="forgotPasswordForm">
+                    <div class="row justify-content-center">
+                        <div class="col-md-8 col-lg-6">
+                            <div class="form-group">
+                                <label class="form-label">
+                                    البريد الإلكتروني <span class="required">*</span>
+                                </label>
+                                <div class="input-icon-wrap">
+                                    <input type="email" id="forgotEmailInput" class="form-control-custom" placeholder="example@email.com" required>
+                                    <i class="fa-solid fa-envelope field-icon"></i>
+                                </div>
+                            </div>
+
+                            <div class="d-grid gap-3 mt-4">
+                                <button type="submit" id="submitForgotBtn" class="btn-primary-custom justify-content-center">
+                                    <i class="fa-solid fa-paper-plane"></i>
+                                    إرسال رمز التحقق
+                                </button>
+                                <a href="/Index" class="btn-outline-custom justify-content-center text-decoration-none">
+                                    <i class="fa-solid fa-arrow-right"></i>
+                                    العودة إلى تسجيل الدخول
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+
+                <div class="divider"></div>
+
+                <div class="text-center">
+                    <p style="font-size:0.85rem; font-weight:600; color:var(--bn-text-muted);">
+                        <i class="fa-solid fa-headset" style="margin-left:0.4rem;"></i>
+                        لم تتلقَ الرمز؟ تواصل مع
+                        <a href="#" style="color:var(--bn-primary); font-weight:800; text-decoration:none;">فريق الدعم</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- رسالة المهمة -->
+    <div class="text-center mt-4" style="animation: slideUpFade 0.8s ease-out 0.2s both;">
+        <p style="font-size:0.8rem; font-weight:700; color:var(--bn-text-muted); letter-spacing:0.5px;">
+            نحو حياة خالية من الاكتئاب — نرافقك بكل خطوة نحو الأمل والشفاء
+        </p>
+    </div>
+
+</div>
+
+<partial name="_Notification" model="statusMessage" />
+<script src="~/js/setting.js"></script>

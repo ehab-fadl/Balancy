@@ -1,0 +1,198 @@
+﻿@page
+@model Balancy.Areas.Admin.Pages.AuditlogModel
+@{
+    ViewData["Title"] = "سجل العمليات";
+    var totalLogs = Model.AuditLogs.Count;
+    var successLogs = Model.AuditLogs.Count(x => x.IsSuccess);
+    var failLogs = totalLogs - successLogs;
+}
+
+<div class="container-fluid px-4">
+
+    <!-- Page Header -->
+    <div class="page-header">
+        <h1 class="page-title">
+            <i class="fa-solid fa-clipboard-list"></i>
+            سجل العمليات
+        </h1>
+        <ul class="breadcrumb-custom">
+            <li><a href="#">الرئيسية</a></li>
+            <li>لوحة التحكم</li>
+            <li>سجل العمليات</li>
+        </ul>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-xl col-md-4 col-sm-6">
+            <div class="stat-card total">
+                <div class="stat-icon"><i class="fa-solid fa-database"></i></div>
+                <div class="stat-info">
+                    <h3>@totalLogs</h3>
+                    <span>إجمالي السجلات</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl col-md-4 col-sm-6">
+            <div class="stat-card success">
+                <div class="stat-icon"><i class="fa-solid fa-circle-check"></i></div>
+                <div class="stat-info">
+                    <h3>@successLogs</h3>
+                    <span>عمليات ناجحة</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl col-md-4 col-sm-6">
+            <div class="stat-card fail">
+                <div class="stat-icon"><i class="fa-solid fa-circle-xmark"></i></div>
+                <div class="stat-info">
+                    <h3>@failLogs</h3>
+                    <span>عمليات فاشلة</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Message Display -->
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger mb-4" style="background-color: #fee2e2; color: #991b1b; padding: 15px; border-radius: 8px;">
+            <strong>تنبيه:</strong> @Model.ErrorMessage
+        </div>
+    }
+
+    <!-- Audit Logs Table Card -->
+    <div class="content-card">
+        <div class="card-header-custom">
+            <div class="card-header-title">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+                جميع العمليات
+            </div>
+
+            <!-- نموذج التصفية (Filters Form) -->
+            <form method="get" class="filters-row">
+                <div class="filter-box">
+                    <i class="fa-solid fa-filter"></i>
+                    <select asp-for="SelectedAction">
+                        <option value="">كل العمليات</option>
+                        <option value="Login">تسجيل دخول</option>
+                        <option value="Logout">تسجيل خروج</option>
+                        <option value="Register">تسجيل جديد</option>
+                        <option value="DeleteUser">حذف مستخدم</option>
+                        <option value="ToggleStatus">تفعيل/تعطيل</option>
+                       
+                    </select>
+                </div>
+
+                <div class="filter-box">
+                    <i class="fa-solid fa-user"></i>
+                    <select asp-for="SelectedUser">
+                        <option value="">كل المستخدمين</option>
+                        @foreach (var user in Model.AvailableUsers)
+                        {
+                            <option value="@user">@user</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="filter-box">
+                    <i class="fa-solid fa-calendar"></i>
+                    <input type="date" asp-for="SelectedDate" value="@Model.SelectedDate?.ToString("yyyy-MM-dd")">
+                </div>
+
+                <button type="submit" class="btn-filter">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    تصفية
+                </button>
+            </form>
+        </div>
+
+        <div class="table-wrap">
+            <table class="balancy-table">
+                <thead>
+                    <tr>
+                        <th>المستخدم</th>
+                        <th>العملية</th>
+                        <th>التفاصيل</th>
+                        <th>التاريخ والوقت</th>
+                        <th>الحالة</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.AuditLogs != null && Model.AuditLogs.Any())
+                    {
+                        foreach (var log in Model.AuditLogs)
+                        {
+                            string iconClass = log.Action switch
+                            {
+                                "Login" => "fa-right-to-bracket",
+                                "Logout" => "fa-right-from-bracket",
+                                "Register" => "fa-user-plus",
+                                "DeleteUser" => "fa-user-slash",
+                                "ToggleStatus" => "fa-user-gear",
+                                "AssignRole" => "fa-shield-halved",
+                                "ChangePassword" => "fa-key",
+                                "UpdateUser" => "fa-user-pen",
+                                _ => "fa-circle-dot"
+                            };
+
+                            <tr>
+                                <td>
+                                    <div class="user-cell">
+                                        <img src="https://ui-avatars.com/api/?name=@Uri.EscapeDataString(log.UserName ?? "User")&background=0d9488&color=fff&size=128" alt="User">
+                                        <div>
+                                            <span class="name">@(string.IsNullOrEmpty(log.UserName) ? "مستخدم غير معروف" : log.UserName)</span>
+                                            <span class="email">ID: @log.UserId</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="action-badge action-login">
+                                        <i class="fa-solid @iconClass"></i>
+                                        @log.Action
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="details-text">@(string.IsNullOrEmpty(log.Details) ? "-" : log.Details)</div>
+                                </td>
+                                <td>
+                                    <div class="timestamp-cell">
+                                        <span class="timestamp-date">@log.Timestamp.ToString("yyyy-MM-dd")</span>
+                                        <span class="timestamp-time">@log.Timestamp.ToString("HH:mm:ss")</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    @if (log.IsSuccess)
+                                    {
+                                        <span class="status-badge status-success">
+                                            <span class="status-dot"></span>
+                                            نجاح
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="status-badge status-fail">
+                                            <span class="status-dot"></span>
+                                            فشل
+                                        </span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="5" class="text-center py-4 text-muted">لا توجد سجلات متاحة حالياً.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card-footer-custom">
+            <span class="showing-text">عرض <strong>1-@Model.AuditLogs.Count</strong> من <strong>@Model.AuditLogs.Count</strong> سجل</span>
+           
+        </div>
+    </div>
+</div>

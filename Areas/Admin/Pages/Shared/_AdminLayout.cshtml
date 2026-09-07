@@ -1,0 +1,243 @@
+﻿@using System.Security.Claims
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بالنسي — لوحة تحكم الأدمن</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
+    <link href="~/css/admin/index.css" rel="stylesheet" />
+    <link href="~/css/admin/viewuser.css" rel="stylesheet" />
+    <link href="~/css/admin/editview.css" rel="stylesheet" />
+    <link href="~/css/admin/assignrole.css" rel="stylesheet" />
+    <link href="~/css/admin/auditlog.css" rel="stylesheet" />
+    <link href="~/css/admin/statistics.css" rel="stylesheet" />
+</head>
+<body>
+    <!-- عنصر التنبيه بالشبكة (يظهر في كل الصفحات) -->
+    <div id="globalNetworkAlert" style="display: none; position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 99999; min-width: 300px; max-width: 90%; background-color: #dc3545; color: white; padding: 12px 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); text-align: center; font-weight: 600; direction: rtl;">
+        <span id="globalNetworkAlertText">انقطع الاتصال بالإنترنت.</span>
+    </div>
+    @if (TempData["ConnectionError"] != null)
+    {
+        <div class="alert alert-danger mb-4 text-center" style="border-radius: 12px; font-weight: 700; background-color: #fef2f2; color: #dc2626; border: 1px solid #fecaca; padding: 12px;">
+            <i class="fa-solid fa-triangle-exclamation me-2"></i>
+            @TempData["ConnectionError"]
+        </div>
+    }
+    <!-- Top Bar -->
+    <div class="top-bar">
+        <div class="container-fluid px-4">
+            <div class="top-bar-content">
+                <div class="top-bar-icon"><i class="fa-solid fa-shield-halved"></i></div>
+                <span class="top-bar-text">
+                    <i class="fa-solid fa-quote-right ms-2" style="opacity: 0.6;"></i>
+                    لوحة تحكم <strong>مدير النظام</strong> — إدارة شاملة للمستخدمين والأدوار والأذونات
+                    <i class="fa-solid fa-quote-left me-2" style="opacity: 0.6;"></i>
+                </span>
+                <div class="top-bar-icon"><i class="fa-solid fa-gear"></i></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg balancy-navbar">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand-wrapper" href="#" style="cursor: pointer;">
+                <div class="brand-logo"><i class="fa-solid fa-heart-pulse"></i></div>
+                <div class="brand-text">
+                    <span class="brand-name">بالنسي</span>
+                    <span class="brand-tagline">رعاية · أمل · شفاء</span>
+                </div>
+            </a>
+                <div class="collapse navbar-collapse" id="balancyNav">
+                <ul class="navbar-nav balancy-nav mx-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link @(ViewContext.RouteData.Values["page"]?.ToString()?.Contains("/Index") == true ? "active" : "")" href="/Admin/Index">
+                            <i class="fa-solid fa-users-gear"></i>
+                            إدارة المستخدمين
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @(ViewContext.RouteData.Values["page"]?.ToString()?.Contains("/Statistics") == true ? "active" : "")" asp-page="/Statistics" asp-area="Admin">
+                            <i class="fa-solid fa-chart-pie"></i>
+                            إحصائيات النظام
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @(ViewContext.RouteData.Values["page"]?.ToString()?.Contains("/Auditlog") == true ? "active" : "")" asp-page="/Auditlog" asp-area="Admin">
+                            <i class="fa-solid fa-file-lines"></i>
+                            سجل النشاطات
+                        </a>
+                    </li>
+                </ul>
+                @if (User.Identity != null && User.Identity.IsAuthenticated)
+                {
+                    // 1. استخراج بيانات المستخدم من الـ Claims
+                    var userName = User.Identity.Name ?? "مستخدم";
+                    var userEmail = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value ?? "";
+                    var userRole = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value ?? "";
+
+                    // 2. ترجمة اسم الدور للعرض في التصميم
+                    var roleDisplayName = userRole switch
+                    {
+                        "Admin" => "مدير النظام",
+                        "Doctor" or "Doctor" => "طبيب",
+                        "Searcher" => "باحث",
+                        "NullUser" => "مستخدم جديد",
+                        _ => userRole
+                    };
+
+                    // 3. توليد رابط الصورة الرمزية ديناميكياً بناءً على اسم المستخدم
+                    var avatarUrl = $"https://ui-avatars.com/api/?name={Uri.EscapeDataString(userName)}&background=0d9488&color=fff&size=128&font-size=0.4";
+
+                    <div class="d-flex align-items-center gap-3 user-actions">
+                        <div class="user-dropdown">
+                            <div class="user-toggle">
+                                <div class="user-avatar-wrapper">
+                                    <img src="@avatarUrl" alt="@userName" class="user-avatar">
+                                    <span class="user-status"></span>
+                                </div>
+                                <div class="user-info">
+                                    <span class="user-name">@userName</span>
+                                    <span class="user-role">@roleDisplayName</span>
+                                </div>
+                                <i class="fa-solid fa-chevron-down user-caret"></i>
+                            </div>
+                            <div class="dropdown-menu-custom">
+                                <div class="dropdown-header-custom">
+                                    <img src="@avatarUrl" alt="@userName">
+                                    <div>
+                                        <strong>@userName</strong>
+                                        <small>@userEmail</small>
+                                    </div>
+                                </div>
+                                <a class="dropdown-item-custom" asp-page="/EditProfile" asp-area="">
+                                    <i class="fa-solid fa-id-card"></i>
+                                    عرض البروفايل
+                                </a>
+                                <a class="dropdown-item-custom" asp-page="/Setting" asp-area="">
+                                    <i class="fa-solid fa-gear"></i>
+                                    الإعدادات
+                                </a>
+                                <div class="dropdown-divider-custom"></div>
+
+                                <!-- زر تسجيل الخروج الفرعي داخل القائمة -->
+                                <form method="post" asp-page="/Logout" asp-area="" class="w-100 m-0 p-0">
+                                    <button type="submit" class="dropdown-item-custom text-danger border-0 bg-transparent w-100 text-start" style="cursor: pointer;">
+                                        <i class="fa-solid fa-right-from-bracket"></i>
+                                        تسجيل الخروج
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- زر تسجيل الخروج الرئيسي -->
+                        <form method="post" asp-page="/Logout" asp-area="" class="d-none d-lg-flex m-0 p-0">
+                            <button type="submit" class="btn-logout-main border-0" style="cursor: pointer;">
+                                <i class="fa-solid fa-power-off"></i>
+                                <span>تسجيل الخروج</span>
+                            </button>
+                        </form>
+                    </div>
+                }
+            </div>
+        </div>
+    </nav>
+    <main class="main-content">
+        @RenderBody()
+    </main>
+
+    <!-- Footer -->
+    <footer class="balancy-footer">
+        <div class="container-fluid px-4">
+            <div class="footer-main">
+                <div class="row g-4">
+                    <div class="col-lg-4 col-md-6">
+                        <div class="footer-brand-section">
+                            <a class="footer-brand" href="#" style="cursor: pointer;">
+                                <div class="footer-brand-icon"><i class="fa-solid fa-heart-pulse"></i></div>
+                                <div>
+                                    <div class="footer-brand-name">بالنسي</div>
+                                    <div class="footer-brand-tagline">رعاية · أمل · شفاء</div>
+                                </div>
+                            </a>
+                            <p class="footer-desc">
+                                منصة متكاملة لرعاية مرضى الاكتئاب، نقدم لك أدوات متقدمة لإدارة المستخدمين والأدوار والأذونات بكفاءة واحترافية.
+                            </p>
+                            <div class="footer-social">
+                                <a href="#" title="فيسبوك"><i class="fa-brands fa-facebook-f"></i></a>
+                                <a href="#" title="تويتر / إكس"><i class="fa-brands fa-x-twitter"></i></a>
+                                <a href="#" title="إنستغرام"><i class="fa-brands fa-instagram"></i></a>
+                                <a href="#" title="لينكدإن"><i class="fa-brands fa-linkedin-in"></i></a>
+                                <a href="#" title="واتساب"><i class="fa-brands fa-whatsapp"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-2 col-md-6">
+                        <h5 class="footer-title"><i class="fa-solid fa-link"></i> روابط سريعة</h5>
+                        <ul class="footer-links">
+                            <li><a href="#"><i class="fa-solid fa-chevron-left"></i> الرئيسية</a></li>
+                            <li><a href="#" onclick="showComingSoon()"><i class="fa-solid fa-chevron-left"></i> عن المنصة</a></li>
+                            <li><a href="#" onclick="showComingSoon()"><i class="fa-solid fa-chevron-left"></i> خدماتنا</a></li>
+                            <li><a href="#" onclick="showComingSoon()"><i class="fa-solid fa-chevron-left"></i> الأسئلة الشائعة</a></li>
+                            <li><a href="#" onclick="showComingSoon()"><i class="fa-solid fa-chevron-left"></i> سياسة الخصوصية</a></li>
+                        </ul>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <h5 class="footer-title"><i class="fa-solid fa-user-shield"></i> أدوات الأدمن</h5>
+                        <ul class="footer-links">
+                            <li><a href="/Admin/Index"><i class="fa-solid fa-chevron-left"></i> إدارة المستخدمين</a></li>
+                            <li><a href="/Admin/Auditlog" ><i class="fa-solid fa-chevron-left"></i> سجل النشاطات</a></li>
+                            <li><a href="/Admin/Statistics"><i class="fa-solid fa-chevron-left"></i> التقارير والإحصائيات</a></li>
+                       
+                        </ul>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <h5 class="footer-title"><i class="fa-solid fa-address-card"></i> تواصل معنا</h5>
+                        <div class="footer-contact-item">
+                            <i class="fa-solid fa-location-dot"></i>
+                            <div><strong>العنوان</strong> دمشق، سوريا — شارع الثورة، بناء رقم 45</div>
+                        </div>
+                        <div class="footer-contact-item">
+                            <i class="fa-solid fa-phone"></i>
+                            <div><strong>الهاتف</strong> +963 11 123 4567</div>
+                        </div>
+                        <div class="footer-contact-item">
+                            <i class="fa-solid fa-mobile-screen"></i>
+                            <div><strong>الجوال</strong> +963 933 123 456</div>
+                        </div>
+                        <div class="footer-contact-item">
+                            <i class="fa-solid fa-envelope"></i>
+                            <div><strong>البريد الإلكتروني</strong> admin@balancy.app</div>
+                        </div>
+                        <div class="footer-contact-item">
+                            <i class="fa-solid fa-globe"></i>
+                            <div><strong>الموقع الإلكتروني</strong> www.balancy.app</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <div class="container-fluid px-4">
+                    <div class="footer-bottom-content">
+                        <div class="footer-copyright">
+                            <i class="fa-solid fa-heart"></i>
+                            <span>© 2026 بالنسي — جميع الحقوق محفوظة</span>
+                        </div>
+                        <div class="footer-bottom-links">
+                            <a href="#" onclick="showComingSoon()">شروط الاستخدام</a>
+                            <a href="#" onclick="showComingSoon()">سياسة الخصوصية</a>
+                            <a href="#" onclick="showComingSoon()">الدعم الفني</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+    <script src="~/js/internet.js"></script>
+    <partial name="_Notification" />
+</body>
+</html>

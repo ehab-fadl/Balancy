@@ -1,0 +1,98 @@
+﻿@page
+@model Balancy.Pages.LoginModel
+@{
+}
+<!-- Background Shapes -->
+<div class="login-page">
+<div class="bg-shape shape-1"></div>
+<div class="bg-shape shape-2"></div>
+
+<!-- Login Card -->
+<div class="login-card">
+
+    <!-- Header -->
+    <div class="login-header">
+        <div class="login-icon">
+            <i class="fa-solid fa-right-to-bracket"></i>
+        </div>
+        <h1 class="login-title">تسجيل الدخول</h1>
+        <p class="login-subtitle">أهلاً بعودتك إلى بالنسي</p>
+    </div>
+
+    <!-- رسالة الخطأ تظهر هنا في حال أدخل المستخدم بيانات خاطئة -->
+    @if (!ModelState.IsValid)
+    {
+        <div class="alert alert-danger" style="border-radius: 14px; font-weight: 700; font-size: 0.9rem; padding: 12px; margin-bottom: 20px; text-align: center; border: 1px solid var(--bn-danger); color: var(--bn-danger); background-color: #fef2f2;">
+            @foreach (var error in ModelState.Values.SelectMany(v => v.Errors))
+            {
+                <span class="d-block">@error.ErrorMessage</span>
+            }
+        </div>
+    }
+
+    <!-- Form (تم تعديل الـ Method وإزالة الـ Action ليعمل مع C#) -->
+    <form method="post">
+
+        <!-- Email -->
+        <div class="form-group">
+            <label class="form-label">
+                <i class="fa-solid fa-envelope"></i>
+                البريد الإلكتروني
+            </label>
+            <div class="input-wrapper">
+                <!-- تم إضافة asp-for لربط الحقل بالكود -->
+                <input asp-for="Input.Email" type="email" class="form-control-custom" placeholder="admin@hospital.com" required>
+                <span class="input-icon"><i class="fa-solid fa-at"></i></span>
+            </div>
+        </div>
+
+            <!-- Password -->
+            <div class="form-group">
+                <label class="form-label">
+                    <i class="fa-solid fa-lock"></i>
+                    كلمة المرور
+                </label>
+                <div class="input-wrapper">
+                    <input asp-for="Input.Password" type="password" class="form-control-custom" placeholder="••••••••" minlength="6" required>
+                    <span class="input-icon"><i class="fa-solid fa-key"></i></span>
+
+                    <!-- زر نظيف يعتمد على الكلاسات فقط -->
+                    <button type="button" class="toggle-password">
+                        <i class="fa-solid fa-eye-slash"></i>
+                    </button>
+                </div>
+            </div>
+
+        <!-- Options -->
+        <div class="form-options">
+            <label class="remember-me">
+                    <input type="checkbox" asp-for="Input.RememberMe">
+                <span>تذكرني</span>
+            </label>
+                <div class="mb-3 text-end">
+                    <a asp-page="/Setting" class="forgot-link text-decoration-none">نسيت كلمة المرور؟</a>
+                </div>
+        </div>
+
+        <!-- Submit -->
+        <button type="submit" class="btn-login-submit">
+            <i class="fa-solid fa-arrow-right-to-bracket"></i>
+            <span>تسجيل الدخول</span>
+        </button>
+
+    </form>
+
+    <!-- Security Note -->
+    <div class="security-note">
+        <i class="fa-solid fa-shield-halved"></i>
+        <span>اتصال آمن مشفر بـ SSL</span>
+    </div>
+
+    <!-- Register Link -->
+    <div class="register-link">
+        <p>ليس لديك حساب؟ <a href="/Register">سجل الآن</a></p>
+    </div>
+
+</div>
+</div>
+<script src="~/js/login.js"></script>

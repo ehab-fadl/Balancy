@@ -1,0 +1,111 @@
+﻿@page "{id}"
+@model Balancy.Areas.Admin.Pages.EditViewModel
+@{
+    ViewData["Title"] = "تعديل الملف الشخصي";
+}
+
+<div class="bg-shape bg-shape-1"></div>
+<div class="bg-shape bg-shape-2"></div>
+<div class="bg-shape bg-shape-3"></div>
+
+<div class="edit-wrapper">
+
+    <div class="page-header">
+        <div class="logo-icon">
+            <i class="fa-solid fa-user-pen"></i>
+        </div>
+        <h1>تعديل الملف الشخصي</h1>
+        <p>تحديث بياناتك الشخصية ومعلومات الحساب</p>
+        <div class="tagline">رعاية · أمل · شفاء</div>
+    </div>
+
+    <div class="edit-card">
+
+        <div class="edit-card-header">
+            <h2><i class="fa-solid fa-id-card" style="margin-left: 0.5rem;"></i> المعلومات الشخصية</h2>
+            <p>قم بتعديل الحقول أدناه ثم اضغط حفظ</p>
+        </div>
+
+        <div class="edit-card-body">
+
+            <form method="POST">
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">
+                                الاسم الأول <span class="required">*</span>
+                            </label>
+                            <div class="input-icon-wrap">
+                                <input type="text" class="form-control-custom" asp-for="Input.FirstName" placeholder="أدخل الاسم الأول" >
+                                <i class="fa-solid fa-user field-icon"></i>
+                            </div>
+                            <span asp-validation-for="Input.FirstName" class="text-danger" style="font-size: 0.8rem;"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">
+                                الاسم الثاني <span class="required">*</span>
+                            </label>
+                            <div class="input-icon-wrap">
+                                <input type="text" class="form-control-custom" asp-for="Input.LastName" placeholder="أدخل الاسم الثاني" >
+                                <i class="fa-solid fa-user-tag field-icon"></i>
+                            </div>
+                            <span asp-validation-for="Input.LastName" class="text-danger" style="font-size: 0.8rem;"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">
+                                البريد الإلكتروني <span class="required">*</span>
+                            </label>
+                            <div class="input-icon-wrap">
+                                <input type="email" class="form-control-custom" asp-for="Input.Email" placeholder="example@email.com" >
+                                <i class="fa-solid fa-envelope field-icon"></i>
+                            </div>
+                            <span asp-validation-for="Input.Email" class="text-danger" style="font-size: 0.8rem;"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">
+                                رقم الهاتف <span class="required">*</span>
+                            </label>
+                            <div class="input-icon-wrap">
+                                <input type="tel" class="form-control-custom" asp-for="Input.PhoneNumber" placeholder="05xxxxxxxx" >
+                                <i class="fa-solid fa-phone field-icon"></i>
+                            </div>
+                            <span asp-validation-for="Input.PhoneNumber" class="text-danger" style="font-size: 0.8rem;"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="divider"></div>
+
+                <!-- الأزرار -->
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary-custom">
+                        <i class="fa-solid fa-floppy-disk"></i>
+                        حفظ التغييرات
+                    </button>
+                    <a asp-page="ViewUser" asp-route-id="@Model.Id" class="btn-outline-custom" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center;">
+                        <i class="fa-solid fa-rotate-left"></i>
+                        إلغاء
+                    </a>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+
+    <div class="text-center mt-4" style="animation: slideUpFade 0.8s ease-out 0.4s both;">
+        <p style="font-size:0.8rem; font-weight:700; color:var(--bn-text-muted); letter-spacing:0.5px;">
+            نحو حياة خالية من الاكتئاب — نرافقك بكل خطوة نحو الأمل والشفاء
+        </p>
+    </div>
+</div>

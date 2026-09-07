@@ -1,0 +1,127 @@
+﻿<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بالنسي - المنصة المتكاملة</title>
+
+    <!-- Bootstrap 5.3 RTL -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- Google Fonts: Tajawal -->
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/Index.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/Balancy.styles.css" asp-append-version="true" />
+    <link href="~/css/login.css" rel="stylesheet" />
+    <link href="~/css/EditProfile.css" rel="stylesheet" />
+    <link href="~/css/setting.css" rel="stylesheet" />
+    <link href="~/css/register.css" rel="stylesheet" />
+    <link href="~/css/accountdeactivated.css" rel="stylesheet" />
+    <link href="~/css/offlineerror.css" rel="stylesheet" />
+</head>
+
+<body>
+    <!-- عنصر التنبيه بالشبكة (يظهر في كل الصفحات) -->
+    <div id="globalNetworkAlert" style="display: none; position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 99999; min-width: 300px; max-width: 90%; background-color: #dc3545; color: white; padding: 12px 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); text-align: center; font-weight: 600; direction: rtl;">
+        <span id="globalNetworkAlertText">انقطع الاتصال بالإنترنت.</span>
+    </div>
+    <!-- رسالة انقطاع الاتصال بالخادم تظهر أعلى التبويبات -->
+    @if (TempData["ConnectionError"] != null)
+    {
+        <div class="alert alert-danger mb-4 text-center" style="border-radius: 12px; font-weight: 700; background-color: #fef2f2; color: #dc2626; border: 1px solid #fecaca; padding: 12px;">
+            <i class="fa-solid fa-triangle-exclamation me-2"></i>
+            @TempData["ConnectionError"]
+        </div>
+    }
+
+    <!-- 1. Top Bar -->
+    <div class="top-bar">
+        <div class="container-fluid px-4">
+            <div class="top-bar-content">
+                <div class="top-bar-icon">
+                    <i class="fa-solid fa-hand-holding-heart"></i>
+                </div>
+                <span class="top-bar-text">
+                    <i class="fa-solid fa-quote-right ms-2" style="opacity: 0.6;"></i>
+                    نحو <strong>حياة خالية من الاكتئاب</strong> — نرافقك بكل خطوة نحو الأمل والشفاء
+                    <i class="fa-solid fa-quote-left me-2" style="opacity: 0.6;"></i>
+                </span>
+                <div class="top-bar-icon">
+                    <i class="fa-solid fa-seedling"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg balancy-navbar">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand-wrapper" onclick="switchView('home-view')" style="cursor: pointer;">
+                <div class="brand-logo">
+                    <i class="fa-solid fa-heart-pulse"></i>
+                </div>
+                <div class="brand-text">
+                    <span class="brand-name">بالنسي</span>
+                    <span class="brand-tagline">رعاية · أمل · شفاء</span>
+                </div>
+            </a>
+
+           
+
+            <div class="collapse navbar-collapse" id="balancyNav">
+                <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
+                    <!-- قائمة التنقل فارغة لـ NullUser -->
+                </ul>
+
+            </div>
+        </div>
+    </nav>
+    <main class="main-content">
+            @RenderBody()
+    </main>
+    <!-- Footer -->
+    <footer class="balancy-footer">
+        <div class="container-fluid px-4">
+            <div class="footer-simple">
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                    <a class="footer-brand" onclick="switchView('home-view')" style="cursor: pointer;">
+                        <div class="footer-brand-icon">
+                            <i class="fa-solid fa-heart-pulse"></i>
+                        </div>
+                        <div class="footer-brand-text">
+                            <span class="footer-brand-name">بالنسي</span>
+                            <div class="footer-tagline-custom">
+                                رعاية · أمل · شفاء
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <div class="container-fluid px-4">
+                    <div class="footer-copyright">
+                        <i class="fa-solid fa-heart"></i>
+                        <span>© 2026 بالنسي — جميع الحقوق محفوظة</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/internet.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+    <partial name="_Notification" />
+</body>
+</html>

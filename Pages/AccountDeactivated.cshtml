@@ -1,0 +1,81 @@
+﻿@page
+@model Balancy.Pages.AccountDeactivatedModel
+@{
+    ViewData["Title"] = "الحساب معطل";
+}
+
+<div class="bg-shape bg-shape-1"></div>
+<div class="bg-shape bg-shape-2"></div>
+<div class="bg-shape bg-shape-3"></div>
+
+<div class="deactivated-wrapper">
+
+    <div class="deactivated-card">
+
+        <div class="deactivated-banner"></div>
+
+        <div class="deactivated-icon">
+            <i class="fa-solid fa-circle-xmark"></i>
+        </div>
+
+        <div class="deactivated-body">
+
+            <div class="deactivated-title">الحساب معطل</div>
+            <div class="deactivated-subtitle">تم إلغاء تفعيل حسابك في النظام</div>
+
+            <!-- بيانات المستخدم -->
+            <div class="user-info-row">
+                <img src="@Model.UserData.ProfilePicture" alt="صورة المستخدم">
+                <div style="text-align: right;">
+                    <div class="name">@Model.UserData.FullName</div>
+                    <div class="email">@Model.UserData.Email</div>
+                </div>
+            </div>
+
+            <!-- رسالة التنبيه -->
+            <div class="alert-box">
+                <ul>
+                    <li>
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        <span>لا يمكنك الاستفادة من أي خدمة في النظام حالياً.</span>
+                    </li>
+                    <li>
+                        <i class="fa-solid fa-lock"></i>
+                        <span>تم حظر وصولك إلى جميع الصفحات والميزات.</span>
+                    </li>
+                    <li>
+                        <i class="fa-solid fa-building-columns"></i>
+                        <span>يجب مراجعة الإدارة لإعادة تفعيل حسابك.</span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- تواصل مع الإدارة -->
+            <div class="contact-box">
+                <p>
+                    <i class="fa-solid fa-headset" style="margin-left: 0.4rem;"></i>
+                    للاستفسار أو إعادة التفعيل، تواصل مع
+                    <a href="#">فريق الدعم</a>
+                    أو عبر البريد
+                    <a href="mailto:support@balancy.app">support@balancy.app</a>
+                </p>
+            </div>
+
+            <!-- الأزرار -->
+            <div class="d-flex gap-3 justify-content-center flex-wrap">
+                <form method="post" asp-page-handler="Logout">
+                    <button type="submit" class="btn-danger-custom" style="border: none; cursor: pointer;">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                        تسجيل الخروج
+                    </button>
+                </form>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="tagline-footer">
+        <div class="logo-text">بالنسي</div>
+        <p>نحو حياة خالية من الاكتئاب — نرافقك بكل خطوة نحو الأمل والشفاء</p>
+    </div>
+</div>

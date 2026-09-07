@@ -1,0 +1,422 @@
+/* ═══════════════════════════════════════════════════════════════ */
+/* BACKGROUND SHAPES */
+/* ═══════════════════════════════════════════════════════════════ */
+.bg-shape {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(100px);
+    pointer-events: none;
+    opacity: 0.35;
+}
+
+.shape-1 {
+    width: 450px;
+    height: 450px;
+    background: linear-gradient(135deg, #cffafe 0%, #a5f3fc 100%);
+    top: -120px;
+    right: -120px;
+    animation: float-shape 10s ease-in-out infinite;
+}
+
+.shape-2 {
+    width: 350px;
+    height: 350px;
+    background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+    bottom: -100px;
+    left: -100px;
+    animation: float-shape 12s ease-in-out infinite reverse;
+}
+
+@keyframes float-shape {
+    0%, 100% {
+        transform: translate(0, 0) scale(1);
+    }
+
+    33% {
+        transform: translate(20px, -30px) scale(1.05);
+    }
+
+    66% {
+        transform: translate(-15px, 15px) scale(0.98);
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════════ */
+/* REGISTER CARD */
+/* ═══════════════════════════════════════════════════════════════ */
+.register-card {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    max-width: 520px;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    border: 1px solid rgba(226, 232, 240, 0.6);
+    border-radius: 32px;
+    padding: 2.5rem 2rem;
+    box-shadow: 0 20px 60px -15px rgba(8, 145, 178, 0.1), 0 0 0 1px rgba(255,255,255,0.5) inset;
+}
+
+/* ═══════════════════════════════════════════════════════════════ */
+/* HEADER ICON */
+/* ═══════════════════════════════════════════════════════════════ */
+.register-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.register-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, var(--bn-primary) 0%, #06b6d4 100%);
+    border-radius: 24px;
+    margin-bottom: 1.25rem;
+    box-shadow: 0 12px 32px -8px rgba(8, 145, 178, 0.35);
+    position: relative;
+    overflow: hidden;
+    animation: gentle-float 5s ease-in-out infinite;
+}
+
+    .register-icon::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.25) 50%, transparent 70%);
+        animation: shine-sweep 4s infinite;
+    }
+
+    .register-icon i {
+        font-size: 2.2rem;
+        color: white;
+        position: relative;
+        z-index: 2;
+    }
+
+@keyframes gentle-float {
+    0%, 100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-8px);
+    }
+}
+
+@keyframes shine-sweep {
+    0% {
+        transform: translateX(-100%) rotate(45deg);
+    }
+
+    100% {
+        transform: translateX(200%) rotate(45deg);
+    }
+}
+
+.register-title {
+    font-size: 1.7rem;
+    font-weight: 900;
+    color: var(--bn-primary-dark);
+    margin-bottom: 0.4rem;
+}
+
+.register-subtitle {
+    font-size: 0.95rem;
+    color: var(--bn-text-muted);
+    font-weight: 600;
+}
+
+/* ═══════════════════════════════════════════════════════════════ */
+/* FORM STYLES */
+/* ═══════════════════════════════════════════════════════════════ */
+.form-group {
+    margin-bottom: 1.1rem;
+    position: relative;
+}
+
+.form-label {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: var(--bn-text);
+    margin-bottom: 0.5rem;
+}
+
+    .form-label i {
+        color: var(--bn-primary);
+        font-size: 0.75rem;
+    }
+
+.input-wrapper {
+    position: relative;
+}
+
+.input-icon {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--bn-text-muted);
+    font-size: 0.95rem;
+    transition: color 0.25s ease;
+    pointer-events: none;
+}
+
+.form-control-custom {
+    width: 100%;
+    padding: 0.85rem 2.75rem 0.85rem 1rem;
+    border: 2px solid var(--bn-border);
+    border-radius: 14px;
+    font-family: 'Tajawal', sans-serif;
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--bn-text);
+    background: var(--bn-white);
+    transition: all 0.25s ease;
+}
+
+    .form-control-custom:focus {
+        outline: none;
+        border-color: var(--bn-primary);
+        box-shadow: 0 0 0 4px var(--bn-primary-light);
+    }
+
+        .form-control-custom:focus + .input-icon,
+        .input-wrapper:focus-within .input-icon {
+            color: var(--bn-primary);
+        }
+
+    .form-control-custom::placeholder {
+        color: var(--bn-text-muted);
+        font-weight: 500;
+    }
+
+/* Password requirements box */
+.password-rules {
+    background: linear-gradient(135deg, #f8fafc 0%, #f0f9ff 100%);
+    border: 1px solid var(--bn-border);
+    border-radius: 14px;
+    padding: 1rem 1.25rem;
+    margin-top: 0.75rem;
+}
+
+.password-rules-title {
+    font-size: 0.8rem;
+    font-weight: 800;
+    color: var(--bn-text-soft);
+    margin-bottom: 0.6rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+    .password-rules-title i {
+        color: var(--bn-primary);
+    }
+
+.rule-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--bn-text-muted);
+    margin-bottom: 0.35rem;
+}
+
+    .rule-item i {
+        font-size: 0.65rem;
+        width: 18px;
+        height: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--bn-border);
+        color: var(--bn-text-muted);
+        border-radius: 50%;
+        transition: all 0.3s ease;
+    }
+
+    .rule-item.valid i {
+        background: var(--bn-success);
+        color: white;
+    }
+
+/* ═══════════════════════════════════════════════════════════════ */
+/* SUBMIT BUTTON */
+/* ═══════════════════════════════════════════════════════════════ */
+.btn-register-submit {
+    width: 100%;
+    padding: 1rem;
+    background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%);
+    color: white;
+    border: none;
+    border-radius: 14px;
+    font-family: 'Tajawal', sans-serif;
+    font-weight: 900;
+    font-size: 1.05rem;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all 0.35s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    margin-top: 1.5rem;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 8px 28px -6px rgba(8, 145, 178, 0.35);
+}
+
+    .btn-register-submit::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.2) 50%, transparent 70%);
+        transform: translateX(-100%);
+        transition: transform 0.6s ease;
+    }
+
+    .btn-register-submit:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 36px -6px rgba(8, 145, 178, 0.45);
+    }
+
+        .btn-register-submit:hover::before {
+            transform: translateX(100%);
+        }
+
+    .btn-register-submit i {
+        font-size: 1rem;
+        position: relative;
+        z-index: 2;
+    }
+
+    .btn-register-submit span {
+        position: relative;
+        z-index: 2;
+    }
+
+/* ═══════════════════════════════════════════════════════════════ */
+/* LOGIN LINK */
+/* ═══════════════════════════════════════════════════════════════ */
+.login-link {
+    text-align: center;
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--bn-border);
+}
+
+    .login-link p {
+        font-size: 0.9rem;
+        color: var(--bn-text-muted);
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .login-link a {
+        color: var(--bn-primary);
+        font-weight: 800;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        position: relative;
+    }
+
+        .login-link a::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            right: 0;
+            width: 0;
+            height: 2px;
+            background: var(--bn-primary);
+            border-radius: 2px;
+            transition: width 0.3s ease;
+        }
+
+        .login-link a:hover {
+            color: var(--bn-primary-dark);
+        }
+
+            .login-link a:hover::after {
+                width: 100%;
+            }
+
+/* ═══════════════════════════════════════════════════════════════ */
+/* DIVIDER */
+/* ═══════════════════════════════════════════════════════════════ */
+.form-divider {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin: 1.25rem 0;
+    color: var(--bn-text-muted);
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+    .form-divider::before,
+    .form-divider::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, var(--bn-border), transparent);
+    }
+
+/* ═══════════════════════════════════════════════════════════════ */
+/* RESPONSIVE */
+/* ═══════════════════════════════════════════════════════════════ */
+@media (max-width: 575.98px) {
+    .register-card {
+        padding: 2rem 1.25rem;
+        border-radius: 24px;
+    }
+
+    .register-icon {
+        width: 64px;
+        height: 64px;
+        border-radius: 20px;
+    }
+
+        .register-icon i {
+            font-size: 1.8rem;
+        }
+
+    .register-title {
+        font-size: 1.4rem;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════════ */
+/* ENTRANCE ANIMATION */
+/* ═══════════════════════════════════════════════════════════════ */
+@keyframes slideUpFade {
+    from {
+        opacity: 0;
+        transform: translateY(40px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.register-card {
+    animation: slideUpFade 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.login-page {
+    position: relative;
+    width: 100%;
+    min-height: 100vh; /* يغطي ارتفاع الشاشة بالكامل */
+    display: flex;
+    align-items: center; /* توسيط عمودي (Vertical) */
+    justify-content: center; /* توسيط أفقي (Horizontal) */
+    overflow: hidden;
+    padding: 1rem;
+}

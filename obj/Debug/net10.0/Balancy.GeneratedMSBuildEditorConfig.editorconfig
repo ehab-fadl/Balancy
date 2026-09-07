@@ -1,0 +1,168 @@
+is_global = true
+build_property.TargetFramework = net10.0
+build_property.TargetFrameworkIdentifier = .NETCoreApp
+build_property.TargetFrameworkVersion = v10.0
+build_property.TargetPlatformMinVersion = 
+build_property.UsingMicrosoftNETSdkWeb = true
+build_property.ProjectTypeGuids = 
+build_property.InvariantGlobalization = 
+build_property.PlatformNeutralAssembly = 
+build_property.EnforceExtendedAnalyzerRules = 
+build_property.EntryPointFilePath = 
+build_property._SupportedPlatformList = Linux,macOS,Windows
+build_property.RootNamespace = Balancy
+build_property.RootNamespace = Balancy
+build_property.ProjectDir = D:\Projects\Asp.Net_Core_Projects\MicroservivesDepressionProject\Frondend\Balancy\Balancy\
+build_property.EnableComHosting = 
+build_property.EnableGeneratedComInterfaceComImportInterop = 
+build_property.RazorLangVersion = 10.0
+build_property.SupportLocalizedComponentNames = 
+build_property.GenerateRazorMetadataSourceChecksumAttributes = 
+build_property.MSBuildProjectDirectory = D:\Projects\Asp.Net_Core_Projects\MicroservivesDepressionProject\Frondend\Balancy\Balancy
+build_property._RazorSourceGeneratorDebug = 
+build_property.EffectiveAnalysisLevelStyle = 10.0
+build_property.EnableCodeStyleSeverity = 
+
+[D:/Projects/Asp.Net_Core_Projects/MicroservivesDepressionProject/Frondend/Balancy/Balancy/Areas/Admin/Pages/AssignRole.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcQWRtaW5cUGFnZXNcQXNzaWduUm9sZS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Projects/Asp.Net_Core_Projects/MicroservivesDepressionProject/Frondend/Balancy/Balancy/Areas/Admin/Pages/Auditlog.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcQWRtaW5cUGFnZXNcQXVkaXRsb2cuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Projects/Asp.Net_Core_Projects/MicroservivesDepressionProject/Frondend/Balancy/Balancy/Areas/Admin/Pages/DeleteUser.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcQWRtaW5cUGFnZXNcRGVsZXRlVXNlci5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Projects/Asp.Net_Core_Projects/MicroservivesDepressionProject/Frondend/Balancy/Balancy/Areas/Admin/Pages/EditView.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcQWRtaW5cUGFnZXNcRWRpdFZpZXcuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Projects/Asp.Net_Core_Projects/MicroservivesDepressionProject/Frondend/Balancy/Balancy/Areas/Admin/Pages/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcQWRtaW5cUGFnZXNcSW5kZXguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Projects/Asp.Net_Core_Projects/MicroservivesDepressionProject/Frondend/Balancy/Balancy/Areas/Admin/Pages/Shared/_AdminLayout.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcQWRtaW5cUGFnZXNcU2hhcmVkXF9BZG1pbkxheW91dC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Projects/Asp.Net_Core_Projects/MicroservivesDepressionProject/Frondend/Balancy/Balancy/Areas/Admin/Pages/Statistics.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcQWRtaW5cUGFnZXNcU3RhdGlzdGljcy5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Projects/Asp.Net_Core_Projects/MicroservivesDepressionProject/Frondend/Balancy/Balancy/Areas/Admin/Pages/ViewUser.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcQWRtaW5cUGFnZXNcVmlld1VzZXIuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Projects/Asp.Net_Core_Projects/MicroservivesDepressionProject/Frondend/Balancy/Balancy/Areas/Admin/Pages/_ViewImports.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcQWRtaW5cUGFnZXNcX1ZpZXdJbXBvcnRzLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Projects/Asp.Net_Core_Projects/MicroservivesDepressionProject/Frondend/Balancy/Balancy/Areas/Admin/Pages/_ViewStart.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcQWRtaW5cUGFnZXNcX1ZpZXdTdGFydC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Projects/Asp.Net_Core_Projects/MicroservivesDepressionProject/Frondend/Balancy/Balancy/Areas/Doctor/Pages/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcRG9jdG9yXFBhZ2VzXEluZGV4LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Projects/Asp.Net_Core_Projects/MicroservivesDepressionProject/Frondend/Balancy/Balancy/Areas/Doctor/Pages/Shared/_DoctorLayout.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcRG9jdG9yXFBhZ2VzXFNoYXJlZFxfRG9jdG9yTGF5b3V0LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Projects/Asp.Net_Core_Projects/MicroservivesDepressionProject/Frondend/Balancy/Balancy/Areas/Doctor/Pages/_ViewImports.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcRG9jdG9yXFBhZ2VzXF9WaWV3SW1wb3J0cy5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Projects/Asp.Net_Core_Projects/MicroservivesDepressionProject/Frondend/Balancy/Balancy/Areas/Doctor/Pages/_ViewStart.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcRG9jdG9yXFBhZ2VzXF9WaWV3U3RhcnQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Projects/Asp.Net_Core_Projects/MicroservivesDepressionProject/Frondend/Balancy/Balancy/Areas/NullUser/Pages/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcTnVsbFVzZXJcUGFnZXNcSW5kZXguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Projects/Asp.Net_Core_Projects/MicroservivesDepressionProject/Frondend/Balancy/Balancy/Areas/NullUser/Pages/Shared/_NullUserLayout.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcTnVsbFVzZXJcUGFnZXNcU2hhcmVkXF9OdWxsVXNlckxheW91dC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Projects/Asp.Net_Core_Projects/MicroservivesDepressionProject/Frondend/Balancy/Balancy/Areas/NullUser/Pages/_ViewImports.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcTnVsbFVzZXJcUGFnZXNcX1ZpZXdJbXBvcnRzLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Projects/Asp.Net_Core_Projects/MicroservivesDepressionProject/Frondend/Balancy/Balancy/Areas/NullUser/Pages/_ViewStart.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcTnVsbFVzZXJcUGFnZXNcX1ZpZXdTdGFydC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Projects/Asp.Net_Core_Projects/MicroservivesDepressionProject/Frondend/Balancy/Balancy/Areas/Searcher/Pages/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcU2VhcmNoZXJcUGFnZXNcSW5kZXguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Projects/Asp.Net_Core_Projects/MicroservivesDepressionProject/Frondend/Balancy/Balancy/Areas/Searcher/Pages/Shared/_SearchLayout.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcU2VhcmNoZXJcUGFnZXNcU2hhcmVkXF9TZWFyY2hMYXlvdXQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Projects/Asp.Net_Core_Projects/MicroservivesDepressionProject/Frondend/Balancy/Balancy/Areas/Searcher/Pages/_ViewImports.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcU2VhcmNoZXJcUGFnZXNcX1ZpZXdJbXBvcnRzLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Projects/Asp.Net_Core_Projects/MicroservivesDepressionProject/Frondend/Balancy/Balancy/Areas/Searcher/Pages/_ViewStart.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcU2VhcmNoZXJcUGFnZXNcX1ZpZXdTdGFydC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Projects/Asp.Net_Core_Projects/MicroservivesDepressionProject/Frondend/Balancy/Balancy/Pages/AccessDenied.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQWNjZXNzRGVuaWVkLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Projects/Asp.Net_Core_Projects/MicroservivesDepressionProject/Frondend/Balancy/Balancy/Pages/AccountDeactivated.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQWNjb3VudERlYWN0aXZhdGVkLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Projects/Asp.Net_Core_Projects/MicroservivesDepressionProject/Frondend/Balancy/Balancy/Pages/EditProfile.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRWRpdFByb2ZpbGUuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Projects/Asp.Net_Core_Projects/MicroservivesDepressionProject/Frondend/Balancy/Balancy/Pages/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSW5kZXguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Projects/Asp.Net_Core_Projects/MicroservivesDepressionProject/Frondend/Balancy/Balancy/Pages/Login.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTG9naW4uY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Projects/Asp.Net_Core_Projects/MicroservivesDepressionProject/Frondend/Balancy/Balancy/Pages/Logout.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTG9nb3V0LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Projects/Asp.Net_Core_Projects/MicroservivesDepressionProject/Frondend/Balancy/Balancy/Pages/OfflineError.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcT2ZmbGluZUVycm9yLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Projects/Asp.Net_Core_Projects/MicroservivesDepressionProject/Frondend/Balancy/Balancy/Pages/Register.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUmVnaXN0ZXIuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Projects/Asp.Net_Core_Projects/MicroservivesDepressionProject/Frondend/Balancy/Balancy/Pages/Setting.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcU2V0dGluZy5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Projects/Asp.Net_Core_Projects/MicroservivesDepressionProject/Frondend/Balancy/Balancy/Pages/Shared/_Notification.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcU2hhcmVkXF9Ob3RpZmljYXRpb24uY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Projects/Asp.Net_Core_Projects/MicroservivesDepressionProject/Frondend/Balancy/Balancy/Pages/Shared/_ValidationScriptsPartial.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcU2hhcmVkXF9WYWxpZGF0aW9uU2NyaXB0c1BhcnRpYWwuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Projects/Asp.Net_Core_Projects/MicroservivesDepressionProject/Frondend/Balancy/Balancy/Pages/_ViewImports.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcX1ZpZXdJbXBvcnRzLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Projects/Asp.Net_Core_Projects/MicroservivesDepressionProject/Frondend/Balancy/Balancy/Pages/_ViewStart.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcX1ZpZXdTdGFydC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Projects/Asp.Net_Core_Projects/MicroservivesDepressionProject/Frondend/Balancy/Balancy/Pages/Shared/_Layout.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcU2hhcmVkXF9MYXlvdXQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = b-cnknv7ic22

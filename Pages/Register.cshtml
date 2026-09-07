@@ -1,0 +1,161 @@
+﻿@page
+@model Balancy.Pages.RegisterModel
+@{
+}
+
+<div class="login-page">
+    <!-- Background Shapes -->
+    <div class="bg-shape shape-1"></div>
+    <div class="bg-shape shape-2"></div>
+
+    <!-- Register Card -->
+    <div class="register-card">
+
+        <!-- Header -->
+        <div class="register-header">
+            <div class="register-icon">
+                <i class="fa-solid fa-user-plus"></i>
+            </div>
+            <h1 class="register-title">إنشاء حساب جديد</h1>
+            <p class="register-subtitle">انضم إلى بالنسي وكن جزءاً من رحلة الشفاء</p>
+        </div>
+
+        @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+        {
+            <div class="alert alert-danger" style="margin-bottom: 1rem; font-size: 0.9rem; font-weight: 700; color: #ef4444;">
+                @Model.ErrorMessage
+            </div>
+        }
+
+        
+        <!-- Form -->
+        <!-- Form -->
+        <form method="POST" id="registerForm" novalidate>
+
+            <!-- Name Row -->
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fa-solid fa-user"></i> الاسم الأول
+                        </label>
+                        <div class="input-wrapper">
+                            <input type="text" id="firstName" asp-for="Input.FirstName" class="form-control-custom" placeholder="مثال: أحمد">
+                            <span class="input-icon"><i class="fa-solid fa-signature"></i></span>
+                        </div>
+                        <!-- الخطأ يظهر هنا مباشرة تحت العنصر -->
+                        <span asp-validation-for="Input.FirstName" class="text-danger" style="font-size: 0.8rem; display: block; margin-top: 4px;"></span>
+                        <small class="error-msg text-danger" id="err-firstName" style="display:none; font-size:0.8rem; margin-top: 4px;"></small>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fa-solid fa-user"></i> الاسم الأخير
+                        </label>
+                        <div class="input-wrapper">
+                            <input type="text" id="lastName" asp-for="Input.LastName" class="form-control-custom" placeholder="مثال: خالد">
+                            <span class="input-icon"><i class="fa-solid fa-signature"></i></span>
+                        </div>
+                        <span asp-validation-for="Input.LastName" class="text-danger" style="font-size: 0.8rem; display: block; margin-top: 4px;"></span>
+                        <small class="error-msg text-danger" id="err-lastName" style="display:none; font-size:0.8rem; margin-top: 4px;"></small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Email -->
+            <div class="form-group">
+                <label class="form-label">
+                    <i class="fa-solid fa-envelope"></i> البريد الإلكتروني
+                </label>
+                <div class="input-wrapper">
+                    <input type="email" id="email" asp-for="Input.Email" class="form-control-custom" placeholder="name@email.com">
+                    <span class="input-icon"><i class="fa-solid fa-at"></i></span>
+                </div>
+                <span asp-validation-for="Input.Email" class="text-danger" style="font-size: 0.8rem; display: block; margin-top: 4px;"></span>
+                <small class="error-msg text-danger" id="err-email" style="display:none; font-size:0.8rem; margin-top: 4px;"></small>
+            </div>
+
+            <!-- Phone -->
+            <div class="form-group">
+                <label class="form-label">
+                    <i class="fa-solid fa-phone"></i> رقم الهاتف
+                </label>
+                <div class="input-wrapper">
+                    <input type="tel" id="phone" asp-for="Input.PhoneNumber" class="form-control-custom" placeholder="+963 912 345 678">
+                    <span class="input-icon"><i class="fa-solid fa-mobile-screen"></i></span>
+                </div>
+                <span asp-validation-for="Input.PhoneNumber" class="text-danger" style="font-size: 0.8rem; display: block; margin-top: 4px;"></span>
+                <small class="error-msg text-danger" id="err-phone" style="display:none; font-size:0.8rem; margin-top: 4px;"></small>
+            </div>
+
+            <div class="form-divider">بيانات الأمان</div>
+
+            <!-- Password -->
+            <div class="form-group">
+                <label class="form-label">
+                    <i class="fa-solid fa-lock"></i> كلمة المرور
+                </label>
+                <div style="position: relative; width: 100%;">
+                    <!-- حقل النص مع إضافة مساحة فارغة من اليمين (padding-right) لكي لا يختفي النص تحت العين -->
+                    <input type="password" id="passwordInput" asp-for="Input.Password" class="form-control-custom" placeholder="••••••••" style="width: 100%; padding-right: 45px; padding-left: 15px; box-sizing: border-box;">
+
+                    <!-- زر العين مثبت تماماً في أقصى اليمين -->
+                    <span id="togglePasswordBtn" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #6c757d; z-index: 10; padding: 5px;">
+                        <i class="fa-solid fa-eye-slash" style="pointer-events: none;"></i>
+                    </span>
+                </div>
+                <span asp-validation-for="Input.Password" class="text-danger" style="font-size: 0.8rem; display: block; margin-top: 4px;"></span>
+
+                <!-- Password Rules -->
+                <div class="password-rules" style="margin-top: 0.5rem; font-size: 0.85rem;">
+                    <div class="password-rules-title" style="margin-bottom: 0.3rem; font-weight: bold;">
+                        <i class="fa-solid fa-shield-halved"></i> شروط كلمة المرور
+                    </div>
+                    <div class="rule-item" id="rule-length" style="color: #6b7280; margin-bottom: 2px;">
+                        <i class="fa-solid fa-circle-xmark" id="icon-length"></i> <span>8 أحرف على الأقل</span>
+                    </div>
+                    <div class="rule-item" id="rule-upper" style="color: #6b7280; margin-bottom: 2px;">
+                        <i class="fa-solid fa-circle-xmark" id="icon-upper"></i> <span>حرف كبير (A-Z)</span>
+                    </div>
+                    <div class="rule-item" id="rule-lower" style="color: #6b7280; margin-bottom: 2px;">
+                        <i class="fa-solid fa-circle-xmark" id="icon-lower"></i> <span>حرف صغير (a-z)</span>
+                    </div>
+                    <div class="rule-item" id="rule-number" style="color: #6b7280;">
+                        <i class="fa-solid fa-circle-xmark" id="icon-number"></i> <span>رقم واحد على الأقل (0-9)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Confirm Password -->
+            <div class="form-group">
+                <label class="form-label">
+                    <i class="fa-solid fa-lock"></i> تأكيد كلمة المرور
+                </label>
+                <div style="position: relative; width: 100%;">
+                    <!-- حقل تأكيد كلمة المرور مع مساحة من اليمين -->
+                    <input type="password" id="confirmPassword" asp-for="Input.ConfirmPassword" class="form-control-custom" placeholder="••••••••" style="width: 100%; padding-right: 45px; padding-left: 15px; box-sizing: border-box;">
+
+                    <!-- زر العين مثبت تماماً في أقصى اليمين -->
+                    <span id="toggleConfirmPasswordBtn" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #6c757d; z-index: 10; padding: 5px;">
+                        <i class="fa-solid fa-eye-slash" style="pointer-events: none;"></i>
+                    </span>
+                </div>
+                <span asp-validation-for="Input.ConfirmPassword" class="text-danger" style="font-size: 0.8rem; display: block; margin-top: 4px;"></span>
+                <small class="error-msg text-danger" id="err-confirm" style="display:none; font-size:0.8rem; margin-top: 4px;"></small>
+            </div>
+            <!-- Submit -->
+            <button type="submit" id="submitBtn" class="btn-register-submit">
+                <i class="fa-solid fa-user-plus"></i>
+                <span>إنشاء الحساب</span>
+            </button>
+
+        </form>
+
+        <!-- Login Link -->
+        <div class="login-link">
+            <p>لديك حساب بالفعل؟ <a href="/Login">سجل الدخول من هنا</a></p>
+        </div>
+    </div>
+</div>
+<script src="~/js/register.js"></script>
