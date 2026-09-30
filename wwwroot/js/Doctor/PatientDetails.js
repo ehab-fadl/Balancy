@@ -660,3 +660,35 @@
     })();
 
 })();
+
+/* ============================================================
+   15. Bind patientId to Document Manager links
+       ✅ المسار الصحيح: /Doctor/DocumentManager/DocumentManager
+============================================================ */
+(function bindPatientIdToDocLinks() {
+    const params = new URLSearchParams(window.location.search);
+    const patientId = params.get('patientId')
+        || params.get('id')
+        || sessionStorage.getItem('bnCurrentPatientId')
+        || '';
+
+    // حفظ في window و sessionStorage للاستخدام العام
+    window.bnCurrentPatientId = patientId;
+    if (patientId) sessionStorage.setItem('bnCurrentPatientId', patientId);
+
+    console.log('🆔 PatientId المستخرج من URL:', patientId || '(غير محدد)');
+
+    // ✅ المسار الصحيح لمدير الوثائق
+    const DOCS_BASE_URL = '/Doctor/DocumentManager/DocumentManager';
+
+    // إضافة patientId لكل زر وثائق
+    ['openDocsBtn', 'fpDocsBtn'].forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) {
+            btn.href = patientId
+                ? `${DOCS_BASE_URL}?patientId=${patientId}`
+                : DOCS_BASE_URL;
+            console.log(`✅ تم تحديث رابط ${id} → ${btn.href}`);
+        }
+    });
+})();

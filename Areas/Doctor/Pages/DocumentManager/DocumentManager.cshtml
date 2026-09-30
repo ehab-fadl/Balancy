@@ -1,0 +1,441 @@
+﻿@page
+@model Balancy.Areas.Doctor.Pages.DocumentManagerModel
+@{
+   
+}
+
+
+<main class="doc-manager-main">
+
+    <!-- Top Controls -->
+    <div class="bn-top-controls">
+        <button type="button" class="bn-icon-btn bn-theme-toggle" id="themeToggle"
+                aria-label="تبديل الوضع الليلي" title="تبديل الوضع الليلي">
+            <i class="fa-solid fa-moon icon-moon"></i>
+            <i class="fa-solid fa-sun icon-sun"></i>
+        </button>
+
+        <button type="button" class="bn-icon-btn" id="backBtn"
+                aria-label="العودة لملف المريض" title="العودة لملف المريض">
+            <i class="fa-solid fa-arrow-right"></i>
+        </button>
+
+        <button type="button" class="bn-icon-btn" id="exportBtn"
+                aria-label="طباعة / تصدير" title="طباعة / تصدير">
+            <i class="fa-solid fa-print"></i>
+        </button>
+    </div>
+
+    <!-- Background Shapes -->
+    <div class="bg-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+    </div>
+
+    <!-- Page Wrapper -->
+    <div class="page-wrapper">
+
+        <div class="doc-manager-layout">
+
+            <!-- Sidebar -->
+            <aside class="doc-sidebar">
+                <div class="sidebar-header">
+                    <div class="sidebar-icon">
+                        <i class="fa-solid fa-folder-open"></i>
+                    </div>
+                    <div>
+                        <h2 class="sidebar-title">مدير الوثائق</h2>
+                        <p class="sidebar-subtitle" id="patientNameSubtitle">إدارة الوثائق الطبية</p>
+                    </div>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">التصنيفات</div>
+                    <ul class="sidebar-nav" role="tablist">
+                        <li class="sidebar-item active" data-filter="all" role="tab">
+                            <div class="sidebar-item-icon all"><i class="fa-solid fa-layer-group"></i></div>
+                            <span class="sidebar-item-label">كل الوثائق</span>
+                            <span class="sidebar-item-count" id="countAll">0</span>
+                        </li>
+                        <li class="sidebar-item" data-filter="lab" role="tab">
+                            <div class="sidebar-item-icon lab"><i class="fa-solid fa-flask-vial"></i></div>
+                            <span class="sidebar-item-label">التحاليل</span>
+                            <span class="sidebar-item-count" id="countLab">0</span>
+                        </li>
+                        <li class="sidebar-item" data-filter="rx" role="tab">
+                            <div class="sidebar-item-icon rx"><i class="fa-solid fa-prescription-bottle-medical"></i></div>
+                            <span class="sidebar-item-label">الوصفات الطبية</span>
+                            <span class="sidebar-item-count" id="countRx">0</span>
+                        </li>
+                        <li class="sidebar-item" data-filter="report" role="tab">
+                            <div class="sidebar-item-icon report"><i class="fa-solid fa-file-medical"></i></div>
+                            <span class="sidebar-item-label">التقارير</span>
+                            <span class="sidebar-item-count" id="countReport">0</span>
+                        </li>
+                        <li class="sidebar-item" data-filter="attachment" role="tab">
+                            <div class="sidebar-item-icon attach"><i class="fa-solid fa-paperclip"></i></div>
+                            <span class="sidebar-item-label">المرفقات</span>
+                            <span class="sidebar-item-count" id="countAttachment">0</span>
+                        </li>
+                        <li class="sidebar-item" data-filter="record" role="tab">
+                            <div class="sidebar-item-icon record"><i class="fa-solid fa-file-shield"></i></div>
+                            <span class="sidebar-item-label">سجلات طبية</span>
+                            <span class="sidebar-item-count" id="countRecord">0</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">حالات خاصة</div>
+                    <ul class="sidebar-nav" role="tablist">
+                        <li class="sidebar-item" data-filter="favorite" role="tab">
+                            <div class="sidebar-item-icon fav"><i class="fa-solid fa-star"></i></div>
+                            <span class="sidebar-item-label">المفضلة</span>
+                            <span class="sidebar-item-count" id="countFavorite">0</span>
+                        </li>
+                        <li class="sidebar-item" data-filter="deleted" role="tab">
+                            <div class="sidebar-item-icon trash"><i class="fa-solid fa-trash"></i></div>
+                            <span class="sidebar-item-label">سلة المحذوفات</span>
+                            <span class="sidebar-item-count" id="countDeleted">0</span>
+                        </li>
+                    </ul>
+                </div>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="doc-main">
+
+                <!-- Patient Banner (يُملأ عبر JS) -->
+                <div class="patient-banner" id="patientBanner" style="display:none;">
+                    <div class="patient-banner-icon">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+                    <div class="patient-banner-info">
+                        <div class="patient-banner-label">وثائق المريض</div>
+                        <div class="patient-banner-name" id="patientBannerName">-</div>
+                    </div>
+                    <div class="patient-banner-id">
+                        <i class="fa-solid fa-hashtag"></i>
+                        <span id="patientBannerId">-</span>
+                    </div>
+                </div>
+
+                <!-- Stats Bar -->
+                <div class="stats-bar">
+                    <div class="stat-card total">
+                        <div class="stat-icon total"><i class="fa-solid fa-folder"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-label">إجمالي الوثائق</span>
+                            <span class="stat-value" id="statTotal">0</span>
+                        </div>
+                    </div>
+                    <div class="stat-card labs">
+                        <div class="stat-icon labs"><i class="fa-solid fa-flask-vial"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-label">التحاليل</span>
+                            <span class="stat-value" id="statLabs">0</span>
+                        </div>
+                    </div>
+                    <div class="stat-card rx">
+                        <div class="stat-icon rx"><i class="fa-solid fa-prescription"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-label">الوصفات الطبية</span>
+                            <span class="stat-value" id="statRx">0</span>
+                        </div>
+                    </div>
+                    <div class="stat-card reports">
+                        <div class="stat-icon reports"><i class="fa-solid fa-file-medical"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-label">التقارير</span>
+                            <span class="stat-value" id="statReports">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Toolbar -->
+                <div class="doc-toolbar">
+                    <div class="search-box">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" class="search-input" id="searchInput"
+                               placeholder="ابحث بالاسم أو الوسم أو النوع..." aria-label="بحث">
+                    </div>
+
+                    <select class="filter-select" id="filterDate" aria-label="فلتر التاريخ">
+                        <option value="">كل التواريخ</option>
+                        <option value="today">اليوم</option>
+                        <option value="week">آخر 7 أيام</option>
+                        <option value="month">آخر 30 يوم</option>
+                        <option value="year">آخر سنة</option>
+                    </select>
+
+                    <select class="filter-select" id="sortBy" aria-label="الترتيب">
+                        <option value="newest">الأحدث أولاً</option>
+                        <option value="oldest">الأقدم أولاً</option>
+                        <option value="name">الاسم (أ-ي)</option>
+                        <option value="size">الحجم</option>
+                    </select>
+
+                    <div class="view-toggle">
+                        <button type="button" class="view-toggle-btn active" id="viewGrid" title="عرض شبكة">
+                            <i class="fa-solid fa-grip"></i>
+                        </button>
+                        <button type="button" class="view-toggle-btn" id="viewList" title="عرض قائمة">
+                            <i class="fa-solid fa-list"></i>
+                        </button>
+                    </div>
+
+                    <button type="button" class="btn-upload" id="uploadBtn">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                        رفع وثيقة جديدة
+                    </button>
+                </div>
+
+                <!-- Documents Area -->
+                <div class="documents-area">
+                    <div class="docs-grid" id="docsContainer"></div>
+                </div>
+
+            </main>
+
+        </div>
+
+    </div>
+
+    <!-- Drag & Drop Overlay -->
+    <div class="drop-overlay" id="dropOverlay">
+        <div class="drop-zone">
+            <div class="drop-zone-icon">
+                <i class="fa-solid fa-cloud-arrow-up"></i>
+            </div>
+            <h2>أفلت الملفات هنا</h2>
+            <p>سيتم رفعها تلقائياً إلى وثائق المريض</p>
+        </div>
+    </div>
+
+    <!-- FAB -->
+    <div class="bn-fab">
+        <button type="button" class="bn-fab-btn" id="fabUpload" aria-label="رفع وثيقة" title="رفع وثيقة">
+            <i class="fa-solid fa-plus"></i>
+        </button>
+    </div>
+
+    <!-- Upload Modal -->
+    <div class="bn-modal-overlay" id="uploadModal" role="dialog" aria-modal="true">
+        <div class="bn-modal lg">
+            <div class="bn-modal-header">
+                <div class="bn-modal-header-icon">
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                </div>
+                <div class="bn-modal-header-text">
+                    <h3 id="uploadModalTitle">رفع وثيقة جديدة</h3>
+                    <p id="uploadModalSubtitle">املأ البيانات وأرفق الملف</p>
+                </div>
+                <button type="button" class="btn-close" id="uploadModalClose" aria-label="إغلاق"></button>
+            </div>
+
+            <div class="bn-modal-body">
+                <form id="uploadForm" novalidate>
+                    <input type="hidden" id="uploadEditIndex" value="-1">
+
+                    <div class="upload-drop-area" id="uploadDropArea">
+                        <div class="upload-drop-icon">
+                            <i class="fa-solid fa-file-arrow-up"></i>
+                        </div>
+                        <h4>اختر ملفاً أو اسحبه هنا</h4>
+                        <p>PDF، صور، Word، Excel — بحد أقصى 50 ميجابايت</p>
+                        <input type="file" id="fileInput" style="display: none;"
+                               accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx,.txt,.dcm,.zip">
+                    </div>
+
+                    <div class="selected-file-info" id="selectedFileInfo">
+                        <div class="selected-file-icon">
+                            <i class="fa-solid fa-file" id="selectedFileIcon"></i>
+                        </div>
+                        <div class="selected-file-details">
+                            <div class="selected-file-name" id="selectedFileName">-</div>
+                            <div class="selected-file-size" id="selectedFileSize">-</div>
+                        </div>
+                        <button type="button" class="selected-file-remove" id="removeFileBtn" aria-label="إزالة الملف">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="docType">
+                                <i class="fa-solid fa-tag"></i>
+                                نوع الوثيقة
+                            </label>
+                            <select class="form-control-custom" id="docType" required>
+                                <option value="">اختر النوع</option>
+                                <option value="lab">تحليل مخبري</option>
+                                <option value="rx">وصفة طبية</option>
+                                <option value="report">تقرير طبي</option>
+                                <option value="attachment">مرفق عام</option>
+                                <option value="record">سجل طبي</option>
+                                <option value="image">صورة طبية</option>
+                                <option value="pdf">مستند PDF</option>
+                                <option value="other">أخرى</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="docDate">
+                                <i class="fa-solid fa-calendar-days"></i>
+                                تاريخ الوثيقة
+                            </label>
+                            <input type="date" class="form-control-custom" id="docDate" required>
+                        </div>
+
+                        <div class="col-12">
+                            <label for="docName">
+                                <i class="fa-solid fa-heading"></i>
+                                اسم الوثيقة
+                            </label>
+                            <input type="text" class="form-control-custom" id="docName"
+                                   placeholder="مثال: تحليل دم شامل - أكتوبر 2024" required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="docSource">
+                                <i class="fa-solid fa-user-doctor"></i>
+                                المصدر / الطبيب
+                            </label>
+                            <input type="text" class="form-control-custom" id="docSource"
+                                   placeholder="مثال: د. أحمد، مختبر X">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="docCategory">
+                                <i class="fa-solid fa-folder-tree"></i>
+                                تصنيف فرعي
+                            </label>
+                            <input type="text" class="form-control-custom" id="docCategory"
+                                   placeholder="مثال: تحاليل روتينية">
+                        </div>
+
+                        <div class="col-12">
+                            <label for="tagInput">
+                                <i class="fa-solid fa-hashtag"></i>
+                                الوسوم (اضغط Enter لإضافة)
+                            </label>
+                            <div class="tags-input-wrapper" id="tagsWrapper">
+                                <input type="text" id="tagInput" placeholder="أضف وسماً...">
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <label for="docNotes">
+                                <i class="fa-solid fa-note-sticky"></i>
+                                ملاحظات (اختياري)
+                            </label>
+                            <textarea class="form-control-custom" id="docNotes"
+                                      placeholder="ملاحظات إضافية عن الوثيقة..."></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="bn-modal-footer">
+                <button type="button" class="bn-btn bn-btn-ghost" id="uploadCancelBtn">
+                    <i class="fa-solid fa-xmark"></i>
+                    إلغاء
+                </button>
+                <button type="button" class="bn-btn bn-btn-primary" id="uploadSaveBtn">
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                    رفع الوثيقة
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Preview Modal -->
+    <div class="bn-modal-overlay" id="previewModal" role="dialog" aria-modal="true">
+        <div class="bn-modal lg">
+            <div class="doc-preview-header">
+                <div class="bn-modal-header-icon" id="previewIcon">
+                    <i class="fa-solid fa-file"></i>
+                </div>
+                <div class="bn-modal-header-text">
+                    <h3 id="previewTitle">-</h3>
+                    <p id="previewSubtitle">-</p>
+                </div>
+                <button type="button" class="btn-close" id="previewCloseBtn" aria-label="إغلاق" style="filter: invert(1);"></button>
+            </div>
+
+            <div class="bn-modal-body">
+                <div class="doc-preview-body">
+                    <div class="doc-preview-thumbnail" id="previewThumbnail">
+                        <i class="fa-solid fa-file" id="previewThumbIcon"></i>
+                    </div>
+                    <div class="doc-preview-info" id="previewInfo"></div>
+                </div>
+            </div>
+
+            <div class="bn-modal-footer">
+                <button type="button" class="bn-btn bn-btn-ghost" id="previewDownloadBtn">
+                    <i class="fa-solid fa-download"></i>
+                    تحميل
+                </button>
+                <button type="button" class="bn-btn bn-btn-ghost" id="previewPrintBtn">
+                    <i class="fa-solid fa-print"></i>
+                    طباعة
+                </button>
+                <button type="button" class="bn-btn bn-btn-primary" id="previewCloseBtn2">
+                    <i class="fa-solid fa-check"></i>
+                    إغلاق
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirm Modal -->
+    <div class="bn-modal-overlay" id="confirmModal" role="dialog" aria-modal="true">
+        <div class="bn-modal bn-modal-danger">
+            <div class="bn-modal-header">
+                <div class="bn-modal-header-icon">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+                <div class="bn-modal-header-text">
+                    <h3 id="confirmTitle">تأكيد الحذف</h3>
+                    <p id="confirmSubtitle">لا يمكن التراجع عن هذه العملية</p>
+                </div>
+            </div>
+            <div class="bn-modal-body">
+                <p id="confirmMessage" style="font-size: 0.9rem; color: var(--bn-text-soft); line-height: 1.8; font-weight: 600;">هل أنت متأكد؟</p>
+            </div>
+            <div class="bn-modal-footer">
+                <button type="button" class="bn-btn bn-btn-ghost" id="confirmCancelBtn">
+                    <i class="fa-solid fa-xmark"></i>
+                    إلغاء
+                </button>
+                <button type="button" class="bn-btn bn-btn-danger" id="confirmOkBtn">
+                    <i class="fa-solid fa-trash"></i>
+                    نعم، احذف
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast-container">
+        <div id="notificationToast" class="toast toast-custom" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-body">
+                <div class="toast-icon-wrap" id="toastIcon"></div>
+                <div class="toast-content">
+                    <strong id="toastTitle"></strong>
+                    <div id="toastMessage" class="small"></div>
+                </div>
+                <button type="button" class="btn-close" id="toastCloseBtn" aria-label="إغلاق"></button>
+            </div>
+            <div class="toast-progress">
+                <div class="toast-progress-bar" id="toastProgressBar"></div>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+
+    <script src="~/js/doctor/documentmanager/documentmanager.js"></script>

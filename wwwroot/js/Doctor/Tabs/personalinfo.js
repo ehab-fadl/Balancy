@@ -1,5 +1,5 @@
 ﻿/* ============================================================
-   Personal Info Tab — Standalone Script
+   Personal Info Tab — Standalone Script (Fixed Submit Binding)
    يعمل مستقلاً AND يتكامل مع bnApp إذا وُجد
 ============================================================ */
 
@@ -7,7 +7,7 @@
     console.log('🚀 PersonalInfo.js initialized');
 
     /* ============================================================
-       1. Storage Layer (fallback if bnApp not available)
+       1. Storage Layer
     ============================================================ */
     const storage = (window.bnApp && window.bnApp.bnStorage) ? window.bnApp.bnStorage : {
         prefix: 'balancy_',
@@ -40,7 +40,7 @@
     };
 
     /* ============================================================
-       2. Toast (fallback if bnApp not available)
+       2. Toast
     ============================================================ */
     const showToast = (window.bnApp && window.bnApp.showToast)
         ? window.bnApp.showToast
@@ -52,16 +52,29 @@
        3. Confetti
     ============================================================ */
     const bnConfetti = {
-        el: document.getElementById('bnConfetti'),
+        el: null,
         colors: ['#0891b2', '#6366f1', '#f59e0b', '#10b981', '#ef4444', '#ec4899', '#8b5cf6'],
 
+        ensureEl() {
+            if (this.el && document.body.contains(this.el)) return this.el;
+            let existing = document.getElementById('bnConfetti');
+            if (!existing) {
+                existing = document.createElement('div');
+                existing.className = 'bn-confetti';
+                existing.id = 'bnConfetti';
+                document.body.appendChild(existing);
+            }
+            this.el = existing;
+            return existing;
+        },
+
         fire(duration = 2000) {
-            if (!this.el) return;
-            this.el.innerHTML = '';
-            this.el.classList.add('active');
+            const el = this.ensureEl();
+            if (!el) return;
+            el.innerHTML = '';
+            el.classList.add('active');
 
             const pieceCount = 60;
-
             for (let i = 0; i < pieceCount; i++) {
                 const piece = document.createElement('div');
                 piece.className = 'confetti-piece';
@@ -70,18 +83,18 @@
                 piece.style.animationDuration = (1.5 + Math.random() * 1.5) + 's';
                 piece.style.background = this.colors[Math.floor(Math.random() * this.colors.length)];
                 piece.style.transform = `rotate(${Math.random() * 360}deg)`;
-                this.el.appendChild(piece);
+                el.appendChild(piece);
             }
 
             setTimeout(() => {
-                this.el.classList.remove('active');
-                this.el.innerHTML = '';
+                el.classList.remove('active');
+                el.innerHTML = '';
             }, duration);
         }
     };
 
     /* ============================================================
-       4. Validation Engine
+       4. Validation Engine (موحّد)
     ============================================================ */
     const bnValidation = {
 
@@ -261,12 +274,6 @@
             setTimeout(() => firstInvalid.focus({ preventScroll: true }), 400);
         },
 
-        /* ============================================================
-           ✅ showSummary — النسخة الجديدة
-           - اللوح يبقى ظاهراً (لا يختفي تلقائياً)
-           - زر إغلاق (×) يدوي
-           - يختفي تلقائياً فقط عند تصحيح كل الأخطاء
-        ============================================================ */
         showSummary(form, errors) {
             const existing = form.querySelector('.bn-validation-summary');
             if (existing) existing.remove();
@@ -279,9 +286,6 @@
                 <div class="bn-validation-summary-header">
                     <i class="fa-solid fa-circle-exclamation"></i>
                     <span>يوجد ${errors.length} ${errors.length === 1 ? 'خطأ' : 'أخطاء'} يجب تصحيحها:</span>
-                    <button type="button" class="bn-summary-close" aria-label="إغلاق لوح الأخطاء">
-                        <i class="fa-solid fa-xmark"></i>
-                    </button>
                 </div>
                 <ul>
                     ${errors.map((e, i) => `<li data-error-index="${i}">${e.label}: ${e.message}</li>`).join('')}
@@ -290,7 +294,6 @@
 
             form.insertBefore(summary, form.firstChild);
 
-            // النقر على خطأ → التمرير إلى الحقل
             summary.querySelectorAll('li').forEach((li, i) => {
                 li.addEventListener('click', () => {
                     const field = errors[i].field;
@@ -299,32 +302,13 @@
                 });
             });
 
-            // زر الإغلاق اليدوي
-            const closeBtn = summary.querySelector('.bn-summary-close');
-            closeBtn.addEventListener('click', () => {
-                summary.style.transition = 'opacity 0.3s ease';
-                summary.style.opacity = '0';
-                setTimeout(() => summary.remove(), 300);
-            });
-
-            // ✅ اختفاء تلقائي عند تصحيح جميع الأخطاء
-            const watchedFields = errors.map(e => e.field);
-            const checkAllFixed = () => {
-                const allFixed = watchedFields.every(f => {
-                    const res = this.validateField(f);
-                    return res.valid;
-                });
-                if (allFixed) {
-                    summary.style.transition = 'opacity 0.3s ease';
+            setTimeout(() => {
+                if (summary.parentNode) {
+                    summary.style.transition = 'opacity 0.4s ease';
                     summary.style.opacity = '0';
-                    setTimeout(() => summary.remove(), 300);
+                    setTimeout(() => summary.remove(), 400);
                 }
-            };
-
-            watchedFields.forEach(f => {
-                const evt = (f.tagName === 'SELECT' || f.type === 'date') ? 'change' : 'input';
-                f.addEventListener(evt, checkAllFixed);
-            });
+            }, 8000);
         },
 
         attachToField(field) {
@@ -368,8 +352,6 @@
     const bnAutoSave = {
         timers: {},
         delay: 1500,
-        indicator: document.getElementById('saveIndicator'),
-        indicatorText: document.getElementById('saveIndicatorText'),
         hideTimer: null,
 
         init() {
@@ -418,18 +400,21 @@
         },
 
         showIndicator(state) {
-            if (!this.indicator) return;
+            const indicator = document.getElementById('saveIndicator');
+            const indicatorText = document.getElementById('saveIndicatorText');
+            if (!indicator || !indicatorText) return;
+
             clearTimeout(this.hideTimer);
-            this.indicator.classList.add('show');
-            this.indicator.classList.remove('saved');
+            indicator.classList.add('show');
+            indicator.classList.remove('saved');
 
             if (state === 'saving') {
-                this.indicatorText.textContent = 'جاري الحفظ التلقائي...';
+                indicatorText.textContent = 'جاري الحفظ التلقائي...';
             } else if (state === 'saved') {
-                this.indicator.classList.add('saved');
-                this.indicatorText.textContent = 'تم الحفظ التلقائي';
+                indicator.classList.add('saved');
+                indicatorText.textContent = 'تم الحفظ التلقائي';
                 this.hideTimer = setTimeout(() => {
-                    this.indicator.classList.remove('show');
+                    indicator.classList.remove('show');
                 }, 2000);
             }
         }
@@ -489,33 +474,75 @@
         set('maritalStatus', patient.maritalStatus);
     }
 
+    async function mockPostRequest(data) {
+        console.log('POST Patient Data:', data);
+        return new Promise(resolve => setTimeout(() => resolve({ success: true }), 800));
+    }
+
     /* ============================================================
-       8. Submit Handler
+       8. ✅ Wait for form + Bind (الإصلاح الأساسي)
     ============================================================ */
-    const form = document.getElementById('personalInfoForm');
-    if (form) {
+    function waitForFormThenInit(attempt = 0) {
+        const form = document.getElementById('personalInfoForm');
+
+        if (!form) {
+            if (attempt < 20) {
+                setTimeout(() => waitForFormThenInit(attempt + 1), 100);
+            } else {
+                console.warn('⚠️ PersonalInfoForm not found after 2s');
+            }
+            return;
+        }
+
+        console.log('✅ PersonalInfoForm found — binding...');
+        initForm(form);
+    }
+
+    function initForm(form) {
+        // منع الربط المزدوج
+        if (form.dataset.bnBound === '1') {
+            console.log('ℹ️ Form already bound — skipping');
+            return;
+        }
+        form.dataset.bnBound = '1';
+
+        // 1. تحميل البيانات
+        loadPatientData();
+
+        // 2. Auto-save
+        bnAutoSave.init();
+
+        // 3. Validation
+        bnValidation.attachToForm(form);
+
+        // 4. ✅ ربط submit — مع preventDefault
         form.addEventListener('submit', async function (event) {
             event.preventDefault();
+            event.stopPropagation();
+
+            console.log('📤 Form submitted — validating...');
 
             const { isValid, errors } = bnValidation.validateForm(this);
 
             if (!isValid) {
                 bnValidation.showSummary(this, errors);
                 bnValidation.scrollToFirstError(this);
-                showToast('error', 'فشل التحقق', `يوجد ${errors.length} ${errors.length === 1 ? 'خطأ' : 'أخطاء'} في النموذج.`);
-                return;
+                showToast('error', 'فشل التحقق',
+                    `يوجد ${errors.length} ${errors.length === 1 ? 'خطأ' : 'أخطاء'} في النموذج.`);
+                return false;
             }
 
             const saveButton = document.getElementById('saveButton');
             const saveButtonText = document.getElementById('saveButtonText');
             const saveSpinner = document.getElementById('saveSpinner');
+
             const formData = new FormData(this);
             const patientData = Object.fromEntries(formData.entries());
             patientData.id = mockPatientData.id;
 
-            saveButton.disabled = true;
-            saveButtonText.classList.add('d-none');
-            saveSpinner.classList.remove('d-none');
+            if (saveButton) saveButton.disabled = true;
+            if (saveButtonText) saveButtonText.classList.add('d-none');
+            if (saveSpinner) saveSpinner.classList.remove('d-none');
 
             try {
                 await mockPostRequest(patientData);
@@ -528,40 +555,39 @@
             } catch (error) {
                 showToast('error', 'فشل الحفظ', 'حدث خطأ أثناء حفظ البيانات.');
             } finally {
-                saveButton.disabled = false;
-                saveSpinner.classList.add('d-none');
-                saveButtonText.classList.remove('d-none');
+                if (saveButton) saveButton.disabled = false;
+                if (saveSpinner) saveSpinner.classList.add('d-none');
+                if (saveButtonText) saveButtonText.classList.remove('d-none');
             }
+
+            return false;
         });
 
+        // 5. تتبع التغييرات
         form.addEventListener('input', () => bnUnsaved.markDirty());
-    }
 
-    async function mockPostRequest(data) {
-        console.log('POST Patient Data:', data);
-        return new Promise(resolve => setTimeout(() => resolve({ success: true }), 800));
+        // 6. إشعار ترحيبي
+        setTimeout(() => {
+            showToast('info', 'البيانات الشخصية',
+                'يمكنك عرض وتعديل المعلومات الشخصية للمريض هنا. يتم الحفظ تلقائياً أثناء الكتابة.',
+                5000);
+        }, 1000);
+
+        console.log('%c✅ Personal Info Tab Loaded & Bound',
+            'background:#0891b2;color:#fff;padding:6px 16px;border-radius:6px;font-weight:bold;font-size:12px;');
     }
 
     /* ============================================================
-       9. Init
+       9. Start
     ============================================================ */
     function doInit() {
-        loadPatientData();
-        bnAutoSave.init();
-        bnValidation.attachToForm(document.getElementById('personalInfoForm'));
-
-        // ✅ إشعار ترحيبي عند فتح التبويب (مثل Diagnosis)
-        setTimeout(() => {
-            showToast('info', 'البيانات الشخصية', 'يمكنك عرض وتعديل المعلومات الشخصية للمريض هنا. يتم الحفظ تلقائياً أثناء الكتابة.', 5000);
-        }, 1000);
-
-        console.log('%c✅ Personal Info Tab Loaded',
-            'background:#0891b2;color:#fff;padding:6px 16px;border-radius:6px;font-weight:bold;font-size:12px;');
+        waitForFormThenInit();
     }
 
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', doInit);
     } else {
-        doInit();
+        setTimeout(doInit, 50);
     }
+
 })();

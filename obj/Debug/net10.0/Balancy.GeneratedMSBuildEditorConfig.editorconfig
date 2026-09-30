@@ -83,6 +83,10 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = QXJlYXNcRG9jdG9yXFBhZ2VzXERhc2hib2FyZFxEYXNoYm9hcmQuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
+[D:/Projects/Asp.Net_Core_Projects/MicroservivesDepressionProject/Frondend/Balancy/Balancy/Areas/Doctor/Pages/DocumentManager/DocumentManager.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcRG9jdG9yXFBhZ2VzXERvY3VtZW50TWFuYWdlclxEb2N1bWVudE1hbmFnZXIuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
 [D:/Projects/Asp.Net_Core_Projects/MicroservivesDepressionProject/Frondend/Balancy/Balancy/Areas/Doctor/Pages/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = QXJlYXNcRG9jdG9yXFBhZ2VzXEluZGV4LmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
