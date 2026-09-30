@@ -1,0 +1,160 @@
+﻿@page
+@model Balancy.Areas.Doctor.Pages.Tabs.DoctorNotesModel
+@{
+    Layout = null;
+}
+
+<link rel="stylesheet" href="~/css/doctor/tabs/doctornotes.css" />
+
+<div class="doctornotes-container">
+
+    <section class="doctornotes-card">
+
+        <div class="form-card-header">
+            <div class="form-header-title">
+                <div class="form-header-icon">
+                    <i class="fa-solid fa-user-doctor"></i>
+                </div>
+                <div>
+                    <h1>ملاحظات الطبيب المعالج</h1>
+                    <p>توثيق شامل لملاحظات الطبيب المعالج</p>
+                </div>
+            </div>
+            <div class="edit-status">
+                <i class="fa-solid fa-clipboard-check"></i>
+                <span id="doctorNotesCountBadge">0 ملاحظة</span>
+            </div>
+        </div>
+
+        <div class="personal-form">
+
+            <!-- ====================== Form ====================== -->
+            <div class="doctor-note-form-card">
+                <h3 id="doctorNoteFormTitle" class="form-section-title">
+                    <i class="fa-solid fa-plus-circle"></i>
+                    إضافة ملاحظة طبية جديدة
+                </h3>
+
+                <form id="doctorNoteForm" novalidate>
+                    <input type="hidden" id="doctorNoteEditIndex" value="-1">
+
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <label for="doctorNoteTitle" class="form-label-custom">
+                                <i class="fa-solid fa-heading"></i>
+                                عنوان الملاحظة
+                            </label>
+                            <input type="text" class="form-control form-control-custom" id="doctorNoteTitle" name="doctorNoteTitle" placeholder="مثال: تقييم الحالة بعد الجلسة الثالثة" required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="doctorNoteDate" class="form-label-custom">
+                                <i class="fa-solid fa-calendar-days"></i>
+                                تاريخ الملاحظة
+                            </label>
+                            <input type="date" class="form-control form-control-custom" id="doctorNoteDate" name="doctorNoteDate" required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="doctorNoteCategory" class="form-label-custom">
+                                <i class="fa-solid fa-tags"></i>
+                                فئة الملاحظة
+                            </label>
+                            <select class="form-select form-control-custom" id="doctorNoteCategory" name="doctorNoteCategory">
+                                <option value="">اختر الفئة</option>
+                                <option value="تشخيص">تشخيص</option>
+                                <option value="خطة علاجية">خطة علاجية</option>
+                                <option value="تقييم نفسي">تقييم نفسي</option>
+                                <option value="تعديل دوائي">تعديل دوائي</option>
+                                <option value="توصيات">توصيات</option>
+                                <option value="متابعة">متابعة</option>
+                                <option value="ملاحظة إكلينيكية">ملاحظة إكلينيكية</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="doctorNotePriority" class="form-label-custom">
+                                <i class="fa-solid fa-flag"></i>
+                                أهمية الملاحظة
+                            </label>
+                            <select class="form-select form-control-custom" id="doctorNotePriority" name="doctorNotePriority">
+                                <option value="عادية">عادية</option>
+                                <option value="مهمة">مهمة</option>
+                                <option value="عاجلة">عاجلة</option>
+                            </select>
+                        </div>
+
+                        <div class="col-12">
+                            <label for="doctorNoteContent" class="form-label-custom">
+                                <i class="fa-solid fa-align-right"></i>
+                                محتوى الملاحظة الطبية
+                            </label>
+                            <textarea class="form-control form-control-custom" id="doctorNoteContent" name="doctorNoteContent" placeholder="اكتب تفاصيل الملاحظة الطبية كاملة..." style="min-height: 140px;" required></textarea>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2 justify-content-end mt-4 flex-wrap">
+                        <button type="button" id="doctorNoteCancelBtn" class="btn btn-secondary px-4 py-2 d-none" style="border-radius: 14px; font-weight: 800;" onclick="resetDoctorNoteForm()">
+                            <i class="fa-solid fa-xmark ms-1"></i>
+                            إلغاء التعديل
+                        </button>
+                        <button type="submit" id="doctorNoteSubmitBtn" class="btn-save">
+                            <i class="fa-solid fa-plus ms-1"></i>
+                            إضافة الملاحظة الطبية
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <hr class="form-divider">
+
+            <!-- ====================== Notes Grid ====================== -->
+            <div class="form-section-title mb-3">
+                <i class="fa-solid fa-list-check"></i>
+                قائمة الملاحظات الطبية المسجلة
+            </div>
+
+            <div class="doctor-notes-grid" id="doctorNotesGrid"></div>
+
+            <div id="doctorNotesEmptyState" class="text-center text-muted py-5 d-none">
+                <i class="fa-solid fa-folder-open fa-2x mb-3 text-secondary"></i>
+                <p class="fw-bold mb-0">لا توجد ملاحظات طبية مسجلة لهذا المريض حتى الآن.</p>
+            </div>
+
+        </div>
+
+    </section>
+
+</div>
+
+<!-- ============================================================
+     Confirm Modal
+============================================================ -->
+<div class="bn-modal-overlay" id="bnConfirmModal" role="dialog" aria-modal="true" aria-labelledby="bnConfirmModalTitle">
+    <div class="bn-modal bn-modal-danger">
+        <div class="bn-modal-header">
+            <div class="bn-modal-header-icon">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <div class="bn-modal-header-text">
+                <h3 id="bnConfirmModalTitle">تأكيد الحذف</h3>
+                <p id="bnConfirmModalSubtitle">لا يمكن التراجع عن هذه العملية</p>
+            </div>
+        </div>
+        <div class="bn-modal-body">
+            <p class="bn-modal-message" id="bnConfirmModalMessage">هل أنت متأكد؟</p>
+        </div>
+        <div class="bn-modal-footer">
+            <button type="button" class="bn-btn bn-btn-ghost" id="bnConfirmModalCancel">
+                <i class="fa-solid fa-xmark"></i>
+                إلغاء
+            </button>
+            <button type="button" class="bn-btn bn-btn-danger" id="bnConfirmModalConfirm">
+                <i class="fa-solid fa-trash"></i>
+                نعم، احذف
+            </button>
+        </div>
+    </div>
+</div>
+
+<script src="~/js/doctor/tabs/doctornotes.js"></script>

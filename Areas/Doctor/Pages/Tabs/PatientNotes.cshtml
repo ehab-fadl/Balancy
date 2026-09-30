@@ -1,0 +1,161 @@
+﻿@page
+@model Balancy.Areas.Doctor.Pages.Tabs.PatientNotesModel
+@{
+    Layout = null;
+}
+
+<link rel="stylesheet" href="~/css/doctor/tabs/patientnotes.css" />
+
+<div class="patientnotes-container">
+
+    <section class="patientnotes-card">
+
+        <div class="form-card-header">
+            <div class="form-header-title">
+                <div class="form-header-icon">
+                    <i class="fa-solid fa-note-sticky"></i>
+                </div>
+                <div>
+                    <h1>ملاحظات المريض</h1>
+                    <p>إدارة الملاحظات الإكلينيكية والسلوكية للمريض</p>
+                </div>
+            </div>
+            <div class="edit-status">
+                <i class="fa-solid fa-clipboard-list"></i>
+                <span id="notesCountBadge">0 ملاحظة</span>
+            </div>
+        </div>
+
+        <div class="personal-form">
+
+            <!-- ====================================================
+                 Form: Add / Edit Note
+            ===================================================== -->
+            <div class="note-form-card">
+                <h3 id="noteFormTitle" class="form-section-title">
+                    <i class="fa-solid fa-plus-circle"></i>
+                    إضافة ملاحظة جديدة
+                </h3>
+
+                <form id="patientNoteForm" novalidate>
+                    <input type="hidden" id="noteEditIndex" value="-1">
+
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <label for="noteTitle" class="form-label-custom">
+                                <i class="fa-solid fa-heading"></i>
+                                عنوان الملاحظة
+                            </label>
+                            <input type="text" class="form-control form-control-custom" id="noteTitle" name="noteTitle" placeholder="مثال: ملاحظة حول الحالة المزاجية" required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="noteDate" class="form-label-custom">
+                                <i class="fa-solid fa-calendar-days"></i>
+                                تاريخ الملاحظة
+                            </label>
+                            <input type="date" class="form-control form-control-custom" id="noteDate" name="noteDate" required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="noteCategory" class="form-label-custom">
+                                <i class="fa-solid fa-tag"></i>
+                                تصنيف الملاحظة
+                            </label>
+                            <select class="form-select form-control-custom" id="noteCategory" name="noteCategory">
+                                <option value="">اختر التصنيف</option>
+                                <option value="ملاحظة إكلينيكية">ملاحظة إكلينيكية</option>
+                                <option value="ملاحظة سلوكية">ملاحظة سلوكية</option>
+                                <option value="ملاحظة دوائية">ملاحظة دوائية</option>
+                                <option value="ملاحظة اجتماعية">ملاحظة اجتماعية</option>
+                                <option value="ملاحظة متابعة">ملاحظة متابعة</option>
+                                <option value="ملاحظة طارئة">ملاحظة طارئة</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="notePriority" class="form-label-custom">
+                                <i class="fa-solid fa-flag"></i>
+                                أولوية الملاحظة
+                            </label>
+                            <select class="form-select form-control-custom" id="notePriority" name="notePriority">
+                                <option value="عادية">عادية</option>
+                                <option value="مهمة">مهمة</option>
+                                <option value="عاجلة">عاجلة</option>
+                            </select>
+                        </div>
+
+                        <div class="col-12">
+                            <label for="noteContent" class="form-label-custom">
+                                <i class="fa-solid fa-align-right"></i>
+                                محتوى الملاحظة
+                            </label>
+                            <textarea class="form-control form-control-custom" id="noteContent" name="noteContent" placeholder="اكتب تفاصيل الملاحظة..." required></textarea>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2 justify-content-end mt-4 flex-wrap">
+                        <button type="button" id="noteCancelBtn" class="btn-secondary d-none" onclick="resetPatientNoteForm()">
+                            <i class="fa-solid fa-xmark"></i>
+                            إلغاء التعديل
+                        </button>
+                        <button type="submit" id="noteSubmitBtn" class="btn-save">
+                            <i class="fa-solid fa-plus"></i>
+                            إضافة الملاحظة
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- ====================================================
+                 Notes Grid
+            ===================================================== -->
+            <div class="form-section-title">
+                <i class="fa-solid fa-list-check"></i>
+                قائمة الملاحظات المسجلة
+            </div>
+
+            <div class="notes-grid" id="notesGrid"></div>
+
+            <div id="notesEmptyState" class="empty-state" style="display: none;">
+                <i class="fa-solid fa-folder-open"></i>
+                <p>لا توجد ملاحظات مسجلة لهذا المريض حتى الآن.</p>
+            </div>
+
+        </div>
+
+    </section>
+
+</div>
+
+<!-- ============================================================
+     Confirm Delete Modal
+============================================================ -->
+<div class="bn-modal-overlay" id="bnConfirmModal" role="dialog" aria-modal="true">
+    <div class="bn-modal">
+        <div class="bn-modal-header">
+            <div class="bn-modal-header-icon">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <div class="bn-modal-header-text">
+                <h3 id="bnConfirmModalTitle">تأكيد الحذف</h3>
+                <p id="bnConfirmModalSubtitle">لا يمكن التراجع عن هذه العملية</p>
+            </div>
+        </div>
+        <div class="bn-modal-body">
+            <p class="bn-modal-message" id="bnConfirmModalMessage">هل أنت متأكد؟</p>
+        </div>
+        <div class="bn-modal-footer">
+            <button type="button" class="bn-btn bn-btn-ghost" id="bnConfirmModalCancel">
+                <i class="fa-solid fa-xmark"></i>
+                إلغاء
+            </button>
+            <button type="button" class="bn-btn bn-btn-danger" id="bnConfirmModalConfirm">
+                <i class="fa-solid fa-trash"></i>
+                نعم، احذف
+            </button>
+        </div>
+    </div>
+</div>
+
+<script src="~/js/doctor/tabs/patientnotes.js"></script>

@@ -1,0 +1,173 @@
+﻿@page
+@model Balancy.Areas.Doctor.Pages.Appointments.AppointmentsModel
+@{
+}
+  <div class="page-wrapper">
+
+        <!-- Header -->
+        <section class="appointments-header">
+            <div class="header-content">
+                <div class="header-icon"><i class="fa-solid fa-calendar-days"></i></div>
+                <div class="header-text">
+                    <h1>نظام المواعيد</h1>
+                    <p>إدارة مواعيد المرضى القادمة والمتابعة الدورية</p>
+                </div>
+            </div>
+            <button type="button" class="btn-primary-action" id="addAppointmentBtn">
+                <i class="fa-solid fa-plus"></i>
+                إضافة موعد جديد
+            </button>
+        </section>
+
+        <!-- Stats -->
+        <section class="appointments-stats">
+            <div class="stat-card today">
+                <div class="stat-icon"><i class="fa-solid fa-calendar-check"></i></div>
+                <div class="stat-info">
+                    <span class="stat-label">مواعيد اليوم</span>
+                    <span class="stat-value" id="statToday">0</span>
+                </div>
+            </div>
+            <div class="stat-card week">
+                <div class="stat-icon"><i class="fa-solid fa-calendar-week"></i></div>
+                <div class="stat-info">
+                    <span class="stat-label">هذا الأسبوع</span>
+                    <span class="stat-value" id="statWeek">0</span>
+                </div>
+            </div>
+            <div class="stat-card month">
+                <div class="stat-icon"><i class="fa-solid fa-calendar"></i></div>
+                <div class="stat-info">
+                    <span class="stat-label">هذا الشهر</span>
+                    <span class="stat-value" id="statMonth">0</span>
+                </div>
+            </div>
+            <div class="stat-card overdue">
+                <div class="stat-icon"><i class="fa-solid fa-clock-rotate-left"></i></div>
+                <div class="stat-info">
+                    <span class="stat-label">مواعيد متأخرة</span>
+                    <span class="stat-value" id="statOverdue">0</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Filters -->
+        <div class="filter-bar">
+            <div class="filter-search">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="searchInput" placeholder="ابحث باسم المريض أو سبب الزيارة...">
+            </div>
+            <select class="filter-select" id="filterStatus">
+                <option value="all">كل الحالات</option>
+                <option value="today">اليوم</option>
+                <option value="upcoming">قادمة</option>
+                <option value="overdue">متأخرة</option>
+                <option value="past">منتهية</option>
+            </select>
+            <select class="filter-select" id="filterSort">
+                <option value="dateAsc">التاريخ (تصاعدي)</option>
+                <option value="dateDesc">التاريخ (تنازلي)</option>
+                <option value="nameAsc">الاسم (أ-ي)</option>
+            </select>
+        </div>
+
+        <!-- Appointments List -->
+        <div class="appointments-container" id="appointmentsContainer"></div>
+
+    </div>
+
+    <!-- Add/Edit Modal -->
+    <div class="bn-modal-overlay" id="appointmentModal">
+        <div class="bn-modal">
+            <div class="bn-modal-header">
+                <div class="bn-modal-header-icon">
+                    <i class="fa-solid fa-calendar-plus"></i>
+                </div>
+                <div class="bn-modal-header-text">
+                    <h3 id="modalTitle">إضافة موعد جديد</h3>
+                    <p id="modalSubtitle">املأ البيانات التالية لحجز الموعد</p>
+                </div>
+            </div>
+            <form id="appointmentForm" novalidate>
+                <div class="bn-modal-body">
+                    <input type="hidden" id="editId" value="">
+
+                    <div class="form-group">
+                        <label for="aptPatient"><i class="fa-solid fa-user"></i> اسم المريض</label>
+                        <input type="text" id="aptPatient" name="aptPatient" placeholder="مثال: أحمد محمد" required>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="aptDate"><i class="fa-solid fa-calendar-days"></i> تاريخ الموعد</label>
+                            <input type="date" id="aptDate" name="aptDate" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="aptTime"><i class="fa-solid fa-clock"></i> ساعة الموعد</label>
+                            <input type="time" id="aptTime" name="aptTime" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="aptReason"><i class="fa-solid fa-comment-medical"></i> سبب الزيارة</label>
+                        <input type="text" id="aptReason" name="aptReason" placeholder="مثال: متابعة دورية" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="aptNotes"><i class="fa-solid fa-note-sticky"></i> ملاحظات (اختياري)</label>
+                        <textarea id="aptNotes" name="aptNotes" rows="3" placeholder="ملاحظات إضافية..."></textarea>
+                    </div>
+                </div>
+                <div class="bn-modal-footer">
+                    <button type="button" class="bn-btn bn-btn-ghost" id="cancelBtn">
+                        <i class="fa-solid fa-xmark"></i> إلغاء
+                    </button>
+                    <button type="submit" class="bn-btn bn-btn-primary" id="saveBtn">
+                        <i class="fa-solid fa-floppy-disk"></i> حفظ الموعد
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Confirm Delete Modal -->
+    <div class="bn-modal-overlay" id="confirmModal">
+        <div class="bn-modal" style="max-width: 440px;">
+            <div class="bn-modal-header">
+                <div class="bn-modal-header-icon" style="background: #fee2e2; color: #ef4444;">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+                <div class="bn-modal-header-text">
+                    <h3>تأكيد الحذف</h3>
+                    <p>لا يمكن التراجع عن هذه العملية</p>
+                </div>
+            </div>
+            <div class="bn-modal-body">
+                <p id="confirmMessage" style="font-weight: 700;">هل أنت متأكد من حذف هذا الموعد؟</p>
+            </div>
+            <div class="bn-modal-footer">
+                <button type="button" class="bn-btn bn-btn-ghost" id="confirmCancel">
+                    <i class="fa-solid fa-xmark"></i> إلغاء
+                </button>
+                <button type="button" class="bn-btn bn-btn-primary" id="confirmDelete" style="background: linear-gradient(135deg, #ef4444, #dc2626);">
+                    <i class="fa-solid fa-trash"></i> نعم، احذف
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast-container">
+        <div id="notificationToast" class="toast-custom">
+            <div class="toast-body">
+                <div class="toast-icon-wrap" id="toastIcon"></div>
+                <div style="flex: 1;">
+                    <strong id="toastTitle"></strong>
+                    <div id="toastMessage" class="small"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+@section Scripts {
+    <script src="~/js/doctor/Appointments/Appointments.js" defer></script>
+}

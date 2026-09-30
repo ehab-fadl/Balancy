@@ -1,0 +1,104 @@
+﻿@page
+@model Balancy.Areas.Doctor.Pages.Tabs.Phq9Model
+@{
+    Layout = null;
+}
+
+<link rel="stylesheet" href="~/css/doctor/tabs/phq9.css" />
+
+<div class="phq-container">
+
+    <!-- ============================================================
+         PHQ Header
+    ============================================================ -->
+    <section class="phq-header">
+        <div class="phq-header-content">
+            <div class="phq-title-section">
+                <div class="phq-icon"><i class="fa-solid fa-face-frown"></i></div>
+                <div>
+                    <h1>مقياس الاكتئاب العام PHQ-9</h1>
+                    <p>تقييم شدة أعراض الاكتئاب خلال الأسابيع الأربعة الماضية</p>
+                </div>
+            </div>
+            <div class="phq-range">
+                <small>نطاق النتيجة</small>
+                <strong>0 - 27</strong>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         Intro Card
+    ============================================================ -->
+    <section class="intro-card">
+        <div class="intro-icon"><i class="fa-solid fa-circle-info"></i></div>
+        <div>
+            <h3>تعليمات الإجابة</h3>
+            <p>على مدار الأسبوعين الماضيين، ما مدى تكرار تعرضك لأي من المشكلات التالية؟ يرجى تحديد الخيار المناسب لكل سؤال.</p>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         Questions Card
+    ============================================================ -->
+    <section class="questions-card">
+        <form id="phqForm" data-autosave="phq9Draft" novalidate>
+
+            <div id="phqQuestionsContainer"></div>
+
+            <section class="result-card" id="phqResultCard">
+                <div class="result-main">
+                    <div class="score-display">
+                        <div class="score-circle">
+                            <span class="score-number" id="phqTotalScore">0</span>
+                            <span class="score-max">من 27</span>
+                        </div>
+                        <div class="result-info">
+                            <h3>نتيجة مقياس الاكتئاب العام</h3>
+                            <p id="phqResultDescription">سيتم عرض تصنيف النتيجة هنا.</p>
+                        </div>
+                    </div>
+                    <div class="severity-badge" id="phqSeverityBadge">لم يتم التقييم</div>
+                </div>
+
+                <div class="progress-wrapper">
+                    <div class="progress-label">
+                        <span>مستوى النتيجة</span>
+                        <span id="phqProgressPercentage">0%</span>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar" id="phqScoreProgress" style="width: 0%"></div>
+                    </div>
+                </div>
+            </section>
+
+            <div class="phq-actions">
+                <div class="answers-status" id="phqAnswersStatus">تمت الإجابة على 0 من 9 أسئلة</div>
+                <button type="button" class="btn-calculate" id="phqCalculateButton">
+                    <i class="fa-solid fa-calculator"></i>
+                    حساب النتيجة
+                </button>
+            </div>
+
+            <div class="save-section" id="phqSaveSection">
+                <button type="submit" class="btn-save-phq" id="savePhqButton">
+                    <span id="savePhqButtonText">
+                        <i class="fa-solid fa-floppy-disk"></i>
+                        حفظ نتيجة الاختبار
+                    </span>
+                    <span id="savePhqSpinner" class="d-none">
+                        <span class="spinner-border spinner-border-sm"></span>
+                        جاري الحفظ...
+                    </span>
+                </button>
+            </div>
+
+        </form>
+    </section>
+
+</div>
+
+<!-- Confetti -->
+<div class="bn-confetti" id="bnConfetti" aria-hidden="true"></div>
+
+<script src="~/js/doctor/tabs/phq9.js"></script>

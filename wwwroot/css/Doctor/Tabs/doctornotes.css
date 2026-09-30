@@ -1,0 +1,973 @@
+﻿/* ============================================================
+   Doctor Notes Tab — Styles
+============================================================ */
+
+/* -------- Theme Variables (Indigo theme) -------- */
+.doctornotes-container {
+    --bn-primary: #0891b2;
+    --bn-primary-dark: #0e7490;
+    --bn-primary-light: #cffafe;
+    --bn-secondary: #6366f1;
+    --bn-accent: #f59e0b;
+    --bn-success: #10b981;
+    --bn-success-light: #d1fae5;
+    --bn-warning: #f59e0b;
+    --bn-warning-light: #fef3c7;
+    --bn-danger: #ef4444;
+    --bn-danger-light: #fee2e2;
+    --bn-text: #1e293b;
+    --bn-text-soft: #475569;
+    --bn-text-muted: #94a3b8;
+    --bn-border: #e2e8f0;
+    --bn-glass: rgba(255, 255, 255, 0.88);
+    --bn-surface: #ffffff;
+    --bn-surface-soft: #f8fafc;
+    --bn-shadow-sm: 0 4px 24px -4px rgba(0, 0, 0, 0.04);
+    --bn-shadow-md: 0 8px 30px -12px rgba(15, 23, 42, 0.1);
+    --bn-shadow-lg: 0 25px 60px -20px rgba(15, 23, 42, 0.35);
+    --bn-transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    --bn-focus-ring: 0 0 0 4px var(--bn-primary-light);
+    --bn-gradient-primary: linear-gradient(135deg, #4338ca, #6366f1);
+    --bn-gradient-danger: linear-gradient(135deg, var(--bn-danger), #dc2626);
+    width: 100%;
+    animation: dn-slideUpFade 0.6s ease;
+}
+
+[data-theme="dark"] .doctornotes-container {
+    --bn-primary: #22d3ee;
+    --bn-primary-dark: #06b6d4;
+    --bn-primary-light: #164e63;
+    --bn-secondary: #818cf8;
+    --bn-accent: #fbbf24;
+    --bn-success: #34d399;
+    --bn-success-light: #064e3b;
+    --bn-warning: #fbbf24;
+    --bn-warning-light: #78350f;
+    --bn-danger: #f87171;
+    --bn-danger-light: #7f1d1d;
+    --bn-text: #f1f5f9;
+    --bn-text-soft: #cbd5e1;
+    --bn-text-muted: #94a3b8;
+    --bn-border: #334155;
+    --bn-glass: rgba(30, 41, 59, 0.88);
+    --bn-surface: #1e293b;
+    --bn-surface-soft: #0f172a;
+    --bn-shadow-sm: 0 4px 24px -4px rgba(0, 0, 0, 0.4);
+    --bn-shadow-md: 0 8px 30px -12px rgba(0, 0, 0, 0.5);
+    --bn-shadow-lg: 0 25px 60px -20px rgba(0, 0, 0, 0.7);
+    --bn-focus-ring: 0 0 0 4px rgba(34, 211, 238, 0.25);
+}
+
+.doctornotes-container input,
+.doctornotes-container textarea,
+.doctornotes-container select,
+.doctornotes-container .form-control-custom {
+    color-scheme: light;
+}
+
+[data-theme="dark"] .doctornotes-container input,
+[data-theme="dark"] .doctornotes-container textarea,
+[data-theme="dark"] .doctornotes-container select,
+[data-theme="dark"] .doctornotes-container .form-control-custom {
+    color-scheme: dark;
+}
+
+/* ============================================================
+   Animations
+============================================================ */
+@keyframes dn-slideUpFade {
+    from {
+        opacity: 0;
+        transform: translateY(25px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes dn-modalPop {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.96);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes dn-fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes dn-validPulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+    }
+
+    70% {
+        box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+    }
+}
+
+@keyframes dn-invalidShake {
+    0%, 100% {
+        transform: translateX(0);
+    }
+
+    20% {
+        transform: translateX(-6px);
+    }
+
+    40% {
+        transform: translateX(6px);
+    }
+
+    60% {
+        transform: translateX(-4px);
+    }
+
+    80% {
+        transform: translateX(4px);
+    }
+}
+
+@keyframes dn-confetti-fall {
+    0% {
+        transform: translateY(-100vh) rotate(0deg);
+        opacity: 1;
+    }
+
+    100% {
+        transform: translateY(100vh) rotate(720deg);
+        opacity: 0;
+    }
+}
+
+@keyframes dn-shimmer {
+    0% {
+        background-position: -1000px 0;
+    }
+
+    100% {
+        background-position: 1000px 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .doctornotes-container *,
+    .doctornotes-container *::before,
+    .doctornotes-container *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* ============================================================
+   Card (Base)
+============================================================ */
+.doctornotes-container .doctornotes-card {
+    background: var(--bn-glass);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    border: 1px solid var(--bn-border);
+    border-radius: 24px;
+    box-shadow: var(--bn-shadow-sm);
+    overflow: hidden;
+    transition: background 0.35s ease, border-color 0.35s ease, box-shadow var(--bn-transition);
+}
+
+    .doctornotes-container .doctornotes-card:hover {
+        box-shadow: var(--bn-shadow-md);
+    }
+
+.doctornotes-container .form-card-header {
+    padding: 1.5rem 1.75rem;
+    border-bottom: 1px solid var(--bn-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    background: linear-gradient(135deg, transparent, rgba(8, 145, 178, 0.03));
+}
+
+.doctornotes-container .form-header-title {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.doctornotes-container .form-header-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #e0e7ff;
+    color: #4338ca;
+    font-size: 1.3rem;
+    transition: all var(--bn-transition);
+}
+
+[data-theme="dark"] .doctornotes-container .form-header-icon {
+    background: #312e81;
+    color: #a5b4fc;
+}
+
+.doctornotes-container .form-header-title:hover .form-header-icon {
+    transform: rotate(-6deg) scale(1.08);
+}
+
+.doctornotes-container .form-header-title h1 {
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 900;
+    color: var(--bn-text);
+}
+
+.doctornotes-container .form-header-title p {
+    margin: 0.25rem 0 0;
+    color: var(--bn-text-muted);
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
+.doctornotes-container .edit-status {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    color: #4338ca;
+    background: rgba(67, 56, 202, 0.08);
+    padding: 0.45rem 0.85rem;
+    border-radius: 50px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    white-space: nowrap;
+    transition: all var(--bn-transition);
+}
+
+    .doctornotes-container .edit-status:hover {
+        background: rgba(67, 56, 202, 0.15);
+        transform: scale(1.03);
+    }
+
+[data-theme="dark"] .doctornotes-container .edit-status {
+    background: rgba(129, 140, 248, 0.12);
+    color: #a5b4fc;
+}
+
+.doctornotes-container .personal-form {
+    padding: 1.75rem;
+}
+
+.doctornotes-container .form-section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.95rem;
+    font-weight: 900;
+    color: var(--bn-text);
+    margin-bottom: 1.25rem;
+}
+
+    .doctornotes-container .form-section-title i {
+        color: var(--bn-primary);
+    }
+
+.doctornotes-container .form-label-custom {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.82rem;
+    font-weight: 800;
+    color: var(--bn-text-soft);
+    margin-bottom: 0.55rem;
+    transition: color var(--bn-transition);
+}
+
+    .doctornotes-container .form-label-custom i {
+        color: var(--bn-primary);
+        font-size: 0.78rem;
+        transition: transform var(--bn-transition);
+    }
+
+.doctornotes-container .col-md-6:focus-within .form-label-custom,
+.doctornotes-container .col-md-12:focus-within .form-label-custom,
+.doctornotes-container .col-12:focus-within .form-label-custom {
+    color: var(--bn-primary);
+}
+
+    .doctornotes-container .col-md-6:focus-within .form-label-custom i,
+    .doctornotes-container .col-md-12:focus-within .form-label-custom i,
+    .doctornotes-container .col-12:focus-within .form-label-custom i {
+        transform: scale(1.2);
+    }
+
+.doctornotes-container .form-control-custom {
+    min-height: 50px;
+    border: 2px solid var(--bn-border);
+    border-radius: 14px;
+    font-family: 'Tajawal', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--bn-text);
+    background: var(--bn-surface);
+    padding: 0.7rem 1rem;
+    transition: all var(--bn-transition);
+    width: 100%;
+}
+
+    .doctornotes-container .form-control-custom:hover:not(:focus):not(.is-valid):not(.is-invalid) {
+        border-color: rgba(8, 145, 178, 0.4);
+    }
+
+    .doctornotes-container .form-control-custom:focus {
+        border-color: var(--bn-primary);
+        box-shadow: var(--bn-focus-ring);
+        background: var(--bn-surface);
+        transform: translateY(-1px);
+        outline: none;
+    }
+
+.doctornotes-container textarea.form-control-custom {
+    min-height: 110px;
+    resize: vertical;
+}
+
+.doctornotes-container .form-select.form-control-custom {
+    cursor: pointer;
+}
+
+.doctornotes-container .form-divider {
+    border: 0;
+    border-top: 1px solid var(--bn-border);
+    margin: 2rem 0;
+}
+
+/* ============================================================
+   Buttons
+============================================================ */
+.doctornotes-container .btn-save {
+    min-width: 180px;
+    border: none;
+    border-radius: 14px;
+    padding: 0.85rem 1.5rem;
+    background: linear-gradient(135deg, #4338ca, #6366f1);
+    color: white;
+    font-family: 'Tajawal', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 900;
+    box-shadow: 0 8px 20px -6px rgba(67, 56, 202, 0.45);
+    transition: all var(--bn-transition);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    position: relative;
+    overflow: hidden;
+}
+
+    .doctornotes-container .btn-save::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+        background-size: 200% 100%;
+        opacity: 0;
+        transition: opacity var(--bn-transition);
+    }
+
+    .doctornotes-container .btn-save:hover:not(:disabled) {
+        transform: translateY(-3px);
+        box-shadow: 0 15px 32px -10px rgba(67, 56, 202, 0.6);
+    }
+
+        .doctornotes-container .btn-save:hover:not(:disabled)::after {
+            opacity: 1;
+            animation: dn-shimmer 1.5s ease-in-out infinite;
+        }
+
+    .doctornotes-container .btn-save:active:not(:disabled) {
+        transform: translateY(-1px);
+    }
+
+    .doctornotes-container .btn-save:disabled {
+        opacity: 0.75;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+.doctornotes-container .btn-secondary {
+    border: none;
+    border-radius: 14px;
+    padding: 0.75rem 1.4rem;
+    background: var(--bn-surface-soft);
+    color: var(--bn-text-soft);
+    font-family: 'Tajawal', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all var(--bn-transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+    .doctornotes-container .btn-secondary:hover {
+        background: var(--bn-border);
+        transform: translateY(-2px);
+    }
+
+/* ============================================================
+   Doctor Note Form Card
+============================================================ */
+.doctornotes-container .doctor-note-form-card {
+    background: linear-gradient(135deg, var(--bn-surface-soft), var(--bn-surface));
+    border: 1px solid var(--bn-border);
+    border-radius: 20px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    transition: all var(--bn-transition);
+    position: relative;
+    overflow: hidden;
+}
+
+    .doctornotes-container .doctor-note-form-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 4px;
+        height: 100%;
+        background: linear-gradient(180deg, #4338ca, #6366f1);
+        opacity: 0;
+        transition: opacity var(--bn-transition);
+    }
+
+    .doctornotes-container .doctor-note-form-card:hover::before {
+        opacity: 1;
+    }
+
+    .doctornotes-container .doctor-note-form-card:hover {
+        box-shadow: var(--bn-shadow-md);
+        transform: translateY(-2px);
+    }
+
+/* ============================================================
+   Doctor Notes Grid & Cards
+============================================================ */
+.doctornotes-container .doctor-notes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1rem;
+}
+
+.doctornotes-container .doctor-note-card {
+    background: var(--bn-surface);
+    border: 1px solid var(--bn-border);
+    border-radius: 18px;
+    padding: 1.25rem;
+    transition: all var(--bn-transition);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    cursor: default;
+}
+
+    .doctornotes-container .doctor-note-card:hover {
+        border-color: #a5b4fc;
+        box-shadow: 0 12px 30px -15px rgba(99, 102, 241, 0.3);
+        transform: translateY(-5px) scale(1.01);
+    }
+
+    .doctornotes-container .doctor-note-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 6px;
+        height: 100%;
+        transition: width var(--bn-transition);
+    }
+
+    .doctornotes-container .doctor-note-card:hover::before {
+        width: 8px;
+    }
+
+    .doctornotes-container .doctor-note-card.doctor-note-priority-normal::before {
+        background: linear-gradient(180deg, #6366f1, #818cf8);
+    }
+
+    .doctornotes-container .doctor-note-card.doctor-note-priority-important::before {
+        background: linear-gradient(180deg, #f59e0b, #fbbf24);
+    }
+
+    .doctornotes-container .doctor-note-card.doctor-note-priority-urgent::before {
+        background: linear-gradient(180deg, #ef4444, #f87171);
+    }
+
+.doctornotes-container .doctor-note-card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.85rem;
+}
+
+.doctornotes-container .doctor-note-title {
+    font-size: 1rem;
+    font-weight: 900;
+    color: var(--bn-text);
+    margin: 0;
+    line-height: 1.4;
+    flex: 1;
+}
+
+.doctornotes-container .doctor-note-priority-badge {
+    padding: 0.3rem 0.7rem;
+    border-radius: 50px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.doctornotes-container .doctor-note-priority-normal {
+    background: #e0e7ff;
+    color: #4338ca;
+}
+
+.doctornotes-container .doctor-note-priority-important {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.doctornotes-container .doctor-note-priority-urgent {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+[data-theme="dark"] .doctornotes-container .doctor-note-priority-normal {
+    background: #312e81;
+    color: #a5b4fc;
+}
+
+[data-theme="dark"] .doctornotes-container .doctor-note-priority-important {
+    background: #78350f;
+    color: #fcd34d;
+}
+
+[data-theme="dark"] .doctornotes-container .doctor-note-priority-urgent {
+    background: #7f1d1d;
+    color: #fca5a5;
+}
+
+.doctornotes-container .doctor-note-category {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    background: #eef2ff;
+    color: #4338ca;
+    padding: 0.25rem 0.65rem;
+    border-radius: 50px;
+    font-size: 0.72rem;
+    font-weight: 800;
+    margin-bottom: 0.75rem;
+    width: fit-content;
+}
+
+[data-theme="dark"] .doctornotes-container .doctor-note-category {
+    background: #312e81;
+    color: #a5b4fc;
+}
+
+.doctornotes-container .doctor-note-content {
+    font-size: 0.85rem;
+    color: var(--bn-text-soft);
+    line-height: 1.7;
+    margin-bottom: 0.85rem;
+    flex: 1;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+.doctornotes-container .doctor-note-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding-top: 0.85rem;
+    border-top: 1px solid var(--bn-border);
+    margin-top: auto;
+}
+
+.doctornotes-container .doctor-note-date {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.72rem;
+    color: var(--bn-text-muted);
+    font-weight: 700;
+}
+
+.doctornotes-container .doctor-note-actions {
+    display: flex;
+    gap: 0.4rem;
+}
+
+    .doctornotes-container .doctor-note-actions .btn {
+        border-radius: 10px;
+        padding: 0.3rem 0.6rem;
+        font-size: 0.75rem;
+        transition: all var(--bn-transition);
+    }
+
+        .doctornotes-container .doctor-note-actions .btn:hover {
+            transform: translateY(-2px) scale(1.08);
+        }
+
+.doctornotes-container .btn-outline-primary {
+    color: var(--bn-primary);
+    border-color: var(--bn-primary);
+}
+
+    .doctornotes-container .btn-outline-primary:hover {
+        background: var(--bn-primary);
+        color: white;
+    }
+
+.doctornotes-container .btn-outline-danger {
+    color: var(--bn-danger);
+    border-color: var(--bn-danger);
+}
+
+    .doctornotes-container .btn-outline-danger:hover {
+        background: var(--bn-danger);
+        color: white;
+    }
+
+/* ============================================================
+   Empty State
+============================================================ */
+.doctornotes-container .empty-state {
+    text-align: center;
+    padding: 2.5rem 1rem;
+    color: var(--bn-text-muted);
+}
+
+    .doctornotes-container .empty-state i {
+        font-size: 2.5rem;
+        opacity: 0.4;
+        margin-bottom: 0.75rem;
+    }
+
+    .doctornotes-container .empty-state p {
+        font-weight: 700;
+        font-size: 0.88rem;
+        margin: 0;
+    }
+
+/* ============================================================
+   Validation
+============================================================ */
+.doctornotes-container .form-control-custom {
+    transition: border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+}
+
+    .doctornotes-container .form-control-custom.is-valid {
+        border-color: var(--bn-success) !important;
+        padding-left: 2.75rem;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%2310b981'%3E%3Cpath d='M12.736 3.97a.733.733 0 0 1 1.047 0c.286.289.29.756.01 1.05L7.88 12.01a.733.733 0 0 1-1.065.02L3.217 8.384a.757.757 0 0 1 0-1.06.733.733 0 0 1 1.047 0l3.052 3.093 5.4-6.425a.247.247 0 0 1 .02-.022Z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: left 0.9rem center;
+        background-size: 1.1rem;
+        animation: dn-validPulse 0.4s ease;
+    }
+
+    .doctornotes-container .form-control-custom.is-invalid {
+        border-color: var(--bn-danger) !important;
+        padding-left: 2.75rem;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23ef4444'%3E%3Cpath d='M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z'/%3E%3Cpath d='M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0zM7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 4.995z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: left 0.9rem center;
+        background-size: 1.1rem;
+        animation: dn-invalidShake 0.4s ease;
+    }
+
+.doctornotes-container .bn-field-message {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    margin-top: 0.45rem;
+    padding: 0;
+    opacity: 0;
+    max-height: 0;
+    overflow: hidden;
+    transition: opacity 0.25s ease, max-height 0.25s ease, margin 0.25s ease;
+}
+
+    .doctornotes-container .bn-field-message.show {
+        opacity: 1;
+        max-height: 60px;
+        margin-top: 0.45rem;
+    }
+
+    .doctornotes-container .bn-field-message.error {
+        color: var(--bn-danger);
+    }
+
+    .doctornotes-container .bn-field-message.success {
+        color: var(--bn-success);
+    }
+
+    .doctornotes-container .bn-field-message.warning {
+        color: var(--bn-warning);
+    }
+
+    .doctornotes-container .bn-field-message i {
+        font-size: 0.75rem;
+        flex-shrink: 0;
+    }
+
+.doctornotes-container .form-label-custom.required::after {
+    content: " *";
+    color: var(--bn-danger);
+    font-weight: 900;
+    margin-inline-start: 0.15rem;
+}
+
+/* ============================================================
+   Confirm Modal
+============================================================ */
+.doctornotes-container ~ .bn-modal-overlay,
+.bn-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.55);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    padding: 1rem;
+    animation: dn-fadeIn 0.2s ease;
+}
+
+    .doctornotes-container ~ .bn-modal-overlay.show,
+    .bn-modal-overlay.show {
+        display: flex;
+    }
+
+.bn-modal {
+    background: var(--bn-surface, #ffffff);
+    border-radius: 22px;
+    width: 100%;
+    max-width: 520px;
+    box-shadow: var(--bn-shadow-lg, 0 25px 60px -20px rgba(15, 23, 42, 0.35));
+    overflow: hidden;
+    animation: dn-modalPop 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+    border: 1px solid var(--bn-border, #e2e8f0);
+}
+
+.bn-modal-header {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--bn-border, #e2e8f0);
+    background: var(--bn-surface-soft, #f8fafc);
+}
+
+.bn-modal-header-icon {
+    width: 46px;
+    height: 46px;
+    min-width: 46px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bn-primary-light, #cffafe);
+    color: var(--bn-primary-dark, #0e7490);
+    font-size: 1.15rem;
+}
+
+.bn-modal.bn-modal-danger .bn-modal-header-icon {
+    background: var(--bn-danger-light, #fee2e2);
+    color: var(--bn-danger, #ef4444);
+}
+
+.bn-modal-header-text h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 900;
+    color: var(--bn-text, #1e293b);
+}
+
+.bn-modal-header-text p {
+    margin: 0.15rem 0 0;
+    font-size: 0.75rem;
+    color: var(--bn-text-muted, #94a3b8);
+    font-weight: 600;
+}
+
+.bn-modal-body {
+    padding: 1.5rem;
+}
+
+.bn-modal-message {
+    font-size: 0.9rem;
+    color: var(--bn-text-soft, #475569);
+    line-height: 1.8;
+    font-weight: 600;
+}
+
+    .bn-modal-message strong {
+        color: var(--bn-text, #1e293b);
+        font-weight: 900;
+    }
+
+.bn-modal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.6rem;
+    padding: 1rem 1.5rem 1.4rem;
+}
+
+.bn-btn {
+    border: none;
+    border-radius: 14px;
+    padding: 0.7rem 1.4rem;
+    font-family: 'Tajawal', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 900;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.bn-btn-ghost {
+    background: var(--bn-surface-soft, #f8fafc);
+    color: var(--bn-text-soft, #475569);
+}
+
+    .bn-btn-ghost:hover {
+        background: var(--bn-border, #e2e8f0);
+        transform: translateY(-2px);
+    }
+
+.bn-btn-primary {
+    background: var(--bn-gradient-primary, linear-gradient(135deg, #0891b2, #0e7490));
+    color: #fff;
+    box-shadow: 0 8px 20px -8px rgba(8, 145, 178, 0.55);
+}
+
+    .bn-btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 25px -8px rgba(8, 145, 178, 0.65);
+    }
+
+.bn-btn-danger {
+    background: var(--bn-gradient-danger, linear-gradient(135deg, #ef4444, #dc2626));
+    color: #fff;
+    box-shadow: 0 8px 20px -8px rgba(239, 68, 68, 0.55);
+}
+
+    .bn-btn-danger:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 25px -8px rgba(239, 68, 68, 0.65);
+    }
+
+/* ============================================================
+   Toast — يُدار بالكامل من index.css
+   ⚠️ لا نضع قواعد .toast-container هنا لتجنب التعارض
+============================================================ */
+
+/* ============================================================
+   Responsive
+============================================================ */
+@media (max-width: 767px) {
+    .doctornotes-container .form-card-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .doctornotes-container .doctor-notes-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .doctornotes-container .personal-form {
+        padding: 1.25rem;
+    }
+
+    .doctornotes-container .form-card-header {
+        padding: 1.25rem;
+    }
+
+    .doctornotes-container .doctor-note-form-card {
+        padding: 1.25rem;
+    }
+}
+
+@media (max-width: 575px) {
+    .doctornotes-container .personal-form {
+        padding: 1rem;
+    }
+
+    .doctornotes-container .form-card-header {
+        padding: 1rem;
+    }
+
+    .doctornotes-container .doctor-note-form-card {
+        padding: 1rem;
+    }
+
+    .doctornotes-container .bn-field-message {
+        font-size: 0.72rem;
+    }
+}
+
+@media print {
+    .doctornotes-container .doctor-note-form-card,
+    .doctornotes-container .btn-save,
+    .doctornotes-container .btn-secondary,
+    .doctornotes-container .edit-status,
+    .doctornotes-container .doctor-note-actions,
+    .bn-modal-overlay,
+    .bn-confetti {
+        display: none !important;
+    }
+
+    .doctornotes-container .doctornotes-card {
+        box-shadow: none !important;
+        border: 1px solid #ccc !important;
+    }
+
+    .doctornotes-container .doctor-note-card {
+        box-shadow: none !important;
+        border: 1px solid #ccc !important;
+        page-break-inside: avoid;
+    }
+}

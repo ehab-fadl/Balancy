@@ -15,7 +15,40 @@
     <!-- Google Fonts: Tajawal -->
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
     <link href="~/css/doctor/index.css" rel="stylesheet" />
+    <link href="~/css/doctor/layout.css" rel="stylesheet" />
+    <link href="~/css/doctor/patientdetails.css" rel="stylesheet" />
+    <link href="~/css/doctor/tabs/personalinfo.css" rel="stylesheet" />
+    <link href="~/css/doctor/tabs/depressionstory.css" rel="stylesheet" />
+    <link href="~/css/doctor/tabs/chronicdiseases.css" rel="stylesheet" />
+    <link href="~/css/doctor/tabs/chronicpsych.css" rel="stylesheet" />
+    <link href="~/css/doctor/tabs/phq9.css" rel="stylesheet" />
+    <link href="~/css/doctor/tabs/gad7.css" rel="stylesheet" />
+    <link href="~/css/doctor/tabs/mdq.css" rel="stylesheet" />
+    <link href="~/css/doctor/tabs/sds.css" rel="stylesheet" />
+    <link href="~/css/doctor/tabs/cssrs.css" rel="stylesheet" />
+    <link href="~/css/doctor/tabs/diagnosis.css" rel="stylesheet" />
+    <link href="~/css/doctor/tabs/medications.css" rel="stylesheet" />
+    <link href="~/css/doctor/tabs/treatmentplans.css" rel="stylesheet" />
+    <link href="~/css/doctor/tabs/sideeffects.css" rel="stylesheet" />
+    <link href="~/css/doctor/tabs/visits.css" rel="stylesheet" />
+    <link href="~/css/doctor/tabs/substanceuse.css" rel="stylesheet" />
+    <link href="~/css/doctor/tabs/ListeningSessions.css" rel="stylesheet" />
+    <link href="~/css/doctor/tabs/patientnotes.css" rel="stylesheet" />
+    <link href="~/css/doctor/tabs/doctornotes.css" rel="stylesheet" />
+    <link href="~/css/doctor/tabs/vitalsigns.css" rel="stylesheet" />
+    <link href="~/css/doctor/tabs/familyhistory.css" rel="stylesheet" />
+    <link href="~/css/doctor/Statistic.css" rel="stylesheet" />
+    <link href="~/css/doctor/NewPatient/AddPatient.css" rel="stylesheet" />
+    <link href="~/css/doctor/NewPatient/PersonalData.css" rel="stylesheet" />
+    <link href="~/css/doctor/AllPatient/AllPatientListe.css" rel="stylesheet" />
+    <link href="~/css/doctor/ClinicStatistics/ClinicStatistics.css" rel="stylesheet" />
+    <link href="~/css/doctor/Alerts/Alert.css" rel="stylesheet" />
+    <link href="~/css/doctor/Dashboard/Dashboard.css" rel="stylesheet" />
+    <link href="~/css/doctor/Appointments/Appointments.css" rel="stylesheet" />
+  
+
 </head>
+@await RenderSectionAsync("Scripts", required: false)
 <body>
     <!-- عنصر التنبيه بالشبكة (يظهر في كل الصفحات) -->
     <div id="globalNetworkAlert" style="display: none; position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 99999; min-width: 300px; max-width: 90%; background-color: #dc3545; color: white; padding: 12px 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); text-align: center; font-weight: 600; direction: rtl;">
@@ -62,28 +95,87 @@
 
            
 
-            <div class="collapse navbar-collapse" id="balancyNav">
-                <ul class="navbar-nav balancy-nav mx-auto mb-2 mb-lg-0">
-                    <li class="nav-item">
-                        <a class="nav-link" href="#" onclick="showComingSoon()">
-                            <i class="fa-solid fa-user-plus"></i>
-                            إضافة مريض
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#" onclick="showComingSoon()">
-                            <i class="fa-solid fa-users"></i>
-                            عرض جميع المرضى
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#" onclick="showComingSoon()">
-                            <i class="fa-solid fa-chart-pie"></i>
-                            إحصائيات العيادة
-                        </a>
-                    </li>
-                </ul>
+        <div class="collapse navbar-collapse" id="balancyNav">
+    <ul class="navbar-nav balancy-nav mx-auto mb-2 mb-lg-0">
 
+        @{
+            var currentPage = ViewContext.RouteData.Values["page"]?.ToString() ?? "";
+        }
+
+        <!-- الرئيسية -->
+        <li class="nav-item">
+            <a href="/Doctor/"
+               class="nav-link @(currentPage == "/Index" || currentPage == "/Doctor/Index" ? "active" : "")"
+               aria-label="العودة إلى الصفحة الرئيسية"
+               title="الصفحة الرئيسية">
+                <i class="fa-solid fa-house"></i>
+                <span class="nav-text">الرئيسية</span>
+            </a>
+        </li>
+
+        <!-- إضافة مريض -->
+        <li class="nav-item">
+            <a class="nav-link @(currentPage.Contains("/NewPatient/AddPatient") ? "active" : "")"
+               asp-page="/NewPatient/AddPatient"
+               title="إضافة مريض">
+                <i class="fa-solid fa-user-plus"></i>
+                <span class="nav-text">إضافة مريض</span>
+            </a>
+        </li>
+
+        <!-- عرض جميع المرضى -->
+        <li class="nav-item">
+            <a class="nav-link @(currentPage.Contains("/AllPatient/AllPatientListe") ? "active" : "")"
+               asp-page="/AllPatient/AllPatientListe"
+               title="عرض جميع المرضى">
+                <i class="fa-solid fa-users"></i>
+                <span class="nav-text">المرضى</span>
+            </a>
+        </li>
+
+        <!-- إحصائيات العيادة -->
+        <li class="nav-item">
+            <a class="nav-link @(currentPage.Contains("/ClinicStatistics/ClinicStatistics") ? "active" : "")"
+               asp-page="/ClinicStatistics/ClinicStatistics"
+               title="إحصائيات العيادة">
+                <i class="fa-solid fa-chart-pie"></i>
+                <span class="nav-text">الإحصائيات</span>
+            </a>
+        </li>
+
+        <!-- التنبيهات -->
+        <li class="nav-item">
+            <a class="nav-link @(currentPage.Contains("/Alerts/Alert") ? "active" : "")"
+               asp-page="/Alerts/Alert"
+               title="التنبيهات">
+                <i class="fa-solid fa-bell"></i>
+                <span class="nav-text">التنبيهات</span>
+                <span class="nav-badge" id="navbarAlertsBadge">0</span>
+            </a>
+        </li>
+
+        <!-- لوحة التحكم اليومية -->
+        <li class="nav-item">
+            <a class="nav-link @(currentPage.Contains("/Dashboard/Dashboard") ? "active" : "")"
+               asp-page="/Dashboard/Dashboard"
+               title="لوحة التحكم اليومية">
+                <i class="fa-solid fa-gauge-high"></i>
+                <span class="nav-text">لوحة التحكم</span>
+            </a>
+        </li>
+
+        <!-- إدارة المواعيد -->
+        <li class="nav-item">
+            <a class="nav-link @(currentPage.Contains("/Appointments/Appointments") ? "active" : "")"
+               asp-page="/Appointments/Appointments"
+               title="إدارة المواعيد">
+                <i class="fa-solid fa-calendar-days"></i>
+                <span class="nav-text">المواعيد</span>
+            </a>
+        </li>
+
+    </ul>
+</div>
                 @if (User.Identity != null && User.Identity.IsAuthenticated)
                 {
                     var firstName = User.Claims.FirstOrDefault(c => c.Type == "FirstName")?.Value ?? "";

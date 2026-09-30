@@ -1,0 +1,189 @@
+﻿@page
+@model Balancy.Areas.Doctor.Pages.Tabs.ListeningSessionsModel
+@{
+    Layout = null;
+}
+
+<link rel="stylesheet" href="~/css/doctor/tabs/listeningsessions.css" />
+
+<div class="listening-sessions-container">
+
+    <section class="listening-sessions-card">
+
+        <div class="form-card-header">
+            <div class="form-header-title">
+                <div class="form-header-icon">
+                    <i class="fa-solid fa-headphones"></i>
+                </div>
+                <div>
+                    <h1>جلسات الاستماع والمتابعة</h1>
+                    <p>إدارة كاملة لجلسات الاستماع والعلاج النفسي</p>
+                </div>
+            </div>
+            <div class="edit-status">
+                <i class="fa-solid fa-clipboard-check"></i>
+                سجل جلسات متكامل
+            </div>
+        </div>
+
+        <div class="personal-form">
+
+            <div class="session-form-card">
+                <h3 id="sessionFormTitle" class="form-section-title">
+                    <i class="fa-solid fa-plus-circle"></i>
+                    إضافة جلسة استماع جديدة
+                </h3>
+
+                <form id="listeningSessionForm" novalidate>
+                    <input type="hidden" id="sessionEditIndex" value="-1">
+
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <label for="sessionTitle" class="form-label-custom">
+                                <i class="fa-solid fa-heading"></i>
+                                عنوان الجلسة
+                            </label>
+                            <input type="text" class="form-control form-control-custom" id="sessionTitle" name="sessionTitle" placeholder="مثال: جلسة متابعة أسبوعية" required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="sessionDate" class="form-label-custom">
+                                <i class="fa-solid fa-calendar-days"></i>
+                                تاريخ الجلسة
+                            </label>
+                            <input type="date" class="form-control form-control-custom" id="sessionDate" name="sessionDate" required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="sessionTime" class="form-label-custom">
+                                <i class="fa-solid fa-clock"></i>
+                                وقت الجلسة
+                            </label>
+                            <input type="time" class="form-control form-control-custom" id="sessionTime" name="sessionTime">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="sessionDuration" class="form-label-custom">
+                                <i class="fa-solid fa-hourglass-half"></i>
+                                مدة الجلسة (بالدقائق)
+                            </label>
+                            <input type="number" class="form-control form-control-custom" id="sessionDuration" name="sessionDuration" placeholder="مثال: 45" min="1">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="sessionType" class="form-label-custom">
+                                <i class="fa-solid fa-tag"></i>
+                                نوع الجلسة
+                            </label>
+                            <select class="form-select form-control-custom" id="sessionType" name="sessionType">
+                                <option value="">اختر نوع الجلسة</option>
+                                <option value="جلسة استماع فردية">جلسة استماع فردية</option>
+                                <option value="جلسة علاج نفسي">جلسة علاج نفسي</option>
+                                <option value="جلسة متابعة">جلسة متابعة</option>
+                                <option value="جلسة طارئة">جلسة طارئة</option>
+                                <option value="جلسة جماعية">جلسة جماعية</option>
+                                <option value="جلسة أسرية">جلسة أسرية</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="sessionStatus" class="form-label-custom">
+                                <i class="fa-solid fa-circle-check"></i>
+                                حالة الجلسة
+                            </label>
+                            <select class="form-select form-control-custom" id="sessionStatus" name="sessionStatus">
+                                <option value="">اختر حالة الجلسة</option>
+                                <option value="مكتملة">مكتملة</option>
+                                <option value="مجدولة">مجدولة</option>
+                                <option value="ملغية">ملغية</option>
+                                <option value="مؤجلة">مؤجلة</option>
+                            </select>
+                        </div>
+
+                        <div class="col-12">
+                            <label for="sessionNotes" class="form-label-custom">
+                                <i class="fa-solid fa-note-sticky"></i>
+                                ملخص الجلسة والملاحظات
+                            </label>
+                            <textarea class="form-control form-control-custom" id="sessionNotes" name="sessionNotes" placeholder="اكتب ملخصاً للجلسة..." style="min-height: 140px;"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2 justify-content-end mt-4 flex-wrap">
+                        <button type="button" id="sessionCancelBtn" class="btn-secondary d-none" onclick="resetListeningSessionForm()">
+                            <i class="fa-solid fa-xmark"></i>
+                            إلغاء التعديل
+                        </button>
+                        <button type="submit" id="sessionSubmitBtn" class="btn-save">
+                            <i class="fa-solid fa-plus"></i>
+                            إضافة الجلسة
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="form-section-title">
+                <i class="fa-solid fa-table-list"></i>
+                سجل جلسات الاستماع
+                <span id="sessionCountBadge" style="display:none; margin-inline-start: auto; background: var(--bn-primary-light); color: var(--bn-primary-dark); padding: 0.2rem 0.65rem; border-radius: 50px; font-size: 0.72rem; font-weight: 900;">0</span>
+            </div>
+
+            <div class="session-table-wrapper">
+                <table class="table-custom table-mobile-cards">
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;">#</th>
+                            <th>عنوان الجلسة</th>
+                            <th>التاريخ</th>
+                            <th>الوقت</th>
+                            <th>المدة</th>
+                            <th>النوع</th>
+                            <th>الحالة</th>
+                            <th>ملاحظات</th>
+                            <th class="text-center" style="width: 130px;">الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sessionTableBody"></tbody>
+                </table>
+            </div>
+
+            <div id="sessionEmptyState" class="empty-state" style="display: none;">
+                <i class="fa-solid fa-folder-open"></i>
+                <p>لا توجد جلسات استماع مسجلة لهذا المريض حتى الآن.</p>
+            </div>
+
+        </div>
+
+    </section>
+
+</div>
+
+<!-- Confirm Delete Modal -->
+<div class="bn-modal-overlay" id="bnConfirmModal" role="dialog" aria-modal="true">
+    <div class="bn-modal">
+        <div class="bn-modal-header">
+            <div class="bn-modal-header-icon">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <div class="bn-modal-header-text">
+                <h3 id="bnConfirmModalTitle">تأكيد الحذف</h3>
+                <p id="bnConfirmModalSubtitle">لا يمكن التراجع عن هذه العملية</p>
+            </div>
+        </div>
+        <div class="bn-modal-body">
+            <p class="bn-modal-message" id="bnConfirmModalMessage">هل أنت متأكد؟</p>
+        </div>
+        <div class="bn-modal-footer">
+            <button type="button" class="bn-btn bn-btn-ghost" id="bnConfirmModalCancel">
+                <i class="fa-solid fa-xmark"></i>
+                إلغاء
+            </button>
+            <button type="button" class="bn-btn bn-btn-danger" id="bnConfirmModalConfirm">
+                <i class="fa-solid fa-trash"></i>
+                نعم، احذف
+            </button>
+        </div>
+    </div>
+</div>
+
+<script src="~/js/doctor/tabs/listeningsessions.js"></script>

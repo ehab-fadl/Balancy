@@ -1,0 +1,155 @@
+﻿@page
+@model Balancy.Areas.Doctor.Pages.NewPatient.AddPatientModel
+@{
+}
+   <!-- Loading Bar -->
+    <div class="bn-loading-bar" id="bnLoadingBar"></div>
+
+    <!-- Top Controls -->
+    <div class="bn-top-controls">
+        <button type="button" class="bn-icon-btn bn-theme-toggle" id="themeToggle"
+                aria-label="تبديل الوضع الليلي" title="تبديل الوضع الليلي">
+            <i class="fa-solid fa-moon icon-moon"></i>
+            <i class="fa-solid fa-sun icon-sun"></i>
+        </button>
+        <button type="button" class="bn-icon-btn" id="shortcutsBtn"
+                aria-label="اختصارات لوحة المفاتيح" title="اختصارات لوحة المفاتيح">
+            <i class="fa-regular fa-keyboard"></i>
+        </button>
+    </div>
+
+    <!-- Background Shapes -->
+    <div class="bg-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+    </div>
+
+    <!-- Welcome / Add New Patient Page -->
+    <main class="welcome-wrapper">
+        <div class="welcome-card">
+
+            <i class="fa-solid fa-user-plus welcome-watermark"></i>
+
+            <div class="hero-section">
+
+                <!-- Hero Content -->
+                <div class="hero-content">
+
+                    <div class="brand-chip">
+                        <i class="fa-solid fa-heart-pulse"></i>
+                        نظام بالنسي لإدارة المرضى
+                    </div>
+
+                    <h1 class="hero-title">
+                        ابدأ رحلة <span class="highlight">مريض جديد</span><br>
+                        بخطوة واحدة
+                    </h1>
+
+                    <p class="hero-description">
+                        أضف ملف المريض الجديد بسهولة، وسجّل بياناته الشخصية، وتابع تقييماته النفسية،
+                        وأدر خططه العلاجية والزيارات من مكان واحد منظّم وآمن.
+                    </p>
+
+                    <div class="cta-group">
+
+                     <a asp-area="Doctor" asp-page="/NewPatient/PersonalData" class="btn-add-patient">
+                        <span class="btn-icon"><i class="fa-solid fa-plus"></i></span>
+                        إضافة مريض جديد
+                        <i class="fa-solid fa-arrow-left btn-arrow"></i>
+                    </a>
+
+                        <button type="button" class="btn-hint" onclick="showExistingPatients()">
+                            <i class="fa-solid fa-users"></i>
+                            استعراض المرضى المسجّلين
+                            <kbd>Alt+P</kbd>
+                        </button>
+                    </div>
+
+                    <div class="hero-stats">
+                        <div class="hero-stat">
+                            <div class="hero-stat-icon"><i class="fa-solid fa-user-doctor"></i></div>
+                            <div>
+                                <strong>ملف موحّد</strong>
+                                <span>لكل بيانات المريض</span>
+                            </div>
+                        </div>
+                        <div class="hero-stat">
+                            <div class="hero-stat-icon"><i class="fa-solid fa-clipboard-check"></i></div>
+                            <div>
+                                <strong>تقييمات نفسية</strong>
+                                <span>GAD-7 · PHQ-9 · C-SSRS</span>
+                            </div>
+                        </div>
+                        <div class="hero-stat">
+                            <div class="hero-stat-icon"><i class="fa-solid fa-shield-heart"></i></div>
+                            <div>
+                                <strong>بيانات آمنة</strong>
+                                <span>محفوظة بشكل منظّم</span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Hero Visual -->
+                <div class="hero-visual">
+
+                    <div class="visual-halo"></div>
+
+                    <i class="fa-solid fa-star sparkle s1"></i>
+                    <i class="fa-solid fa-star sparkle s2"></i>
+                    <i class="fa-solid fa-star sparkle s3"></i>
+
+                    <div class="float-chip chip-1">
+                        <i class="fa-solid fa-id-card"></i>
+                        بيانات شخصية
+                    </div>
+                    <div class="float-chip chip-2">
+                        <i class="fa-solid fa-file-medical"></i>
+                        ملف متكامل
+                    </div>
+                    <div class="float-chip chip-3">
+                        <i class="fa-solid fa-calendar-check"></i>
+                        متابعة دورية
+                    </div>
+
+                    <div class="visual-card">
+                        <div class="visual-avatar">
+                            <i class="fa-solid fa-user-plus"></i>
+                        </div>
+                        <div class="visual-name">مريض جديد</div>
+                        <div class="visual-meta">جاهز لإنشاء الملف</div>
+                        <div class="visual-tags">
+                            <span class="visual-tag">بيانات</span>
+                            <span class="visual-tag">تقييم</span>
+                            <span class="visual-tag">علاج</span>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer">
+        <div id="notificationToast" class="toast toast-custom" role="alert"
+             aria-live="assertive" aria-atomic="true" data-bs-autohide="false">
+            <div class="toast-body">
+                <div class="toast-icon-wrap" id="toastIcon"></div>
+                <div class="toast-content">
+                    <strong id="toastTitle"></strong>
+                    <div id="toastMessage" class="small"></div>
+                </div>
+                <button type="button" class="btn-close" id="toastCloseBtn" aria-label="إغلاق"></button>
+            </div>
+            <div class="toast-progress">
+                <div class="toast-progress-bar" id="toastProgressBar"></div>
+            </div>
+        </div>
+    </div>
+    @section Scripts {
+   <script src="~/Doctor/Pages/NewPatient/AddPatient.js"></script>
+    }

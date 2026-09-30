@@ -1,0 +1,231 @@
+﻿@page
+@model Balancy.Areas.Doctor.Pages.Tabs.DiagnosisModel
+@{
+    Layout = null;
+}
+
+<link rel="stylesheet" href="~/css/doctor/tabs/diagnosis.css" />
+
+<div class="diagnosis-container">
+
+    <!-- ============================================================
+         Header
+    ============================================================ -->
+    <section class="diagnosis-card">
+
+        <div class="form-card-header">
+            <div class="form-header-title">
+                <div class="form-header-icon">
+                    <i class="fa-solid fa-stethoscope"></i>
+                </div>
+                <div>
+                    <h1>التشخيص (Diagnosis)</h1>
+                    <p>إدارة التشخيصات التفصيلية للمريض</p>
+                </div>
+            </div>
+            <div class="edit-status">
+                <i class="fa-solid fa-clipboard-check"></i>
+                <span id="diagnosisCountBadge">0 تشخيص</span>
+            </div>
+        </div>
+
+        <div class="personal-form">
+
+            <!-- ====================== Form ====================== -->
+            <div class="diagnosis-form-card">
+                <h3 id="diagnosisFormTitle" class="form-section-title">
+                    <i class="fa-solid fa-plus-circle"></i>
+                    إضافة تشخيص جديد
+                </h3>
+
+                <form id="diagnosisForm" novalidate>
+                    <input type="hidden" id="diagnosisEditIndex" value="-1">
+
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <label for="diagnosisType" class="form-label-custom">
+                                <i class="fa-solid fa-disease"></i>
+                                نوع الاكتئاب الرئيسي
+                            </label>
+                            <select class="form-select form-control-custom" id="diagnosisType" name="diagnosisType" required>
+                                <option value="">اختر النوع الرئيسي</option>
+                                <option value="اضطراب الاكتئاب الجسيم (MDD)">اضطراب الاكتئاب الجسيم (MDD)</option>
+                                <option value="اضطراب الاكتئاب المستمر (ديستيميا)">اضطراب الاكتئاب المستمر (ديستيميا)</option>
+                                <option value="اضطراب المزاج التدمري (DMDD)">اضطراب المزاج التدمري (DMDD)</option>
+                                <option value="اضطراب الاكتئاب غير المحدد">اضطراب الاكتئاب غير المحدد</option>
+                                <option value="اضطراب ما قبل الحيض المزعج (PMDD)">اضطراب ما قبل الحيض المزعج (PMDD)</option>
+                                <option value="اكتئاب ثنائي القطب">اكتئاب ثنائي القطب</option>
+                                <option value="اكتئاب ذهاني">اكتئاب ذهاني</option>
+                                <option value="اكتئاب موسمي (SAD)">اكتئاب موسمي (SAD)</option>
+                                <option value="اكتئاب ما بعد الولادة">اكتئاب ما بعد الولادة</option>
+                                <option value="اكتئاب متزامن مع مرض جسدي">اكتئاب متزامن مع مرض جسدي</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="diagnosisSubtype" class="form-label-custom">
+                                <i class="fa-solid fa-tag"></i>
+                                النوع الفرعي
+                            </label>
+                            <select class="form-select form-control-custom" id="diagnosisSubtype" name="diagnosisSubtype" required>
+                                <option value="">اختر النوع الفرعي</option>
+                                <option value="مع قلق">مع قلق</option>
+                                <option value="مع أعراض ذهانية">مع أعراض ذهانية</option>
+                                <option value="مع أعراض جسدية">مع أعراض جسدية</option>
+                                <option value="مع اضطراب النوم">مع اضطراب النوم</option>
+                                <option value="مع اضطراب الشهية">مع اضطراب الشهية</option>
+                                <option value="مع أفكار انتحارية">مع أفكار انتحارية</option>
+                                <option value="مقاوم للعلاج">مقاوم للعلاج</option>
+                                <option value="متكرر">متكرر</option>
+                                <option value="مزمن">مزمن</option>
+                                <option value="موسمي">موسمي</option>
+                                <option value="بدون نوع فرعي محدد">بدون نوع فرعي محدد</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="diagnosisDate" class="form-label-custom">
+                                <i class="fa-solid fa-calendar-days"></i>
+                                تاريخ التشخيص
+                            </label>
+                            <input type="date" class="form-control form-control-custom" id="diagnosisDate" name="diagnosisDate" required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="diagnosisSeverity" class="form-label-custom">
+                                <i class="fa-solid fa-gauge-high"></i>
+                                شدة التشخيص
+                            </label>
+                            <select class="form-select form-control-custom" id="diagnosisSeverity" name="diagnosisSeverity" required>
+                                <option value="">اختر الشدة</option>
+                                <option value="بسيط">بسيط</option>
+                                <option value="متوسط">متوسط</option>
+                                <option value="شديد">شديد</option>
+                                <option value="حرج">حرج</option>
+                            </select>
+                        </div>
+
+                        <div class="col-12">
+                            <label for="diagnosisNotes" class="form-label-custom">
+                                <i class="fa-solid fa-comment-medical"></i>
+                                ملاحظات
+                            </label>
+                            <textarea class="form-control form-control-custom" id="diagnosisNotes" name="diagnosisNotes" placeholder="ملاحظات إضافية..." style="min-height: 120px;"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2 justify-content-end mt-4 flex-wrap">
+                        <button type="button" id="diagnosisCancelBtn" class="btn btn-secondary px-4 py-2 d-none" style="border-radius: 14px; font-weight: 800;" onclick="resetDiagnosisForm()">
+                            <i class="fa-solid fa-xmark ms-1"></i>
+                            إلغاء التعديل
+                        </button>
+                        <button type="submit" id="diagnosisSubmitBtn" class="btn-save" style="min-width: 180px; background: linear-gradient(135deg, #ef4444, #dc2626); box-shadow: 0 8px 20px -6px rgba(239,68,68,0.4);">
+                            <i class="fa-solid fa-plus ms-1"></i>
+                            إضافة التشخيص
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <hr class="form-divider">
+
+            <!-- ====================== Table ====================== -->
+            <div class="form-section-title mb-3">
+                <i class="fa-solid fa-list-check"></i>
+                قائمة التشخيصات المسجلة
+            </div>
+
+            <div class="diagnosis-table-wrapper">
+                <table class="table table-hover align-middle diagnosis-table table-mobile-cards mb-0" style="font-size: 0.9rem;">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>النوع الرئيسي</th>
+                            <th>النوع الفرعي</th>
+                            <th>تاريخ التشخيص</th>
+                            <th>الشدة</th>
+                            <th>ملاحظات</th>
+                            <th class="text-center">الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="diagnosisTableBody"></tbody>
+                </table>
+            </div>
+
+            <div id="diagnosisEmptyState" class="text-center text-muted py-4 d-none">
+                <i class="fa-solid fa-folder-open fa-2x mb-2 text-secondary"></i>
+                <p class="fw-bold mb-0">لا توجد تشخيصات مسجلة لهذا المريض حتى الآن.</p>
+            </div>
+
+        </div>
+
+    </section>
+
+</div>
+
+
+<!-- ============================================================
+     Edit Modal
+============================================================ -->
+<div class="bn-modal-overlay" id="bnEditModal" role="dialog" aria-modal="true" aria-labelledby="bnEditModalTitle">
+    <div class="bn-modal">
+        <div class="bn-modal-header">
+            <div class="bn-modal-header-icon">
+                <i class="fa-solid fa-pen-to-square"></i>
+            </div>
+            <div class="bn-modal-header-text">
+                <h3 id="bnEditModalTitle">تعديل</h3>
+                <p id="bnEditModalSubtitle">قم بتعديل النص ثم اضغط حفظ</p>
+            </div>
+        </div>
+        <div class="bn-modal-body">
+            <label for="bnEditModalInput">
+                <i class="fa-solid fa-keyboard"></i>
+                <span id="bnEditModalLabel">النص</span>
+            </label>
+            <input type="text" id="bnEditModalInput" class="bn-modal-input" autocomplete="off">
+        </div>
+        <div class="bn-modal-footer">
+            <button type="button" class="bn-btn bn-btn-ghost" id="bnEditModalCancel">
+                <i class="fa-solid fa-xmark"></i>
+                إلغاء
+            </button>
+            <button type="button" class="bn-btn bn-btn-primary" id="bnEditModalSave">
+                <i class="fa-solid fa-floppy-disk"></i>
+                حفظ التعديل
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================
+     Confirm Modal
+============================================================ -->
+<div class="bn-modal-overlay" id="bnConfirmModal" role="dialog" aria-modal="true" aria-labelledby="bnConfirmModalTitle">
+    <div class="bn-modal bn-modal-danger">
+        <div class="bn-modal-header">
+            <div class="bn-modal-header-icon">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <div class="bn-modal-header-text">
+                <h3 id="bnConfirmModalTitle">تأكيد الحذف</h3>
+                <p id="bnConfirmModalSubtitle">لا يمكن التراجع عن هذه العملية</p>
+            </div>
+        </div>
+        <div class="bn-modal-body">
+            <p class="bn-modal-message" id="bnConfirmModalMessage">هل أنت متأكد؟</p>
+        </div>
+        <div class="bn-modal-footer">
+            <button type="button" class="bn-btn bn-btn-ghost" id="bnConfirmModalCancel">
+                <i class="fa-solid fa-xmark"></i>
+                إلغاء
+            </button>
+            <button type="button" class="bn-btn bn-btn-danger" id="bnConfirmModalConfirm">
+                <i class="fa-solid fa-trash"></i>
+                نعم، احذف
+            </button>
+        </div>
+    </div>
+</div>
+
+<script src="~/js/doctor/tabs/diagnosis.js"></script>

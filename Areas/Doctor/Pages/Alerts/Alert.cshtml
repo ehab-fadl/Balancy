@@ -1,0 +1,113 @@
+﻿@page
+@model Balancy.Areas.Doctor.Pages.Alerts.AlertModel
+@{
+    ViewData["Title"] = "التنبيهات";
+}
+
+<div class="page-wrapper">
+
+    <!-- Page Header -->
+    <section class="alerts-page-header">
+        <div class="header-content">
+            <div class="header-icon">
+                <i class="fa-solid fa-bell"></i>
+                <span class="live-dot"></span>
+            </div>
+            <div class="header-text">
+                <h1>تنبيهات النظام</h1>
+                <p>
+                    <i class="fa-solid fa-circle-check" style="color: #10b981;"></i>
+                    آخر تحديث: <span class="update-time" id="lastUpdate">الآن</span>
+                </p>
+            </div>
+        </div>
+
+        <div class="header-actions-group">
+            <button type="button" class="header-action-btn" id="resetAllBtn" title="استعادة">
+                <i class="fa-solid fa-rotate-left"></i>
+                استعادة المُتجاهَلة
+            </button>
+            <button type="button" class="header-action-btn danger-btn" id="dismissAllBtn" title="تجاهل الكل">
+                <i class="fa-solid fa-broom"></i>
+                تجاهل الكل
+            </button>
+        </div>
+    </section>
+
+    <!-- Stats -->
+    <section class="alerts-stats">
+        <div class="stat-card critical" data-filter-stat="critical">
+            <div class="stat-icon"><i class="fa-solid fa-circle-exclamation"></i></div>
+            <div class="stat-info">
+                <span class="stat-label">تنبيهات حرجة</span>
+                <span class="stat-value" id="statCritical">0</span>
+            </div>
+        </div>
+
+        <div class="stat-card warning" data-filter-stat="warning">
+            <div class="stat-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <div class="stat-info">
+                <span class="stat-label">تنبيهات مهمة</span>
+                <span class="stat-value" id="statWarning">0</span>
+            </div>
+        </div>
+
+        <div class="stat-card info" data-filter-stat="info">
+            <div class="stat-icon"><i class="fa-solid fa-circle-info"></i></div>
+            <div class="stat-info">
+                <span class="stat-label">معلومات</span>
+                <span class="stat-value" id="statInfo">0</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Filter Tabs -->
+    <div class="filter-tabs">
+        <button type="button" class="filter-tab active" data-filter="all">
+            <i class="fa-solid fa-list"></i>
+            الكل
+            <span class="count-badge" id="countAll">0</span>
+        </button>
+
+        <button type="button" class="filter-tab" data-filter="critical">
+            <i class="fa-solid fa-circle-exclamation"></i>
+            حرجة
+            <span class="count-badge" id="countCritical">0</span>
+        </button>
+
+        <button type="button" class="filter-tab" data-filter="warning">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            مهمة
+            <span class="count-badge" id="countWarning">0</span>
+        </button>
+
+        <button type="button" class="filter-tab" data-filter="info">
+            <i class="fa-solid fa-circle-info"></i>
+            معلومات
+            <span class="count-badge" id="countInfo">0</span>
+        </button>
+    </div>
+
+    <!-- Alerts Container -->
+    <div class="alerts-container" id="alertsContainer"></div>
+
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer">
+    <div id="notificationToast" class="toast toast-custom" role="alert">
+        <div class="toast-body">
+            <div class="toast-icon-wrap" id="toastIcon"></div>
+            <div class="toast-content">
+                <strong id="toastTitle"></strong>
+                <div id="toastMessage" class="small"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+@section Scripts {
+    <script src="~/js/doctor/Alerts/Alert.js" asp-append-version="true"></script>
+}

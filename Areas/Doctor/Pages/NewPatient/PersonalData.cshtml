@@ -1,0 +1,189 @@
+﻿@page
+@model Balancy.Areas.Doctor.Pages.NewPatient.PersonalDataModel
+@{
+    ViewData["Title"] = "البيانات الشخصية";
+}
+
+<!-- Auto-save Indicator -->
+<div class="bn-save-indicator" id="saveIndicator" role="status" aria-live="polite">
+    <span class="dot"></span>
+    <span id="saveIndicatorText">جاري الحفظ التلقائي...</span>
+</div>
+
+<!-- Confetti -->
+<div class="bn-confetti" id="bnConfetti" aria-hidden="true"></div>
+
+<!-- Personal Information Card -->
+<section class="personal-info-card">
+
+    <div class="form-card-header">
+        <div class="form-header-title">
+            <div class="form-header-icon">
+                <i class="fa-solid fa-user"></i>
+            </div>
+            <div>
+                <h1>البيانات الشخصية</h1>
+                <p>عرض وتعديل المعلومات الشخصية للمريض</p>
+            </div>
+        </div>
+        <div class="edit-status">
+            <i class="fa-solid fa-circle-check"></i>
+            جميع الحقول قابلة للتعديل
+        </div>
+    </div>
+
+    <form id="personalInfoForm" class="personal-form" data-autosave="patientData" novalidate>
+
+        <div class="form-section-title">
+            <i class="fa-solid fa-id-card"></i>
+            المعلومات الأساسية
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-6">
+                <label for="firstName" class="form-label-custom">
+                    <i class="fa-solid fa-user"></i>
+                    الاسم
+                </label>
+                <input type="text" class="form-control form-control-custom" id="firstName" name="firstName" required>
+            </div>
+
+            <div class="col-md-6">
+                <label for="lastName" class="form-label-custom">
+                    <i class="fa-solid fa-user-tag"></i>
+                    الكنية
+                </label>
+                <input type="text" class="form-control form-control-custom" id="lastName" name="lastName" required>
+            </div>
+
+            <div class="col-md-6">
+                <label for="dateOfBirth" class="form-label-custom">
+                    <i class="fa-solid fa-calendar"></i>
+                    تاريخ الميلاد
+                </label>
+                <input type="date" class="form-control form-control-custom" id="dateOfBirth" name="dateOfBirth" required>
+            </div>
+
+            <div class="col-md-6">
+                <label for="gender" class="form-label-custom">
+                    <i class="fa-solid fa-venus-mars"></i>
+                    الجنس
+                </label>
+                <select class="form-select form-control-custom" id="gender" name="gender" required>
+                    <option value="">اختر الجنس</option>
+                    <option value="male">ذكر</option>
+                    <option value="female">أنثى</option>
+                </select>
+            </div>
+        </div>
+
+        <hr class="form-divider">
+
+        <div class="form-section-title">
+            <i class="fa-solid fa-address-book"></i>
+            معلومات التواصل
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-6">
+                <label for="phone" class="form-label-custom">
+                    <i class="fa-solid fa-phone"></i>
+                    رقم الهاتف
+                </label>
+                <input type="tel" class="form-control form-control-custom" id="phone" name="phone">
+            </div>
+
+            <div class="col-md-6">
+                <label for="email" class="form-label-custom">
+                    <i class="fa-solid fa-envelope"></i>
+                    البريد الإلكتروني
+                </label>
+                <input type="email" class="form-control form-control-custom" id="email" name="email">
+            </div>
+        </div>
+
+        <hr class="form-divider">
+
+        <div class="form-section-title">
+            <i class="fa-solid fa-location-dot"></i>
+            معلومات السكن
+        </div>
+
+        <div class="row g-4">
+            <div class="col-12">
+                <label for="address" class="form-label-custom">
+                    <i class="fa-solid fa-house"></i>
+                    العنوان الكامل
+                </label>
+                <textarea class="form-control form-control-custom" id="address" name="address" required></textarea>
+            </div>
+
+            <div class="col-md-6">
+                <label for="city" class="form-label-custom">
+                    <i class="fa-solid fa-city"></i>
+                    المحافظة / المدينة
+                </label>
+                <input type="text" class="form-control form-control-custom" id="city" name="city">
+            </div>
+
+            <div class="col-md-6">
+                <label for="maritalStatus" class="form-label-custom">
+                    <i class="fa-solid fa-heart"></i>
+                    الحالة الاجتماعية
+                </label>
+                <select class="form-select form-control-custom" id="maritalStatus" name="maritalStatus">
+                    <option value="">اختر الحالة الاجتماعية</option>
+                    <option value="single">أعزب</option>
+                    <option value="married">متزوج</option>
+                    <option value="widowed">أرمل</option>
+                    <option value="divorced">مطلق</option>
+                </select>
+            </div>
+        </div>
+
+        <hr class="form-divider">
+
+        <div class="form-actions">
+            <div class="form-actions-note">
+                <i class="fa-solid fa-shield-heart"></i>
+                سيتم حفظ التغييرات بشكل آمن في ملف المريض
+            </div>
+
+            <button type="button" class="btn-save" id="saveButton">
+                <span id="saveButtonText">
+                    <i class="fa-solid fa-floppy-disk"></i>
+                    حفظ التغييرات
+                </span>
+                <span id="saveSpinner" class="d-none">
+                    <span class="spinner-border spinner-border-sm" role="status"></span>
+                    جاري الحفظ...
+                </span>
+            </button>
+        </div>
+
+    </form>
+
+</section>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer">
+    <div id="notificationToast" class="toast toast-custom" role="alert"
+         aria-live="assertive" aria-atomic="true" data-bs-autohide="false">
+        <div class="toast-body">
+            <div class="toast-icon-wrap" id="toastIcon"></div>
+            <div class="toast-content">
+                <strong id="toastTitle"></strong>
+                <div id="toastMessage" class="small"></div>
+            </div>
+            <button type="button" class="btn-close" id="toastCloseBtn" aria-label="إغلاق"></button>
+        </div>
+        <div class="toast-progress">
+            <div class="toast-progress-bar" id="toastProgressBar"></div>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts {
+    <script src="~/js/doctor/NewPatient/PersonalData.js" asp-append-version="true"></script>
+}

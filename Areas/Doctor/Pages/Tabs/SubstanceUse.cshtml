@@ -1,0 +1,156 @@
+﻿@page
+@model Balancy.Areas.Doctor.Pages.Tabs.SubstanceUseModel
+@{
+    Layout = null;
+}
+
+<link rel="stylesheet" href="~/css/doctor/tabs/substanceuse.css" />
+
+<div class="substanceuse-container">
+
+    <section class="substanceuse-card">
+
+        <div class="form-card-header">
+            <div class="form-header-title">
+                <div class="form-header-icon">
+                    <i class="fa-solid fa-wine-bottle"></i>
+                </div>
+                <div>
+                    <h1>تعاطي الكحول أو المواد المخدرة</h1>
+                    <p>إدارة سجل المواد التي يتعاطاها المريض ومتابعة آخر مرة تم فيها التعاطي</p>
+                </div>
+            </div>
+            <div class="edit-status">
+                <i class="fa-solid fa-clipboard-list"></i>
+                سجل التعاطي
+            </div>
+        </div>
+
+        <div class="personal-form">
+
+            <!-- ====================================================
+                 Form: Add / Edit Substance
+            ===================================================== -->
+            <div class="substance-form-card">
+                <h3 id="substanceUseFormTitle" class="form-section-title">
+                    <i class="fa-solid fa-plus-circle"></i>
+                    إضافة مادة جديدة
+                </h3>
+
+                <form id="substanceUseForm" novalidate>
+                    <input type="hidden" id="substanceUseEditIndex" value="-1">
+
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <label for="substanceName" class="form-label-custom">
+                                <i class="fa-solid fa-prescription-bottle"></i>
+                                اسم المادة
+                            </label>
+                            <input type="text" class="form-control form-control-custom" id="substanceName" name="substanceName" required placeholder="مثال: الكحول">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="substanceAmount" class="form-label-custom">
+                                <i class="fa-solid fa-scale-balanced"></i>
+                                الكمية
+                            </label>
+                            <input type="text" class="form-control form-control-custom" id="substanceAmount" name="substanceAmount" required placeholder="مثال: 2-3 كؤوس يومياً">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="substanceLastUse" class="form-label-custom">
+                                <i class="fa-solid fa-calendar-days"></i>
+                                آخر مرة تعاطاها
+                            </label>
+                            <input type="date" class="form-control form-control-custom" id="substanceLastUse" name="substanceLastUse" required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="substanceNotes" class="form-label-custom">
+                                <i class="fa-solid fa-note-sticky"></i>
+                                ملاحظات
+                            </label>
+                            <textarea class="form-control form-control-custom" id="substanceNotes" name="substanceNotes" placeholder="ملاحظات إضافية (اختياري)" style="min-height: 50px;"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2 justify-content-end mt-4 flex-wrap">
+                        <button type="button" id="substanceUseCancelBtn" class="btn-secondary d-none" onclick="resetSubstanceUseForm()">
+                            <i class="fa-solid fa-xmark"></i>
+                            إلغاء التعديل
+                        </button>
+                        <button type="submit" id="substanceUseSubmitBtn" class="btn-save">
+                            <i class="fa-solid fa-plus"></i>
+                            إضافة المادة
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- ====================================================
+                 Table: Substance Use Record
+            ===================================================== -->
+            <div class="form-section-title">
+                <i class="fa-solid fa-table-list"></i>
+                سجل التعاطي
+                <span id="substanceCountBadge" style="display:none; margin-inline-start: auto; background: var(--bn-primary-light); color: var(--bn-primary-dark); padding: 0.2rem 0.65rem; border-radius: 50px; font-size: 0.72rem; font-weight: 900;">0</span>
+            </div>
+
+            <div class="substance-table-wrapper">
+                <table class="table-custom table-mobile-cards">
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;">#</th>
+                            <th>اسم المادة</th>
+                            <th>الكمية</th>
+                            <th>آخر مرة تعاطاها</th>
+                            <th>ملاحظات</th>
+                            <th class="text-center" style="width: 130px;">العمليات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="substanceUseTableBody"></tbody>
+                </table>
+            </div>
+
+            <div id="substanceUseEmptyState" class="empty-state" style="display: none;">
+                <i class="fa-solid fa-folder-open"></i>
+                <p>لا توجد مواد مسجلة لهذا المريض حتى الآن.</p>
+            </div>
+
+        </div>
+
+    </section>
+
+</div>
+
+<!-- ============================================================
+     Confirm Delete Modal
+============================================================ -->
+<div class="bn-modal-overlay" id="bnConfirmModal" role="dialog" aria-modal="true">
+    <div class="bn-modal">
+        <div class="bn-modal-header">
+            <div class="bn-modal-header-icon">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <div class="bn-modal-header-text">
+                <h3 id="bnConfirmModalTitle">تأكيد الحذف</h3>
+                <p id="bnConfirmModalSubtitle">لا يمكن التراجع عن هذه العملية</p>
+            </div>
+        </div>
+        <div class="bn-modal-body">
+            <p class="bn-modal-message" id="bnConfirmModalMessage">هل أنت متأكد؟</p>
+        </div>
+        <div class="bn-modal-footer">
+            <button type="button" class="bn-btn bn-btn-ghost" id="bnConfirmModalCancel">
+                <i class="fa-solid fa-xmark"></i>
+                إلغاء
+            </button>
+            <button type="button" class="bn-btn bn-btn-danger" id="bnConfirmModalConfirm">
+                <i class="fa-solid fa-trash"></i>
+                نعم، احذف
+            </button>
+        </div>
+    </div>
+</div>
+
+<script src="~/js/doctor/tabs/substanceuse.js"></script>

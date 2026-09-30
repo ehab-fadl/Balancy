@@ -1,0 +1,220 @@
+﻿@page
+@model Balancy.Areas.Doctor.Pages.Dashboard.DashboardModel
+@{
+}
+  <!-- Background Shapes -->
+    <div class="bg-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+    </div>
+
+    <div class="page-wrapper">
+
+        <!-- Welcome Header -->
+        <section class="welcome-header">
+            <div class="welcome-content">
+                <div class="welcome-avatar">
+                    <i class="fa-solid fa-user-doctor"></i>
+                    <span class="online-dot"></span>
+                </div>
+                <div class="welcome-text">
+                    <h1>مرحباً، <span id="doctorName">دكتور</span> 👋</h1>
+                    <p>
+                        <span class="date-chip">
+                            <i class="fa-solid fa-calendar-day"></i>
+                            <span id="todayDate">الأحد، 25 سبتمبر 2025</span>
+                        </span>
+                        <span id="greetingText">أتمنى لك يوماً موفقاً</span>
+                    </p>
+                </div>
+            </div>
+
+            <div class="welcome-actions">
+                <a href="#" class="welcome-btn primary" id="addPatientBtn">
+                    <i class="fa-solid fa-user-plus"></i>
+                    مريض جديد
+                </a>
+                <a href="#" class="welcome-btn outline" id="viewAlertsBtn">
+                    <i class="fa-solid fa-bell"></i>
+                    التنبيهات
+                </a>
+            </div>
+        </section>
+
+        <!-- Quick Stats -->
+        <section class="quick-stats">
+            <div class="stat-card primary" style="animation-delay: 0.05s">
+                <div class="stat-icon"><i class="fa-solid fa-calendar-check"></i></div>
+                <div class="stat-label"><i class="fa-solid fa-clock"></i> مواعيد اليوم</div>
+                <div class="stat-value" id="statTodayAppointments">8</div>
+                <div class="stat-footer">
+                    <span class="stat-change up"><i class="fa-solid fa-arrow-up"></i> +3</span>
+                    <span class="stat-hint">من الأمس</span>
+                </div>
+            </div>
+
+            <div class="stat-card success" style="animation-delay: 0.1s">
+                <div class="stat-icon"><i class="fa-solid fa-users"></i></div>
+                <div class="stat-label"><i class="fa-solid fa-user-group"></i> إجمالي المرضى</div>
+                <div class="stat-value" id="statTotalPatients">248</div>
+                <div class="stat-footer">
+                    <span class="stat-change up"><i class="fa-solid fa-arrow-up"></i> +12%</span>
+                    <span class="stat-hint">هذا الشهر</span>
+                </div>
+            </div>
+
+            <div class="stat-card danger" style="animation-delay: 0.15s">
+                <div class="stat-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                <div class="stat-label"><i class="fa-solid fa-circle-exclamation"></i> حالات حرجة</div>
+                <div class="stat-value" id="statCriticalPatients">3</div>
+                <div class="stat-footer">
+                    <span class="stat-change down"><i class="fa-solid fa-arrow-down"></i> -2</span>
+                    <span class="stat-hint">من الأمس</span>
+                </div>
+            </div>
+
+            <div class="stat-card warning" style="animation-delay: 0.2s">
+                <div class="stat-icon"><i class="fa-solid fa-user-plus"></i></div>
+                <div class="stat-label"><i class="fa-solid fa-sparkles"></i> مرضى جدد</div>
+                <div class="stat-value" id="statNewPatients">23</div>
+                <div class="stat-footer">
+                    <span class="stat-change up"><i class="fa-solid fa-arrow-up"></i> +5</span>
+                    <span class="stat-hint">هذا الشهر</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Grid: Appointments + Alerts -->
+        <div class="dashboard-grid">
+
+            <!-- Today's Appointments -->
+            <div class="panel-card" style="animation-delay: 0.25s">
+                <div class="panel-header">
+                    <div class="panel-header-content">
+                        <div class="panel-header-icon">
+                            <i class="fa-solid fa-calendar-day"></i>
+                        </div>
+                        <div class="panel-header-text">
+                            <h3>مواعيد اليوم</h3>
+                            <p>جدول الزيارات المقررة لهذا اليوم</p>
+                        </div>
+                    </div>
+                    <span class="panel-badge">
+                        <i class="fa-solid fa-calendar"></i>
+                        <span id="appointmentsCount">6 مواعيد</span>
+                    </span>
+                </div>
+                <div class="panel-body">
+                    <div class="appointments-list" id="appointmentsList"></div>
+                </div>
+            </div>
+
+            <!-- Alerts Widget -->
+            <div class="panel-card" style="animation-delay: 0.3s">
+                <div class="panel-header">
+                    <div class="panel-header-content">
+                        <div class="panel-header-icon" style="background: var(--bn-danger-light); color: var(--bn-danger);">
+                            <i class="fa-solid fa-bell"></i>
+                        </div>
+                        <div class="panel-header-text">
+                            <h3>التنبيهات النشطة</h3>
+                            <p>الحالات التي تحتاج انتباهك</p>
+                        </div>
+                    </div>
+                    <span class="panel-badge danger" id="alertsCountBadge">
+                        <i class="fa-solid fa-circle-exclamation"></i>
+                        <span id="alertsCount">5 تنبيهات</span>
+                    </span>
+                </div>
+                <div class="panel-body">
+                    <div class="alerts-widget" id="alertsWidget"></div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Recent Patients -->
+        <div class="dashboard-grid">
+
+            <!-- Recent Patients -->
+            <div class="panel-card" style="animation-delay: 0.35s">
+                <div class="panel-header">
+                    <div class="panel-header-content">
+                        <div class="panel-header-icon" style="background: var(--bn-success-light); color: var(--bn-success);">
+                            <i class="fa-solid fa-user-clock"></i>
+                        </div>
+                        <div class="panel-header-text">
+                            <h3>آخر المرضى المضافين</h3>
+                            <p>أحدث المرضى في النظام</p>
+                        </div>
+                    </div>
+                    <a href="#" class="see-all">عرض الكل <i class="fa-solid fa-arrow-left"></i></a>
+                </div>
+                <div class="panel-body">
+                    <div class="patients-list" id="recentPatientsList"></div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="panel-card" style="animation-delay: 0.4s">
+                <div class="panel-header">
+                    <div class="panel-header-content">
+                        <div class="panel-header-icon" style="background: var(--bn-purple-light); color: var(--bn-purple);">
+                            <i class="fa-solid fa-bolt"></i>
+                        </div>
+                        <div class="panel-header-text">
+                            <h3>إجراءات سريعة</h3>
+                            <p>الوصول السريع للمهام الأساسية</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="panel-body">
+                    <div class="quick-actions-grid">
+                        <a href="#" class="quick-action-card" data-action="add-patient">
+                            <div class="quick-action-icon"><i class="fa-solid fa-user-plus"></i></div>
+                            <p class="quick-action-title">مريض جديد</p>
+                            <p class="quick-action-desc">إضافة ملف جديد</p>
+                        </a>
+
+                        <a href="#" class="quick-action-card" data-action="new-session">
+                            <div class="quick-action-icon"><i class="fa-solid fa-headphones"></i></div>
+                            <p class="quick-action-title">جلسة استماع</p>
+                            <p class="quick-action-desc">بدء جلسة جديدة</p>
+                        </a>
+
+                        <a href="#" class="quick-action-card" data-action="search-patient">
+                            <div class="quick-action-icon"><i class="fa-solid fa-magnifying-glass"></i></div>
+                            <p class="quick-action-title">بحث عن مريض</p>
+                            <p class="quick-action-desc">الوصول السريع</p>
+                        </a>
+
+                        <a href="#" class="quick-action-card" data-action="view-stats">
+                            <div class="quick-action-icon"><i class="fa-solid fa-chart-line"></i></div>
+                            <p class="quick-action-title">الإحصائيات</p>
+                            <p class="quick-action-desc">تقارير العيادة</p>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer">
+        <div id="notificationToast" class="toast toast-custom" role="alert">
+            <div class="toast-body">
+                <div class="toast-icon-wrap" id="toastIcon"></div>
+                <div class="toast-content">
+                    <strong id="toastTitle"></strong>
+                    <div id="toastMessage" class="small"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+@section Scripts {
+   
+    <script src="~/js/doctor/Dashboard/Dashboard.js"></script>
+}

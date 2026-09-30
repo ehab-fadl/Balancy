@@ -1,0 +1,147 @@
+﻿@page
+@model Balancy.Areas.Doctor.Pages.Tabs.ChronicDiseasesModel
+@{
+    Layout = null;
+}
+
+<link rel="stylesheet" href="~/css/doctor/tabs/chronicdiseases.css" />
+
+<!-- ============================================================
+     Card: Chronic Physical Diseases
+============================================================ -->
+<section class="chronic-diseases-card">
+
+    <div class="form-card-header">
+        <div class="form-header-title">
+            <div class="form-header-icon">
+                <i class="fa-solid fa-notes-medical"></i>
+            </div>
+            <div>
+                <h1>قائمة الأمراض المزمنة (الجسدية)</h1>
+                <p>إدارة وإضافة وتعديل الأمراض المزمنة الخاصة بالمريض مباشرة</p>
+            </div>
+        </div>
+        <div class="edit-status">
+            <i class="fa-solid fa-shield-halved"></i>
+            سجل صحي جسدي متكامل
+        </div>
+    </div>
+
+    <form id="chronicForm" class="personal-form" novalidate>
+        <input type="hidden" id="chronicEditIndex" value="-1">
+
+        <div class="form-section-title">
+            <i class="fa-solid fa-file-medical"></i>
+            <span id="chronicFormTitle">إضافة مرض مزمن جديد</span>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-6">
+                <label for="diseaseName" class="form-label-custom">
+                    <i class="fa-solid fa-disease"></i>
+                    اسم المرض
+                </label>
+                <input type="text" class="form-control form-control-custom" id="diseaseName" name="diseaseName" placeholder="مثال: ارتفاع ضغط الدم، السكري..." required>
+            </div>
+
+            <div class="col-md-6">
+                <label for="diseaseDate" class="form-label-custom">
+                    <i class="fa-solid fa-calendar-days"></i>
+                    تاريخ التشخيص
+                </label>
+                <input type="date" class="form-control form-control-custom" id="diseaseDate" name="diseaseDate" required>
+            </div>
+
+            <div class="col-md-6">
+                <label for="diseaseMeds" class="form-label-custom">
+                    <i class="fa-solid fa-pills"></i>
+                    الأدوية المستخدمة
+                </label>
+                <input type="text" class="form-control form-control-custom" id="diseaseMeds" name="diseaseMeds" placeholder="مثال: ميتفورمين 500 مغ..." required>
+            </div>
+
+            <div class="col-md-6">
+                <label for="diseaseNotes" class="form-label-custom">
+                    <i class="fa-solid fa-comment-medical"></i>
+                    ملاحظات طبية
+                </label>
+                <input type="text" class="form-control form-control-custom" id="diseaseNotes" name="diseaseNotes" placeholder="ملاحظات إضافية...">
+            </div>
+        </div>
+
+        <div class="d-flex gap-2 justify-content-end mt-4 flex-wrap">
+            <button type="button" id="chronicCancelBtn" class="btn-secondary d-none" onclick="resetChronicForm()">
+                <i class="fa-solid fa-xmark"></i>
+                إلغاء التعديل
+            </button>
+            <button type="submit" id="chronicSubmitBtn" class="btn-save">
+                <i class="fa-solid fa-plus"></i>
+                إضافة المرض
+            </button>
+        </div>
+    </form>
+
+    <hr class="form-divider mx-4" style="margin-inline: 1.75rem;">
+
+    <div class="personal-form" style="padding-top: 0;">
+        <div class="form-section-title">
+            <i class="fa-solid fa-list-check"></i>
+            قائمة الأمراض المسجلة حالياً
+            <span class="tab-badge" id="chronicCountBadge" style="display:none; margin-inline-start: auto; background: var(--bn-success-light); color: #047857; padding: 0.2rem 0.65rem; border-radius: 50px; font-size: 0.72rem; font-weight: 900;">0</span>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table-custom table-mobile-cards">
+                <thead>
+                    <tr>
+                        <th style="width: 50px;">#</th>
+                        <th>اسم المرض</th>
+                        <th>تاريخ التشخيص</th>
+                        <th>الأدوية</th>
+                        <th>ملاحظات</th>
+                        <th class="text-center" style="width: 130px;">الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody id="chronicTableBody"></tbody>
+            </table>
+        </div>
+
+        <div id="chronicEmptyState" class="empty-state" style="display: none;">
+            <i class="fa-solid fa-folder-open"></i>
+            <p>لا توجد أمراض مزمنة مسجلة لهذا المريض حتى الآن.</p>
+        </div>
+    </div>
+
+</section>
+
+<!-- ============================================================
+     Confirm Delete Modal
+============================================================ -->
+<div class="bn-modal-overlay" id="bnConfirmModal" role="dialog" aria-modal="true">
+    <div class="bn-modal">
+        <div class="bn-modal-header">
+            <div class="bn-modal-header-icon">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <div class="bn-modal-header-text">
+                <h3 id="bnConfirmModalTitle">تأكيد الحذف</h3>
+                <p id="bnConfirmModalSubtitle">لا يمكن التراجع عن هذه العملية</p>
+            </div>
+        </div>
+        <div class="bn-modal-body">
+            <p class="bn-modal-message" id="bnConfirmModalMessage">هل أنت متأكد؟</p>
+        </div>
+        <div class="bn-modal-footer">
+            <button type="button" class="bn-btn bn-btn-ghost" id="bnConfirmModalCancel">
+                <i class="fa-solid fa-xmark"></i>
+                إلغاء
+            </button>
+            <button type="button" class="bn-btn bn-btn-danger" id="bnConfirmModalConfirm">
+                <i class="fa-solid fa-trash"></i>
+                نعم، احذف
+            </button>
+        </div>
+    </div>
+</div>
+
+<script src="~/js/doctor/tabs/chronicdiseases.js"></script>

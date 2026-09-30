@@ -1,0 +1,195 @@
+﻿@page
+@model Balancy.Areas.Doctor.Pages.Tabs.VisitsModel
+@{
+    Layout = null;
+}
+
+<link rel="stylesheet" href="~/css/doctor/tabs/visits.css" />
+
+<div class="visits-container">
+
+    <section class="visits-card">
+
+        <div class="form-card-header">
+            <div class="form-header-title">
+                <div class="form-header-icon">
+                    <i class="fa-solid fa-calendar-check"></i>
+                </div>
+                <div>
+                    <h1>تسجيل الزيارة (Visit Management)</h1>
+                    <p>تسجيل زيارات المريض مع تحديد سبب الزيارة والملاحظات</p>
+                </div>
+            </div>
+            <div class="edit-status">
+                <i class="fa-solid fa-clipboard-list"></i>
+                <span id="visitsCountBadge">0 زيارة</span>
+            </div>
+        </div>
+
+        <div class="personal-form">
+
+            <!-- ====================== Form ====================== -->
+            <div class="visit-form-card">
+                <h3 id="visitFormTitle" class="form-section-title">
+                    <i class="fa-solid fa-plus-circle"></i>
+                    تسجيل زيارة جديدة
+                </h3>
+
+                <form id="visitForm" novalidate>
+                    <input type="hidden" id="visitEditIndex" value="-1">
+
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <label for="visitReason" class="form-label-custom">
+                                <i class="fa-solid fa-comment-medical"></i>
+                                سبب الزيارة
+                            </label>
+                            <input type="text" class="form-control form-control-custom" id="visitReason" name="visitReason" placeholder="مثال: متابعة دورية..." required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="visitDate" class="form-label-custom">
+                                <i class="fa-solid fa-calendar-days"></i>
+                                تاريخ الزيارة
+                            </label>
+                            <input type="date" class="form-control form-control-custom" id="visitDate" name="visitDate" required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="visitNotes" class="form-label-custom">
+                                <i class="fa-solid fa-note-sticky"></i>
+                                ملاحظات
+                            </label>
+                            <input type="text" class="form-control form-control-custom" id="visitNotes" name="visitNotes" placeholder="ملاحظات إضافية (اختياري)">
+                        </div>
+
+                        <!-- ✅ زر حجز موعد الزيارة القادمة -->
+                        <div class="col-md-6">
+                            <label class="form-label-custom">
+                                <i class="fa-solid fa-calendar-plus"></i>
+                                موعد الزيارة القادمة
+                            </label>
+                            <button type="button" class="btn-book-appointment" id="bookAppointmentBtn">
+                                <i class="fa-solid fa-calendar-plus"></i>
+                                حجز موعد الزيارة القادمة
+                            </button>
+                            <small class="book-appointment-hint">
+                                <i class="fa-solid fa-info-circle"></i>
+                                سيُفتح نموذج لإضافة الموعد دون مغادرة الصفحة
+                            </small>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2 justify-content-end mt-4 flex-wrap">
+                        <button type="button" id="visitCancelBtn" class="btn btn-secondary px-4 py-2 d-none" style="border-radius: 14px; font-weight: 800;" onclick="resetVisitForm()">
+                            <i class="fa-solid fa-xmark ms-1"></i>
+                            إلغاء التعديل
+                        </button>
+                        <button type="submit" id="visitSubmitBtn" class="btn-save">
+                            <i class="fa-solid fa-plus ms-1"></i>
+                            تسجيل الزيارة
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <hr class="form-divider">
+
+            <!-- ====================== Table ====================== -->
+            <div class="form-section-title mb-3">
+                <i class="fa-solid fa-list-check"></i>
+                قائمة الزيارات المسجلة
+            </div>
+
+            <div class="visit-table-wrapper">
+                <table class="table table-hover align-middle visit-table table-mobile-cards mb-0" style="font-size: 0.9rem;">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>سبب الزيارة</th>
+                            <th>تاريخ الزيارة</th>
+                            <th>ملاحظات</th>
+                            <th class="text-center">الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="visitTableBody"></tbody>
+                </table>
+            </div>
+
+            <div id="visitEmptyState" class="text-center text-muted py-4 d-none">
+                <i class="fa-solid fa-folder-open fa-2x mb-2 text-secondary"></i>
+                <p class="fw-bold mb-0">لا توجد زيارات مسجلة لهذا المريض حتى الآن.</p>
+            </div>
+
+        </div>
+
+    </section>
+
+</div>
+
+
+<!-- ============================================================
+     Edit Modal
+============================================================ -->
+<div class="bn-modal-overlay" id="bnEditModal" role="dialog" aria-modal="true" aria-labelledby="bnEditModalTitle">
+    <div class="bn-modal">
+        <div class="bn-modal-header">
+            <div class="bn-modal-header-icon">
+                <i class="fa-solid fa-pen-to-square"></i>
+            </div>
+            <div class="bn-modal-header-text">
+                <h3 id="bnEditModalTitle">تعديل</h3>
+                <p id="bnEditModalSubtitle">قم بتعديل النص ثم اضغط حفظ</p>
+            </div>
+        </div>
+        <div class="bn-modal-body">
+            <label for="bnEditModalInput">
+                <i class="fa-solid fa-keyboard"></i>
+                <span id="bnEditModalLabel">النص</span>
+            </label>
+            <input type="text" id="bnEditModalInput" class="bn-modal-input" autocomplete="off">
+        </div>
+        <div class="bn-modal-footer">
+            <button type="button" class="bn-btn bn-btn-ghost" id="bnEditModalCancel">
+                <i class="fa-solid fa-xmark"></i>
+                إلغاء
+            </button>
+            <button type="button" class="bn-btn bn-btn-primary" id="bnEditModalSave">
+                <i class="fa-solid fa-floppy-disk"></i>
+                حفظ التعديل
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================
+     Confirm Modal
+============================================================ -->
+<div class="bn-modal-overlay" id="bnConfirmModal" role="dialog" aria-modal="true" aria-labelledby="bnConfirmModalTitle">
+    <div class="bn-modal bn-modal-danger">
+        <div class="bn-modal-header">
+            <div class="bn-modal-header-icon">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <div class="bn-modal-header-text">
+                <h3 id="bnConfirmModalTitle">تأكيد الحذف</h3>
+                <p id="bnConfirmModalSubtitle">لا يمكن التراجع عن هذه العملية</p>
+            </div>
+        </div>
+        <div class="bn-modal-body">
+            <p class="bn-modal-message" id="bnConfirmModalMessage">هل أنت متأكد؟</p>
+        </div>
+        <div class="bn-modal-footer">
+            <button type="button" class="bn-btn bn-btn-ghost" id="bnConfirmModalCancel">
+                <i class="fa-solid fa-xmark"></i>
+                إلغاء
+            </button>
+            <button type="button" class="bn-btn bn-btn-danger" id="bnConfirmModalConfirm">
+                <i class="fa-solid fa-trash"></i>
+                نعم، احذف
+            </button>
+        </div>
+    </div>
+</div>
+
+<script src="~/js/doctor/tabs/visits.js"></script>

@@ -1,0 +1,773 @@
+﻿/* ============================================================
+   Depression Story Tab — Styles
+============================================================ */
+
+/* -------- Theme Variables -------- */
+:root {
+    --bn-primary: #0891b2;
+    --bn-primary-dark: #0e7490;
+    --bn-primary-light: #cffafe;
+    --bn-secondary: #6366f1;
+    --bn-accent: #f59e0b;
+    --bn-success: #10b981;
+    --bn-success-light: #d1fae5;
+    --bn-warning: #f59e0b;
+    --bn-warning-light: #fef3c7;
+    --bn-danger: #ef4444;
+    --bn-danger-light: #fee2e2;
+    --bn-text: #1e293b;
+    --bn-text-soft: #475569;
+    --bn-text-muted: #94a3b8;
+    --bn-border: #e2e8f0;
+    --bn-glass: rgba(255, 255, 255, 0.88);
+    --bn-surface: #ffffff;
+    --bn-surface-soft: #f8fafc;
+    --bn-shadow-sm: 0 4px 24px -4px rgba(0, 0, 0, 0.04);
+    --bn-shadow-md: 0 8px 30px -12px rgba(15, 23, 42, 0.1);
+    --bn-transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    --bn-focus-ring: 0 0 0 4px var(--bn-primary-light);
+    --bn-gradient-primary: linear-gradient(135deg, var(--bn-primary), var(--bn-primary-dark));
+}
+
+[data-theme="dark"] {
+    --bn-primary: #22d3ee;
+    --bn-primary-dark: #06b6d4;
+    --bn-primary-light: #164e63;
+    --bn-secondary: #818cf8;
+    --bn-accent: #fbbf24;
+    --bn-success: #34d399;
+    --bn-success-light: #064e3b;
+    --bn-warning: #fbbf24;
+    --bn-warning-light: #78350f;
+    --bn-danger: #f87171;
+    --bn-danger-light: #7f1d1d;
+    --bn-text: #f1f5f9;
+    --bn-text-soft: #cbd5e1;
+    --bn-text-muted: #94a3b8;
+    --bn-border: #334155;
+    --bn-glass: rgba(30, 41, 59, 0.88);
+    --bn-surface: #1e293b;
+    --bn-surface-soft: #0f172a;
+    --bn-shadow-sm: 0 4px 24px -4px rgba(0, 0, 0, 0.4);
+    --bn-shadow-md: 0 8px 30px -12px rgba(0, 0, 0, 0.5);
+    --bn-focus-ring: 0 0 0 4px rgba(34, 211, 238, 0.25);
+}
+
+    [data-theme="dark"] input,
+    [data-theme="dark"] textarea,
+    [data-theme="dark"] select {
+        color-scheme: dark;
+    }
+
+    [data-theme="dark"] .btn-close {
+        filter: invert(1);
+    }
+
+/* ============================================================
+   Animations
+============================================================ */
+@keyframes ds-slideUpFade {
+    from {
+        opacity: 0;
+        transform: translateY(25px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes ds-pulseDot {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.6;
+        transform: scale(1.15);
+    }
+}
+
+@keyframes ds-validPulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+    }
+
+    70% {
+        box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+    }
+}
+
+@keyframes ds-invalidShake {
+    0%, 100% {
+        transform: translateX(0);
+    }
+
+    20% {
+        transform: translateX(-6px);
+    }
+
+    40% {
+        transform: translateX(6px);
+    }
+
+    60% {
+        transform: translateX(-4px);
+    }
+
+    80% {
+        transform: translateX(4px);
+    }
+}
+
+@keyframes ds-confetti-fall {
+    0% {
+        transform: translateY(-100vh) rotate(0deg);
+        opacity: 1;
+    }
+
+    100% {
+        transform: translateY(100vh) rotate(720deg);
+        opacity: 0;
+    }
+}
+
+@keyframes ds-shimmer {
+    0% {
+        background-position: -1000px 0;
+    }
+
+    100% {
+        background-position: 1000px 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* ============================================================
+   Depression Story Card
+============================================================ */
+.depression-story-card {
+    width: 100%;
+    background: var(--bn-glass);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    border: 1px solid var(--bn-border);
+    border-radius: 24px;
+    box-shadow: var(--bn-shadow-sm);
+    overflow: hidden;
+    animation: ds-slideUpFade 0.6s ease;
+    transition: background 0.35s ease, border-color 0.35s ease, box-shadow var(--bn-transition);
+}
+
+    .depression-story-card:hover {
+        box-shadow: var(--bn-shadow-md);
+    }
+
+.form-card-header {
+    padding: 1.5rem 1.75rem;
+    border-bottom: 1px solid var(--bn-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    background: linear-gradient(135deg, transparent, rgba(8, 145, 178, 0.03));
+}
+
+.form-header-title {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.form-header-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bn-primary-light);
+    color: var(--bn-primary-dark);
+    font-size: 1.3rem;
+    transition: all var(--bn-transition);
+}
+
+.form-header-title:hover .form-header-icon {
+    transform: rotate(-6deg) scale(1.08);
+}
+
+.form-header-title h1 {
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 900;
+    color: var(--bn-text);
+}
+
+.form-header-title p {
+    margin: 0.25rem 0 0;
+    color: var(--bn-text-muted);
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
+.edit-status {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    color: var(--bn-primary);
+    background: rgba(8, 145, 178, 0.08);
+    padding: 0.45rem 0.85rem;
+    border-radius: 50px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    white-space: nowrap;
+    transition: all var(--bn-transition);
+}
+
+    .edit-status:hover {
+        background: rgba(8, 145, 178, 0.15);
+        transform: scale(1.03);
+    }
+
+[data-theme="dark"] .edit-status {
+    background: rgba(34, 211, 238, 0.1);
+}
+
+.personal-form {
+    padding: 1.75rem;
+}
+
+.form-section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.95rem;
+    font-weight: 900;
+    color: var(--bn-text);
+    margin-bottom: 1.25rem;
+}
+
+    .form-section-title i {
+        color: var(--bn-primary);
+    }
+
+.form-label-custom {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.82rem;
+    font-weight: 800;
+    color: var(--bn-text-soft);
+    margin-bottom: 0.55rem;
+    transition: color var(--bn-transition);
+}
+
+    .form-label-custom i {
+        color: var(--bn-primary);
+        font-size: 0.78rem;
+        transition: transform var(--bn-transition);
+    }
+
+.col-12:focus-within .form-label-custom {
+    color: var(--bn-primary);
+}
+
+    .col-12:focus-within .form-label-custom i {
+        transform: scale(1.2);
+    }
+
+.form-control-custom {
+    min-height: 50px;
+    border: 2px solid var(--bn-border);
+    border-radius: 14px;
+    font-family: 'Tajawal', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--bn-text);
+    background: var(--bn-surface);
+    padding: 0.7rem 1rem;
+    transition: all var(--bn-transition);
+    width: 100%;
+    line-height: 1.8;
+}
+
+    .form-control-custom:hover:not(:focus):not(.is-valid):not(.is-invalid) {
+        border-color: rgba(8, 145, 178, 0.4);
+    }
+
+    .form-control-custom:focus {
+        outline: none;
+        border-color: var(--bn-primary);
+        box-shadow: var(--bn-focus-ring);
+        background: var(--bn-surface);
+        transform: translateY(-1px);
+    }
+
+textarea.form-control-custom {
+    min-height: 320px;
+    resize: vertical;
+}
+
+/* Character counter */
+.char-counter {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.35rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--bn-text-muted);
+    margin-top: 0.5rem;
+    transition: color var(--bn-transition);
+}
+
+    .char-counter i {
+        color: var(--bn-primary);
+        font-size: 0.7rem;
+    }
+
+    .char-counter.warning {
+        color: var(--bn-warning);
+    }
+
+        .char-counter.warning i {
+            color: var(--bn-warning);
+        }
+
+    .char-counter.danger {
+        color: var(--bn-danger);
+    }
+
+        .char-counter.danger i {
+            color: var(--bn-danger);
+        }
+
+.form-divider {
+    border: 0;
+    border-top: 1px solid var(--bn-border);
+    margin: 2rem 0;
+}
+
+.form-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-top: 0.5rem;
+}
+
+.form-actions-note {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--bn-text-muted);
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+    .form-actions-note i {
+        color: var(--bn-primary);
+    }
+
+.btn-save {
+    min-width: 220px;
+    border: none;
+    border-radius: 14px;
+    padding: 0.85rem 1.5rem;
+    background: var(--bn-gradient-primary);
+    color: white;
+    font-family: 'Tajawal', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 900;
+    box-shadow: 0 8px 20px -6px rgba(8, 145, 178, 0.45);
+    transition: all var(--bn-transition);
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+}
+
+    .btn-save::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+        background-size: 200% 100%;
+        opacity: 0;
+        transition: opacity var(--bn-transition);
+    }
+
+    .btn-save:hover:not(:disabled) {
+        transform: translateY(-3px);
+        box-shadow: 0 15px 32px -10px rgba(8, 145, 178, 0.6);
+    }
+
+        .btn-save:hover:not(:disabled)::after {
+            opacity: 1;
+            animation: ds-shimmer 1.5s ease-in-out infinite;
+        }
+
+    .btn-save:active:not(:disabled) {
+        transform: translateY(-1px);
+    }
+
+    .btn-save:disabled {
+        opacity: 0.75;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+/* ============================================================
+   Validation
+============================================================ */
+.form-control-custom {
+    transition: border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+}
+
+    .form-control-custom.is-valid {
+        border-color: var(--bn-success) !important;
+        padding-left: 2.75rem;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%2310b981'%3E%3Cpath d='M12.736 3.97a.733.733 0 0 1 1.047 0c.286.289.29.756.01 1.05L7.88 12.01a.733.733 0 0 1-1.065.02L3.217 8.384a.757.757 0 0 1 0-1.06.733.733 0 0 1 1.047 0l3.052 3.093 5.4-6.425a.247.247 0 0 1 .02-.022Z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: left 0.9rem top 1rem;
+        background-size: 1.1rem;
+        animation: ds-validPulse 0.4s ease;
+    }
+
+    .form-control-custom.is-invalid {
+        border-color: var(--bn-danger) !important;
+        padding-left: 2.75rem;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23ef4444'%3E%3Cpath d='M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z'/%3E%3Cpath d='M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0zM7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 4.995z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: left 0.9rem top 1rem;
+        background-size: 1.1rem;
+        animation: ds-invalidShake 0.4s ease;
+    }
+
+/* في textarea، الأيقونة تظهر بأعلى الحقل وليس في منتصفه */
+textarea.form-control-custom.is-valid,
+textarea.form-control-custom.is-invalid {
+    background-position: left 0.9rem top 1rem;
+}
+
+.bn-field-message {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    margin-top: 0.45rem;
+    padding: 0;
+    opacity: 0;
+    max-height: 0;
+    overflow: hidden;
+    transition: opacity 0.25s ease, max-height 0.25s ease, margin 0.25s ease;
+}
+
+    .bn-field-message.show {
+        opacity: 1;
+        max-height: 60px;
+        margin-top: 0.45rem;
+    }
+
+    .bn-field-message.error {
+        color: var(--bn-danger);
+    }
+
+    .bn-field-message.success {
+        color: var(--bn-success);
+    }
+
+    .bn-field-message.warning {
+        color: var(--bn-warning);
+    }
+
+    .bn-field-message i {
+        font-size: 0.75rem;
+        flex-shrink: 0;
+    }
+
+.form-label-custom.required::after {
+    content: " *";
+    color: var(--bn-danger);
+    font-weight: 900;
+    margin-inline-start: 0.15rem;
+}
+
+.bn-validation-summary {
+    display: none;
+    background: var(--bn-danger-light);
+    border: 1.5px solid rgba(239, 68, 68, 0.3);
+    border-radius: 16px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.25rem;
+    animation: ds-slideUpFade 0.35s ease;
+}
+
+    .bn-validation-summary.show {
+        display: block;
+    }
+
+.bn-validation-summary-header {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-weight: 900;
+    font-size: 0.9rem;
+    color: var(--bn-danger);
+    margin-bottom: 0.6rem;
+    position: relative;
+}
+
+    .bn-validation-summary-header > span {
+        flex: 1;
+    }
+
+/* ✅ زر إغلاق لوح الأخطاء */
+.bn-summary-close {
+    background: transparent;
+    border: none;
+    color: var(--bn-danger);
+    font-size: 0.95rem;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all var(--bn-transition);
+    flex-shrink: 0;
+}
+
+    .bn-summary-close:hover {
+        background: rgba(239, 68, 68, 0.15);
+        transform: scale(1.1);
+    }
+
+    .bn-summary-close:focus-visible {
+        outline: 2px solid var(--bn-danger);
+        outline-offset: 2px;
+    }
+
+.bn-validation-summary ul {
+    margin: 0;
+    padding-inline-start: 1.5rem;
+    list-style: none;
+}
+
+.bn-validation-summary li {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--bn-text-soft);
+    padding: 0.25rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    border-radius: 6px;
+    padding-inline-start: 0.4rem;
+    transition: all var(--bn-transition);
+}
+
+    .bn-validation-summary li:hover {
+        background: rgba(239, 68, 68, 0.1);
+        transform: translateX(-3px);
+    }
+
+    .bn-validation-summary li::before {
+        content: "•";
+        color: var(--bn-danger);
+        font-weight: 900;
+        font-size: 1.2rem;
+        line-height: 0;
+    }
+
+[data-theme="dark"] .bn-validation-summary {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(248, 113, 113, 0.35);
+}
+
+[data-theme="dark"] .bn-validation-summary-header {
+    color: #fca5a5;
+}
+
+[data-theme="dark"] .bn-summary-close {
+    color: #fca5a5;
+}
+
+    [data-theme="dark"] .bn-summary-close:hover {
+        background: rgba(248, 113, 113, 0.15);
+    }
+
+/* ============================================================
+   Auto-save Indicator
+============================================================ */
+.bn-save-indicator {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 99998;
+    display: none;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: var(--bn-warning-light);
+    color: #b45309;
+    border-radius: 50px;
+    font-size: 0.78rem;
+    font-weight: 800;
+    box-shadow: var(--bn-shadow-sm);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+    .bn-save-indicator.show {
+        display: flex;
+    }
+
+    .bn-save-indicator .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--bn-warning);
+        animation: ds-pulseDot 1.5s ease-in-out infinite;
+    }
+
+    .bn-save-indicator.saved {
+        background: var(--bn-success-light);
+        color: #047857;
+        border-color: rgba(16, 185, 129, 0.3);
+    }
+
+        .bn-save-indicator.saved .dot {
+            background: var(--bn-success);
+            animation: none;
+        }
+
+[data-theme="dark"] .bn-save-indicator {
+    background: #78350f;
+    color: #fcd34d;
+}
+
+    [data-theme="dark"] .bn-save-indicator.saved {
+        background: #064e3b;
+        color: #6ee7b7;
+    }
+
+/* ============================================================
+   Confetti
+============================================================ */
+.bn-confetti {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 99997;
+    overflow: hidden;
+    display: none;
+}
+
+    .bn-confetti.active {
+        display: block;
+    }
+
+.confetti-piece {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background: var(--bn-primary);
+    animation: ds-confetti-fall 3s ease-in forwards;
+}
+
+    .confetti-piece:nth-child(2n) {
+        background: var(--bn-secondary);
+        border-radius: 50%;
+    }
+
+    .confetti-piece:nth-child(3n) {
+        background: var(--bn-accent);
+    }
+
+    .confetti-piece:nth-child(5n) {
+        background: var(--bn-success);
+        width: 8px;
+        height: 14px;
+    }
+
+/* ============================================================
+   Toast — يُدار بالكامل من index.css
+   ⚠️ لا نضع قواعد .toast-container هنا لتجنب التعارض
+============================================================ */
+
+/* ============================================================
+   Responsive
+============================================================ */
+@media (max-width: 767px) {
+    .form-card-header {
+        align-items: flex-start;
+        flex-direction: column;
+        padding: 1.15rem;
+    }
+
+    .personal-form {
+        padding: 1.15rem;
+    }
+
+    .form-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .btn-save {
+        width: 100%;
+    }
+
+    .bn-save-indicator {
+        top: 0.6rem;
+        right: 0.6rem;
+    }
+}
+
+@media (max-width: 575px) {
+    .personal-form {
+        padding: 1rem;
+    }
+
+    .form-card-header {
+        padding: 1rem;
+    }
+
+    textarea.form-control-custom {
+        min-height: 240px;
+    }
+}
+
+@media print {
+    .bn-save-indicator, .form-actions, .bn-confetti {
+        display: none !important;
+    }
+
+    .depression-story-card {
+        box-shadow: none !important;
+        border: 1px solid #ccc !important;
+    }
+}

@@ -1,0 +1,104 @@
+﻿@page
+@model Balancy.Areas.Doctor.Pages.Tabs.SdsModel
+@{
+    Layout = null;
+}
+
+<link rel="stylesheet" href="~/css/doctor/tabs/sds.css" />
+
+<div class="sds-container">
+
+    <!-- ============================================================
+         SDS Header
+    ============================================================ -->
+    <section class="sds-header">
+        <div class="sds-header-content">
+            <div class="sds-title-section">
+                <div class="sds-icon"><i class="fa-solid fa-chart-line"></i></div>
+                <div>
+                    <h1>مقياس الإعاقة Sheehan (SDS)</h1>
+                    <p>تقييم مدى تأثر الأنشطة اليومية والعملية والعائلية والاجتماعية بالأعراض</p>
+                </div>
+            </div>
+            <div class="sds-range">
+                <small>نطاق النتيجة</small>
+                <strong>0 - 30</strong>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         Intro Card
+    ============================================================ -->
+    <section class="intro-card">
+        <div class="intro-icon"><i class="fa-solid fa-circle-info"></i></div>
+        <div>
+            <h3>تعليمات الإجابة</h3>
+            <p>تقيس الأسئلة التالية مدى تأثير الأعراض على عمل المريض وعلاقاته وحياته الأسرية. يرجى اختيار الرقم من 0 (لا تأثير) إلى 10 (تأثير شديد للغاية).</p>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         Questions Card
+    ============================================================ -->
+    <section class="questions-card">
+        <form id="sdsForm" data-autosave="sdsDraft" novalidate>
+
+            <div id="sdsQuestionsContainer"></div>
+
+            <section class="result-card" id="sdsResultCard">
+                <div class="result-main">
+                    <div class="score-display">
+                        <div class="score-circle">
+                            <span class="score-number" id="sdsTotalScore">0</span>
+                            <span class="score-max">من 30</span>
+                        </div>
+                        <div class="result-info">
+                            <h3>نتيجة مقياس الإعاقة Sheehan</h3>
+                            <p id="sdsResultDescription">سيتم عرض تصنيف النتيجة هنا.</p>
+                        </div>
+                    </div>
+                    <div class="severity-badge" id="sdsSeverityBadge">لم يتم التقييم</div>
+                </div>
+
+                <div class="progress-wrapper">
+                    <div class="progress-label">
+                        <span>مستوى الإعاقة والتأثير</span>
+                        <span id="sdsProgressPercentage">0%</span>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar" id="sdsScoreProgress" style="width: 0%"></div>
+                    </div>
+                </div>
+            </section>
+
+            <div class="sds-actions">
+                <div class="answers-status" id="sdsAnswersStatus">تمت الإجابة على 0 من 3 أسئلة</div>
+                <button type="button" class="btn-calculate" id="sdsCalculateButton">
+                    <i class="fa-solid fa-calculator"></i>
+                    حساب النتيجة
+                </button>
+            </div>
+
+            <div class="save-section" id="sdsSaveSection">
+                <button type="submit" class="btn-save-sds" id="saveSdsButton">
+                    <span id="saveSdsButtonText">
+                        <i class="fa-solid fa-floppy-disk"></i>
+                        حفظ نتيجة الاختبار
+                    </span>
+                    <span id="saveSdsSpinner" class="d-none">
+                        <span class="spinner-border spinner-border-sm"></span>
+                        جاري الحفظ...
+                    </span>
+                </button>
+            </div>
+
+        </form>
+    </section>
+
+</div>
+
+<!-- Confetti -->
+<div class="bn-confetti" id="bnConfetti" aria-hidden="true"></div>
+
+<script src="~/js/doctor/tabs/sds.js"></script>

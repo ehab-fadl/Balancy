@@ -1,0 +1,297 @@
+﻿@page
+@model Balancy.Areas.Doctor.Pages.ClinicStatistics.ClinicStatisticsModel
+@{
+}
+<!-- Background Shapes -->
+<div class="bg-shapes">
+    <div class="shape shape-1"></div>
+    <div class="shape shape-2"></div>
+    <div class="shape shape-3"></div>
+</div>
+
+<div class="page-wrapper">
+
+    <!-- Page Header -->
+    <section class="stats-page-header">
+        <div class="header-content">
+            <div class="header-icon"><i class="fa-solid fa-chart-line"></i></div>
+            <div class="header-text">
+                <h1>إحصائيات العيادة</h1>
+                <p>نظرة شاملة على أداء العيادة ومؤشرات المرضى</p>
+            </div>
+        </div>
+     
+    </section>
+
+    <!-- Period Filter -->
+    <div class="period-filter">
+        <span class="period-filter-label"><i class="fa-solid fa-calendar-days"></i> الفترة الزمنية:</span>
+        <button type="button" class="period-btn active" data-period="7">آخر 7 أيام</button>
+        <button type="button" class="period-btn" data-period="30">آخر 30 يوم</button>
+        <button type="button" class="period-btn" data-period="90">آخر 3 أشهر</button>
+        <button type="button" class="period-btn" data-period="365">آخر سنة</button>
+    </div>
+
+    <!-- KPI Cards -->
+    <section class="kpi-grid">
+        <div class="kpi-card kpi-total" style="animation-delay: 0.05s">
+            <div class="kpi-icon"><i class="fa-solid fa-users"></i></div>
+            <div class="kpi-label"><i class="fa-solid fa-user-group"></i> إجمالي المرضى</div>
+            <div class="kpi-value" id="kpiTotal">0</div>
+            <span class="kpi-change up"><i class="fa-solid fa-arrow-up"></i> +12%</span>
+        </div>
+
+        <div class="kpi-card kpi-active" style="animation-delay: 0.1s">
+            <div class="kpi-icon"><i class="fa-solid fa-user-check"></i></div>
+            <div class="kpi-label"><i class="fa-solid fa-circle-check"></i> مرضى نشطون</div>
+            <div class="kpi-value" id="kpiActive">0</div>
+            <span class="kpi-change up"><i class="fa-solid fa-arrow-up"></i> +8%</span>
+        </div>
+
+        <div class="kpi-card kpi-critical" style="animation-delay: 0.15s">
+            <div class="kpi-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <div class="kpi-label"><i class="fa-solid fa-circle-exclamation"></i> حالات حرجة</div>
+            <div class="kpi-value" id="kpiCritical">0</div>
+            <span class="kpi-change down"><i class="fa-solid fa-arrow-down"></i> -5%</span>
+        </div>
+
+        <div class="kpi-card kpi-today" style="animation-delay: 0.2s">
+            <div class="kpi-icon"><i class="fa-solid fa-calendar-check"></i></div>
+            <div class="kpi-label"><i class="fa-solid fa-clock"></i> زيارات اليوم</div>
+            <div class="kpi-value" id="kpiToday">0</div>
+            <span class="kpi-change stable"><i class="fa-solid fa-minus"></i> مستقر</span>
+        </div>
+    </section>
+
+    <!-- Secondary KPIs -->
+    <section class="kpi-grid">
+        <div class="kpi-card kpi-total" style="animation-delay: 0.25s">
+            <div class="kpi-icon"><i class="fa-solid fa-calendar-day"></i></div>
+            <div class="kpi-label">زيارات هذا الأسبوع</div>
+            <div class="kpi-value" id="kpiWeek">0</div>
+        </div>
+
+        <div class="kpi-card kpi-active" style="animation-delay: 0.3s">
+            <div class="kpi-icon"><i class="fa-solid fa-user-plus"></i></div>
+            <div class="kpi-label">مرضى جدد هذا الشهر</div>
+            <div class="kpi-value" id="kpiNew">0</div>
+        </div>
+
+        <div class="kpi-card kpi-critical" style="animation-delay: 0.35s">
+            <div class="kpi-icon"><i class="fa-solid fa-percent"></i></div>
+            <div class="kpi-label">نسبة الالتزام بالعلاج</div>
+            <div class="kpi-value" id="kpiAdherence">0%</div>
+        </div>
+
+        <div class="kpi-card kpi-today" style="animation-delay: 0.4s">
+            <div class="kpi-icon"><i class="fa-solid fa-clock-rotate-left"></i></div>
+            <div class="kpi-label">متوسط مدة الجلسة</div>
+            <div class="kpi-value" id="kpiSessionDuration">0 د</div>
+        </div>
+    </section>
+
+    <!-- Row 1: الزيارات (2/3) + التشخيصات (1/3) -->
+    <div class="charts-row">
+
+        <div class="chart-card wide" style="animation-delay: 0.1s">
+            <div class="chart-header">
+                <div>
+                    <div class="chart-title">
+                        <div class="chart-title-icon"><i class="fa-solid fa-chart-area"></i></div>
+                        الزيارات عبر الزمن
+                    </div>
+                    <div class="chart-subtitle">عدد زيارات المرضى خلال الفترة المحددة</div>
+                </div>
+            </div>
+            <div class="chart-body">
+                <canvas id="visitsChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-card medium" style="animation-delay: 0.15s">
+            <div class="chart-header">
+                <div>
+                    <div class="chart-title">
+                        <div class="chart-title-icon"><i class="fa-solid fa-chart-pie"></i></div>
+                        توزيع التشخيصات
+                    </div>
+                    <div class="chart-subtitle">النسب حسب النوع</div>
+                </div>
+            </div>
+            <div class="chart-body">
+                <canvas id="diagnosesChart"></canvas>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Row 2: 3 بطاقات متساوية (الأعمار + الجنس + الصحة) -->
+    <div class="charts-row">
+
+        <div class="chart-card half" style="animation-delay: 0.2s">
+            <div class="chart-header">
+                <div>
+                    <div class="chart-title">
+                        <div class="chart-title-icon"><i class="fa-solid fa-chart-bar"></i></div>
+                        توزيع الأعمار
+                    </div>
+                    <div class="chart-subtitle">المرضى حسب الفئة العمرية</div>
+                </div>
+            </div>
+            <div class="chart-body">
+                <canvas id="ageChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-card half" style="animation-delay: 0.25s">
+            <div class="chart-header">
+                <div>
+                    <div class="chart-title">
+                        <div class="chart-title-icon"><i class="fa-solid fa-venus-mars"></i></div>
+                        توزيع الجنس
+                    </div>
+                    <div class="chart-subtitle">النسب حسب الجنس</div>
+                </div>
+            </div>
+            <div class="chart-body">
+                <canvas id="genderChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-card half" style="animation-delay: 0.3s">
+            <div class="chart-header">
+                <div>
+                    <div class="chart-title">
+                        <div class="chart-title-icon" style="background: var(--bn-success-light); color: var(--bn-success);">
+                            <i class="fa-solid fa-heart-pulse"></i>
+                        </div>
+                        مؤشرات الصحة النفسية
+                    </div>
+                    <div class="chart-subtitle">نسب التحسن العام</div>
+                </div>
+            </div>
+            <div class="chart-body">
+                <canvas id="healthChart"></canvas>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Row 3: التقييمات الكامل -->
+    <div class="charts-row">
+        <div class="chart-card full" style="animation-delay: 0.35s">
+            <div class="chart-header">
+                <div>
+                    <div class="chart-title">
+                        <div class="chart-title-icon"><i class="fa-solid fa-chart-line"></i></div>
+                        مؤشرات التقييم النفسي
+                    </div>
+                    <div class="chart-subtitle">متوسط نتائج GAD-7 · PHQ-9 · SDS على مدار الفترة</div>
+                </div>
+            </div>
+            <div class="chart-body" style="height: 360px;">
+                <canvas id="assessmentsChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Insights Section -->
+    <section class="insights-grid">
+        <div class="insight-card" style="animation-delay: 0.05s">
+            <div class="insight-icon icon-success"><i class="fa-solid fa-arrow-trend-up"></i></div>
+            <div class="insight-content">
+                <div class="insight-title">تحسن ملحوظ في الالتزام</div>
+                <div class="insight-text">ارتفعت نسبة التزام المرضى بالعلاج بنسبة 15% مقارنة بالشهر الماضي.</div>
+                <span class="insight-badge" style="background: var(--bn-success-light); color: #047857;">إيجابي</span>
+            </div>
+        </div>
+
+        <div class="insight-card" style="animation-delay: 0.1s">
+            <div class="insight-icon icon-warning"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <div class="insight-content">
+                <div class="insight-title">مرضى يحتاجون متابعة</div>
+                <div class="insight-text">يوجد 5 مرضى لم يزوروا العيادة منذ أكثر من 45 يوماً.</div>
+                <span class="insight-badge" style="background: var(--bn-warning-light); color: #b45309;">يحتاج إجراء</span>
+            </div>
+        </div>
+
+        <div class="insight-card" style="animation-delay: 0.15s">
+            <div class="insight-icon icon-danger"><i class="fa-solid fa-bell"></i></div>
+            <div class="insight-content">
+                <div class="insight-title">تنبيه: حالات حرجة</div>
+                <div class="insight-text">تم رصد 3 حالات بتقييم C-SSRS مرتفع، تحتاج مراجعة عاجلة.</div>
+                <span class="insight-badge" style="background: var(--bn-danger-light); color: #b91c1c;">عاجل</span>
+            </div>
+        </div>
+
+        <div class="insight-card" style="animation-delay: 0.2s">
+            <div class="insight-icon icon-info"><i class="fa-solid fa-lightbulb"></i></div>
+            <div class="insight-content">
+                <div class="insight-title">ذروة الزيارات</div>
+                <div class="insight-text">أعلى نسبة زيارات أيام الأحد والاثنين بين 10 ص و12 ظهراً.</div>
+                <span class="insight-badge" style="background: var(--bn-primary-light); color: var(--bn-primary-dark);">معلومة</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Top Lists Row -->
+    <div class="top-lists-row">
+
+        <div class="top-list-card" style="animation-delay: 0.05s">
+            <div class="chart-header">
+                <div class="chart-title">
+                    <div class="chart-title-icon" style="background: var(--bn-purple-light); color: var(--bn-purple);">
+                        <i class="fa-solid fa-ranking-star"></i>
+                    </div>
+                    أكثر التشخيصات تكراراً
+                </div>
+            </div>
+            <div class="top-list" id="topDiagnosesList"></div>
+        </div>
+
+        <div class="top-list-card" style="animation-delay: 0.1s">
+            <div class="chart-header">
+                <div class="chart-title">
+                    <div class="chart-title-icon" style="background: var(--bn-success-light); color: var(--bn-success);">
+                        <i class="fa-solid fa-user-check"></i>
+                    </div>
+                    المرضى الأكثر زيارة
+                </div>
+            </div>
+            <div class="top-list" id="topPatientsList"></div>
+        </div>
+
+        <div class="top-list-card" style="animation-delay: 0.15s">
+            <div class="chart-header">
+                <div class="chart-title">
+                    <div class="chart-title-icon" style="background: var(--bn-warning-light); color: var(--bn-warning);">
+                        <i class="fa-solid fa-bell"></i>
+                    </div>
+                    آخر الأنشطة
+                </div>
+            </div>
+            <div class="activity-list" id="activityList"></div>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- Toast -->
+<div class="toast-container" id="toastContainer">
+    <div id="notificationToast" class="toast toast-custom" role="alert">
+        <div class="toast-body">
+            <div class="toast-icon-wrap" id="toastIcon"></div>
+            <div class="toast-content">
+                <strong id="toastTitle"></strong>
+                <div id="toastMessage" class="small"></div>
+            </div>
+            <button type="button" class="btn-close" id="toastCloseBtn" aria-label="إغلاق"></button>
+        </div>
+        <div class="toast-progress"><div class="toast-progress-bar" id="toastProgressBar"></div></div>
+    </div>
+</div>
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="~/js/doctor/ClinicStatistics/ClinicStatistics.js"></script>
+}

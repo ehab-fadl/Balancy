@@ -1,0 +1,110 @@
+﻿@page
+@model Balancy.Areas.Doctor.Pages.Tabs.DepressionStoryModel
+@{
+    Layout = null;
+}
+
+<link rel="stylesheet" href="~/css/doctor/tabs/depressionstory.css" />
+
+<!-- Auto-save Indicator -->
+<div class="bn-save-indicator" id="saveIndicator" role="status" aria-live="polite">
+    <span class="dot"></span>
+    <span id="saveIndicatorText">جاري الحفظ التلقائي...</span>
+</div>
+
+<!-- Confetti -->
+<div class="bn-confetti" id="bnConfetti" aria-hidden="true"></div>
+
+<!-- ============================================================
+     Depression Story Card
+============================================================ -->
+<section class="depression-story-card">
+
+    <div class="form-card-header">
+        <div class="form-header-title">
+            <div class="form-header-icon">
+                <i class="fa-solid fa-book-medical"></i>
+            </div>
+            <div>
+                <h1>قصة مرض الاكتئاب</h1>
+                <p>عرض وتعديل وحفظ القصة المرضية الكاملة للمريض</p>
+            </div>
+        </div>
+        <div class="edit-status">
+            <i class="fa-solid fa-pen-to-square"></i>
+            القصة قابلة للقراءة والتعديل والحفظ
+        </div>
+    </div>
+
+    <form id="depressionStoryForm" class="personal-form" data-autosave="depressionStoryDraft" novalidate>
+
+        <div class="form-section-title">
+            <i class="fa-solid fa-book-open"></i>
+            القصة المرضية الكاملة
+        </div>
+
+        <div class="row g-4">
+            <div class="col-12">
+                <label for="depressionStory" class="form-label-custom">
+                    <i class="fa-solid fa-notes-medical"></i>
+                    تفاصيل قصة مرض الاكتئاب
+                </label>
+                <textarea class="form-control form-control-custom"
+                          id="depressionStory"
+                          name="depressionStory"
+                          placeholder="اكتب هنا القصة المرضية الكاملة للمريض... (تاريخ بداية الأعراض، الظروف المحيطة، تطور الحالة، العلاجات السابقة، الاستجابة للعلاج، إلخ)"
+                          style="min-height: 320px;"
+                          required></textarea>
+
+                <div class="char-counter" id="charCounter">
+                    <i class="fa-solid fa-keyboard"></i>
+                    <span id="charCount">0</span> / 5000 حرف
+                </div>
+            </div>
+        </div>
+
+        <hr class="form-divider">
+
+        <div class="form-actions">
+            <div class="form-actions-note">
+                <i class="fa-solid fa-shield-heart"></i>
+                سيتم حفظ القصة المرضية بشكل آمن في ملف المريض
+            </div>
+
+            <button type="submit" class="btn-save" id="saveStoryButton">
+                <span id="saveStoryButtonText">
+                    <i class="fa-solid fa-floppy-disk"></i>
+                    حفظ القصة المرضية
+                </span>
+                <span id="saveStorySpinner" class="d-none">
+                    <span class="spinner-border spinner-border-sm" role="status"></span>
+                    جاري الحفظ...
+                </span>
+            </button>
+        </div>
+
+    </form>
+
+</section>
+
+<!-- ============================================================
+     Toast Container
+============================================================= -->
+<div class="toast-container" id="toastContainer">
+    <div id="notificationToast" class="toast toast-custom" role="alert"
+         aria-live="assertive" aria-atomic="true" data-bs-autohide="false">
+        <div class="toast-body">
+            <div class="toast-icon-wrap" id="toastIcon"></div>
+            <div class="toast-content">
+                <strong id="toastTitle"></strong>
+                <div id="toastMessage" class="small"></div>
+            </div>
+            <button type="button" class="btn-close" id="toastCloseBtn" aria-label="إغلاق"></button>
+        </div>
+        <div class="toast-progress">
+            <div class="toast-progress-bar" id="toastProgressBar"></div>
+        </div>
+    </div>
+</div>
+
+<script src="~/js/doctor/tabs/depressionstory.js"></script>

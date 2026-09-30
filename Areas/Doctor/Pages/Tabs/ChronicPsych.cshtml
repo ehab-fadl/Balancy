@@ -1,0 +1,190 @@
+﻿@page
+@model Balancy.Areas.Doctor.Pages.Tabs.ChronicPsychModel
+@{
+    Layout = null;
+}
+
+<link rel="stylesheet" href="~/css/doctor/tabs/chronicpsych.css" />
+
+<!-- ============================================================
+     Card: Chronic Psychiatric Diseases
+============================================================ -->
+<section class="chronic-psych-card">
+
+    <div class="form-card-header">
+        <div class="form-header-title">
+            <div class="form-header-icon">
+                <i class="fa-solid fa-brain"></i>
+            </div>
+            <div>
+                <h1>قائمة الأمراض النفسية المزمنة</h1>
+                <p>إدارة الأمراض النفسية المزمنة وتتبع الاستجابة للعلاج</p>
+            </div>
+        </div>
+        <div class="edit-status">
+            <i class="fa-solid fa-notes-medical"></i>
+            سجل نفسي تخصصي متكامل
+        </div>
+    </div>
+
+    <form id="chronicPsychForm" class="personal-form" novalidate>
+        <input type="hidden" id="cpEditIndex" value="-1">
+
+        <div class="form-section-title">
+            <i class="fa-solid fa-file-medical"></i>
+            <span id="cpFormTitle">إضافة مرض نفسي مزمن جديد</span>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-6">
+                <label for="cpName" class="form-label-custom">
+                    <i class="fa-solid fa-disease"></i>
+                    اسم المرض
+                </label>
+                <input type="text" class="form-control form-control-custom" id="cpName" name="cpName" placeholder="مثال: اضطراب الاكتئاب الجسيم..." required>
+            </div>
+
+            <div class="col-md-6">
+                <label for="cpDate" class="form-label-custom">
+                    <i class="fa-solid fa-calendar-days"></i>
+                    تاريخ التشخيص
+                </label>
+                <input type="date" class="form-control form-control-custom" id="cpDate" name="cpDate" required>
+            </div>
+
+            <div class="col-md-6">
+                <label for="cpHospitalization" class="form-label-custom">
+                    <i class="fa-solid fa-hospital"></i>
+                    الدخول لمصح نفسي مسبقاً
+                </label>
+                <select class="form-select form-control-custom" id="cpHospitalization" name="cpHospitalization" required>
+                    <option value="">اختر الحالة</option>
+                    <option value="نعم">نعم</option>
+                    <option value="لا">لا</option>
+                </select>
+            </div>
+
+            <div class="col-md-6">
+                <label for="cpMeds" class="form-label-custom">
+                    <i class="fa-solid fa-pills"></i>
+                    الأدوية
+                </label>
+                <input type="text" class="form-control form-control-custom" id="cpMeds" name="cpMeds" placeholder="مثال: سيرترالين 50 مغ..." required>
+            </div>
+
+            <div class="col-md-6">
+                <label for="cpSeverity" class="form-label-custom">
+                    <i class="fa-solid fa-gauge-high"></i>
+                    شدة المرض
+                </label>
+                <select class="form-select form-control-custom" id="cpSeverity" name="cpSeverity" required>
+                    <option value="">اختر شدة المرض</option>
+                    <option value="بسيط">بسيط</option>
+                    <option value="متوسط">متوسط</option>
+                    <option value="شديد">شديد</option>
+                    <option value="حرج">حرج</option>
+                </select>
+            </div>
+
+            <div class="col-md-6">
+                <label for="cpResponse" class="form-label-custom">
+                    <i class="fa-solid fa-chart-line"></i>
+                    الاستجابة للعلاج
+                </label>
+                <select class="form-select form-control-custom" id="cpResponse" name="cpResponse" required>
+                    <option value="">اختر مستوى الاستجابة</option>
+                    <option value="ممتازة">ممتازة</option>
+                    <option value="جيدة">جيدة</option>
+                    <option value="جزئية">جزئية</option>
+                    <option value="ضعيفة / مقاومة">ضعيفة / مقاومة</option>
+                </select>
+            </div>
+
+            <div class="col-12">
+                <label for="cpNotes" class="form-label-custom">
+                    <i class="fa-solid fa-comment-medical"></i>
+                    ملاحظات
+                </label>
+                <textarea class="form-control form-control-custom" id="cpNotes" name="cpNotes" placeholder="ملاحظات إضافية..."></textarea>
+            </div>
+        </div>
+
+        <div class="d-flex gap-2 justify-content-end mt-4 flex-wrap">
+            <button type="button" id="cpCancelBtn" class="btn-secondary d-none" onclick="resetChronicPsychForm()">
+                <i class="fa-solid fa-xmark"></i>
+                إلغاء التعديل
+            </button>
+            <button type="submit" id="cpSubmitBtn" class="btn-save">
+                <i class="fa-solid fa-plus"></i>
+                إضافة المرض النفسي
+            </button>
+        </div>
+    </form>
+
+    <hr class="form-divider" style="margin-inline: 1.75rem;">
+
+    <div class="personal-form" style="padding-top: 0;">
+        <div class="form-section-title">
+            <i class="fa-solid fa-list-check"></i>
+            قائمة الأمراض النفسية المسجلة حالياً
+            <span id="cpCountBadge" style="display:none; margin-inline-start: auto; background: var(--bn-warning-light); color: #b45309; padding: 0.2rem 0.65rem; border-radius: 50px; font-size: 0.72rem; font-weight: 900;">0</span>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table-custom table-mobile-cards">
+                <thead>
+                    <tr>
+                        <th style="width: 50px;">#</th>
+                        <th>اسم المرض</th>
+                        <th>تاريخ التشخيص</th>
+                        <th>دخول لمصح</th>
+                        <th>الأدوية</th>
+                        <th>الشدة</th>
+                        <th>الاستجابة</th>
+                        <th>ملاحظات</th>
+                        <th class="text-center" style="width: 130px;">الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody id="chronicPsychTableBody"></tbody>
+            </table>
+        </div>
+
+        <div id="chronicPsychEmptyState" class="empty-state" style="display: none;">
+            <i class="fa-solid fa-folder-open"></i>
+            <p>لا توجد أمراض نفسية مزمنة مسجلة لهذا المريض حتى الآن.</p>
+        </div>
+    </div>
+
+</section>
+
+<!-- ============================================================
+     Confirm Delete Modal
+============================================================ -->
+<div class="bn-modal-overlay" id="bnConfirmModal" role="dialog" aria-modal="true">
+    <div class="bn-modal">
+        <div class="bn-modal-header">
+            <div class="bn-modal-header-icon">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <div class="bn-modal-header-text">
+                <h3 id="bnConfirmModalTitle">تأكيد الحذف</h3>
+                <p id="bnConfirmModalSubtitle">لا يمكن التراجع عن هذه العملية</p>
+            </div>
+        </div>
+        <div class="bn-modal-body">
+            <p class="bn-modal-message" id="bnConfirmModalMessage">هل أنت متأكد؟</p>
+        </div>
+        <div class="bn-modal-footer">
+            <button type="button" class="bn-btn bn-btn-ghost" id="bnConfirmModalCancel">
+                <i class="fa-solid fa-xmark"></i>
+                إلغاء
+            </button>
+            <button type="button" class="bn-btn bn-btn-danger" id="bnConfirmModalConfirm">
+                <i class="fa-solid fa-trash"></i>
+                نعم، احذف
+            </button>
+        </div>
+    </div>
+</div>
+
+<script src="~/js/doctor/tabs/chronicpsych.js"></script>

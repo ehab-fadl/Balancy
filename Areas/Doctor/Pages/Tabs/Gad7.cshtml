@@ -1,0 +1,104 @@
+﻿@page
+@model Balancy.Areas.Doctor.Pages.Tabs.Gad7Model
+@{
+    Layout = null;
+}
+
+<link rel="stylesheet" href="~/css/doctor/tabs/gad7.css" />
+
+<div class="gad-container">
+
+    <!-- ============================================================
+         GAD Header
+    ============================================================ -->
+    <section class="gad-header">
+        <div class="gad-header-content">
+            <div class="gad-title-section">
+                <div class="gad-icon"><i class="fa-solid fa-brain"></i></div>
+                <div>
+                    <h1>مؤشر القلق العام GAD-7</h1>
+                    <p>تقييم مستوى أعراض القلق خلال الفترة الأخيرة</p>
+                </div>
+            </div>
+            <div class="gad-range">
+                <small>نطاق النتيجة</small>
+                <strong>0 - 21</strong>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         Intro Card
+    ============================================================ -->
+    <section class="intro-card">
+        <div class="intro-icon"><i class="fa-solid fa-circle-info"></i></div>
+        <div>
+            <h3>تعليمات الإجابة</h3>
+            <p>يرجى اختيار الإجابة التي تعبّر بشكل أفضل عن مدى تكرار شعور المريض بكل عرض من الأعراض التالية.</p>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         Questions Card
+    ============================================================ -->
+    <section class="questions-card">
+        <form id="gadForm" data-autosave="gad7Draft" novalidate>
+
+            <div id="questionsContainer"></div>
+
+            <section class="result-card" id="resultCard">
+                <div class="result-main">
+                    <div class="score-display">
+                        <div class="score-circle">
+                            <span class="score-number" id="totalScore">0</span>
+                            <span class="score-max">من 21</span>
+                        </div>
+                        <div class="result-info">
+                            <h3>نتيجة مؤشر القلق العام</h3>
+                            <p id="resultDescription">سيتم عرض تصنيف النتيجة هنا.</p>
+                        </div>
+                    </div>
+                    <div class="severity-badge" id="severityBadge">لم يتم التقييم</div>
+                </div>
+
+                <div class="progress-wrapper">
+                    <div class="progress-label">
+                        <span>مستوى النتيجة</span>
+                        <span id="progressPercentage">0%</span>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar" id="scoreProgress" style="width: 0%"></div>
+                    </div>
+                </div>
+            </section>
+
+            <div class="gad-actions">
+                <div class="answers-status" id="answersStatus">تمت الإجابة على 0 من 7 أسئلة</div>
+                <button type="button" class="btn-calculate" id="calculateButton">
+                    <i class="fa-solid fa-calculator"></i>
+                    حساب النتيجة
+                </button>
+            </div>
+
+            <div class="save-section" id="saveSection">
+                <button type="submit" class="btn-save-gad" id="saveGadButton">
+                    <span id="saveGadButtonText">
+                        <i class="fa-solid fa-floppy-disk"></i>
+                        حفظ نتيجة الاختبار
+                    </span>
+                    <span id="saveGadSpinner" class="d-none">
+                        <span class="spinner-border spinner-border-sm"></span>
+                        جاري الحفظ...
+                    </span>
+                </button>
+            </div>
+
+        </form>
+    </section>
+
+</div>
+
+<!-- Confetti -->
+<div class="bn-confetti" id="bnConfetti" aria-hidden="true"></div>
+
+<script src="~/js/doctor/tabs/gad7.js"></script>

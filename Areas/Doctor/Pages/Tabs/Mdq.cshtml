@@ -1,0 +1,104 @@
+﻿@page
+@model Balancy.Areas.Doctor.Pages.Tabs.MdqModel
+@{
+    Layout = null;
+}
+
+<link rel="stylesheet" href="~/css/doctor/tabs/mdq.css" />
+
+<div class="mdq-container">
+
+    <!-- ============================================================
+         MDQ Header
+    ============================================================ -->
+    <section class="mdq-header">
+        <div class="mdq-header-content">
+            <div class="mdq-title-section">
+                <div class="mdq-icon"><i class="fa-solid fa-bolt"></i></div>
+                <div>
+                    <h1>اختبار اضطراب ثنائي القطب (MDQ)</h1>
+                    <p>استبيان اضطراب المزاج للكشف عن تقلبات المزاج الحادة</p>
+                </div>
+            </div>
+            <div class="mdq-range">
+                <small>نطاق النتيجة</small>
+                <strong>0 - 13</strong>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         Intro Card
+    ============================================================ -->
+    <section class="intro-card">
+        <div class="intro-icon"><i class="fa-solid fa-circle-info"></i></div>
+        <div>
+            <h3>تعليمات الإجابة</h3>
+            <p>يرجى الإجابة على الأسئلة التالية بـ (نعم) أو (لا) بناءً على تجاربك السابقة التي مررت بها في حياتك.</p>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         Questions Card
+    ============================================================ -->
+    <section class="questions-card">
+        <form id="mdqForm" data-autosave="mdqDraft" novalidate>
+
+            <div id="mdqQuestionsContainer"></div>
+
+            <section class="result-card" id="mdqResultCard">
+                <div class="result-main">
+                    <div class="score-display">
+                        <div class="score-circle">
+                            <span class="score-number" id="mdqTotalScore">0</span>
+                            <span class="score-max">من 13</span>
+                        </div>
+                        <div class="result-info">
+                            <h3>نتيجة اختبار اضطراب ثنائي القطب</h3>
+                            <p id="mdqResultDescription">سيتم عرض تصنيف النتيجة هنا.</p>
+                        </div>
+                    </div>
+                    <div class="severity-badge" id="mdqSeverityBadge">لم يتم التقييم</div>
+                </div>
+
+                <div class="progress-wrapper">
+                    <div class="progress-label">
+                        <span>مستوى النتيجة</span>
+                        <span id="mdqProgressPercentage">0%</span>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar" id="mdqScoreProgress" style="width: 0%"></div>
+                    </div>
+                </div>
+            </section>
+
+            <div class="mdq-actions">
+                <div class="answers-status" id="mdqAnswersStatus">تمت الإجابة على 0 من 13 سؤالاً</div>
+                <button type="button" class="btn-calculate" id="mdqCalculateButton">
+                    <i class="fa-solid fa-calculator"></i>
+                    حساب النتيجة
+                </button>
+            </div>
+
+            <div class="save-section" id="mdqSaveSection">
+                <button type="submit" class="btn-save-mdq" id="saveMdqButton">
+                    <span id="saveMdqButtonText">
+                        <i class="fa-solid fa-floppy-disk"></i>
+                        حفظ نتيجة الاختبار
+                    </span>
+                    <span id="saveMdqSpinner" class="d-none">
+                        <span class="spinner-border spinner-border-sm"></span>
+                        جاري الحفظ...
+                    </span>
+                </button>
+            </div>
+
+        </form>
+    </section>
+
+</div>
+
+<!-- Confetti -->
+<div class="bn-confetti" id="bnConfetti" aria-hidden="true"></div>
+
+<script src="~/js/doctor/tabs/mdq.js"></script>

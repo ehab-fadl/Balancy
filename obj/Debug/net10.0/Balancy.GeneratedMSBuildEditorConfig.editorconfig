@@ -63,12 +63,128 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = QXJlYXNcQWRtaW5cUGFnZXNcX1ZpZXdTdGFydC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
+[D:/Projects/Asp.Net_Core_Projects/MicroservivesDepressionProject/Frondend/Balancy/Balancy/Areas/Doctor/Pages/Alerts/Alert.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcRG9jdG9yXFBhZ2VzXEFsZXJ0c1xBbGVydC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Projects/Asp.Net_Core_Projects/MicroservivesDepressionProject/Frondend/Balancy/Balancy/Areas/Doctor/Pages/AllPatient/AllPatientListe.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcRG9jdG9yXFBhZ2VzXEFsbFBhdGllbnRcQWxsUGF0aWVudExpc3RlLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Projects/Asp.Net_Core_Projects/MicroservivesDepressionProject/Frondend/Balancy/Balancy/Areas/Doctor/Pages/Appointments/Appointments.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcRG9jdG9yXFBhZ2VzXEFwcG9pbnRtZW50c1xBcHBvaW50bWVudHMuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Projects/Asp.Net_Core_Projects/MicroservivesDepressionProject/Frondend/Balancy/Balancy/Areas/Doctor/Pages/ClinicStatistics/ClinicStatistics.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcRG9jdG9yXFBhZ2VzXENsaW5pY1N0YXRpc3RpY3NcQ2xpbmljU3RhdGlzdGljcy5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Projects/Asp.Net_Core_Projects/MicroservivesDepressionProject/Frondend/Balancy/Balancy/Areas/Doctor/Pages/Dashboard/Dashboard.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcRG9jdG9yXFBhZ2VzXERhc2hib2FyZFxEYXNoYm9hcmQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
 [D:/Projects/Asp.Net_Core_Projects/MicroservivesDepressionProject/Frondend/Balancy/Balancy/Areas/Doctor/Pages/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = QXJlYXNcRG9jdG9yXFBhZ2VzXEluZGV4LmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
+[D:/Projects/Asp.Net_Core_Projects/MicroservivesDepressionProject/Frondend/Balancy/Balancy/Areas/Doctor/Pages/NewPatient/AddPatient.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcRG9jdG9yXFBhZ2VzXE5ld1BhdGllbnRcQWRkUGF0aWVudC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Projects/Asp.Net_Core_Projects/MicroservivesDepressionProject/Frondend/Balancy/Balancy/Areas/Doctor/Pages/NewPatient/PersonalData.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcRG9jdG9yXFBhZ2VzXE5ld1BhdGllbnRcUGVyc29uYWxEYXRhLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Projects/Asp.Net_Core_Projects/MicroservivesDepressionProject/Frondend/Balancy/Balancy/Areas/Doctor/Pages/PatientDetails.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcRG9jdG9yXFBhZ2VzXFBhdGllbnREZXRhaWxzLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
 [D:/Projects/Asp.Net_Core_Projects/MicroservivesDepressionProject/Frondend/Balancy/Balancy/Areas/Doctor/Pages/Shared/_DoctorLayout.cshtml]
 build_metadata.AdditionalFiles.TargetPath = QXJlYXNcRG9jdG9yXFBhZ2VzXFNoYXJlZFxfRG9jdG9yTGF5b3V0LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Projects/Asp.Net_Core_Projects/MicroservivesDepressionProject/Frondend/Balancy/Balancy/Areas/Doctor/Pages/Statistic.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcRG9jdG9yXFBhZ2VzXFN0YXRpc3RpYy5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Projects/Asp.Net_Core_Projects/MicroservivesDepressionProject/Frondend/Balancy/Balancy/Areas/Doctor/Pages/Tabs/ChronicDiseases.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcRG9jdG9yXFBhZ2VzXFRhYnNcQ2hyb25pY0Rpc2Vhc2VzLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Projects/Asp.Net_Core_Projects/MicroservivesDepressionProject/Frondend/Balancy/Balancy/Areas/Doctor/Pages/Tabs/ChronicPsych.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcRG9jdG9yXFBhZ2VzXFRhYnNcQ2hyb25pY1BzeWNoLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Projects/Asp.Net_Core_Projects/MicroservivesDepressionProject/Frondend/Balancy/Balancy/Areas/Doctor/Pages/Tabs/Cssrs.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcRG9jdG9yXFBhZ2VzXFRhYnNcQ3NzcnMuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Projects/Asp.Net_Core_Projects/MicroservivesDepressionProject/Frondend/Balancy/Balancy/Areas/Doctor/Pages/Tabs/DepressionStory.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcRG9jdG9yXFBhZ2VzXFRhYnNcRGVwcmVzc2lvblN0b3J5LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Projects/Asp.Net_Core_Projects/MicroservivesDepressionProject/Frondend/Balancy/Balancy/Areas/Doctor/Pages/Tabs/Diagnosis.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcRG9jdG9yXFBhZ2VzXFRhYnNcRGlhZ25vc2lzLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Projects/Asp.Net_Core_Projects/MicroservivesDepressionProject/Frondend/Balancy/Balancy/Areas/Doctor/Pages/Tabs/DoctorNotes.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcRG9jdG9yXFBhZ2VzXFRhYnNcRG9jdG9yTm90ZXMuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Projects/Asp.Net_Core_Projects/MicroservivesDepressionProject/Frondend/Balancy/Balancy/Areas/Doctor/Pages/Tabs/FamilyHistory.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcRG9jdG9yXFBhZ2VzXFRhYnNcRmFtaWx5SGlzdG9yeS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Projects/Asp.Net_Core_Projects/MicroservivesDepressionProject/Frondend/Balancy/Balancy/Areas/Doctor/Pages/Tabs/Gad7.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcRG9jdG9yXFBhZ2VzXFRhYnNcR2FkNy5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Projects/Asp.Net_Core_Projects/MicroservivesDepressionProject/Frondend/Balancy/Balancy/Areas/Doctor/Pages/Tabs/ListeningSessions.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcRG9jdG9yXFBhZ2VzXFRhYnNcTGlzdGVuaW5nU2Vzc2lvbnMuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Projects/Asp.Net_Core_Projects/MicroservivesDepressionProject/Frondend/Balancy/Balancy/Areas/Doctor/Pages/Tabs/Mdq.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcRG9jdG9yXFBhZ2VzXFRhYnNcTWRxLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Projects/Asp.Net_Core_Projects/MicroservivesDepressionProject/Frondend/Balancy/Balancy/Areas/Doctor/Pages/Tabs/Medications.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcRG9jdG9yXFBhZ2VzXFRhYnNcTWVkaWNhdGlvbnMuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Projects/Asp.Net_Core_Projects/MicroservivesDepressionProject/Frondend/Balancy/Balancy/Areas/Doctor/Pages/Tabs/PatientNotes.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcRG9jdG9yXFBhZ2VzXFRhYnNcUGF0aWVudE5vdGVzLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Projects/Asp.Net_Core_Projects/MicroservivesDepressionProject/Frondend/Balancy/Balancy/Areas/Doctor/Pages/Tabs/PersonalInfo.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcRG9jdG9yXFBhZ2VzXFRhYnNcUGVyc29uYWxJbmZvLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Projects/Asp.Net_Core_Projects/MicroservivesDepressionProject/Frondend/Balancy/Balancy/Areas/Doctor/Pages/Tabs/Phq9.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcRG9jdG9yXFBhZ2VzXFRhYnNcUGhxOS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Projects/Asp.Net_Core_Projects/MicroservivesDepressionProject/Frondend/Balancy/Balancy/Areas/Doctor/Pages/Tabs/Sds.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcRG9jdG9yXFBhZ2VzXFRhYnNcU2RzLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Projects/Asp.Net_Core_Projects/MicroservivesDepressionProject/Frondend/Balancy/Balancy/Areas/Doctor/Pages/Tabs/SideEffects.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcRG9jdG9yXFBhZ2VzXFRhYnNcU2lkZUVmZmVjdHMuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Projects/Asp.Net_Core_Projects/MicroservivesDepressionProject/Frondend/Balancy/Balancy/Areas/Doctor/Pages/Tabs/SubstanceUse.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcRG9jdG9yXFBhZ2VzXFRhYnNcU3Vic3RhbmNlVXNlLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Projects/Asp.Net_Core_Projects/MicroservivesDepressionProject/Frondend/Balancy/Balancy/Areas/Doctor/Pages/Tabs/TreatmentPlans.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcRG9jdG9yXFBhZ2VzXFRhYnNcVHJlYXRtZW50UGxhbnMuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Projects/Asp.Net_Core_Projects/MicroservivesDepressionProject/Frondend/Balancy/Balancy/Areas/Doctor/Pages/Tabs/Visits.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcRG9jdG9yXFBhZ2VzXFRhYnNcVmlzaXRzLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Projects/Asp.Net_Core_Projects/MicroservivesDepressionProject/Frondend/Balancy/Balancy/Areas/Doctor/Pages/Tabs/VitalSigns.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcRG9jdG9yXFBhZ2VzXFRhYnNcVml0YWxTaWducy5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
 [D:/Projects/Asp.Net_Core_Projects/MicroservivesDepressionProject/Frondend/Balancy/Balancy/Areas/Doctor/Pages/_ViewImports.cshtml]

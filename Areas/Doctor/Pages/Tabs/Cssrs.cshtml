@@ -1,0 +1,117 @@
+﻿@page
+@model Balancy.Areas.Doctor.Pages.Tabs.CssrsModel
+@{
+    Layout = null;
+}
+
+<link rel="stylesheet" href="~/css/doctor/tabs/cssrs.css" />
+
+<div class="cssrs-container">
+
+    <!-- ============================================================
+         C-SSRS Header
+    ============================================================ -->
+    <section class="cssrs-header">
+        <div class="cssrs-header-content">
+            <div class="cssrs-title-section">
+                <div class="cssrs-icon"><i class="fa-solid fa-shield-heart"></i></div>
+                <div>
+                    <h1>مؤشرات خطر الأفكار الانتحارية (C-SSRS)</h1>
+                    <p>تقييم وتقصّي أفكار وسلوكيات خطورة الانتحار بدقة</p>
+                </div>
+            </div>
+            <div class="cssrs-range">
+                <small>مستوى الخطورة</small>
+                <strong>تقييم حرج</strong>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         Warning Intro Card
+    ============================================================ -->
+    <section class="intro-card">
+        <div class="intro-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+        <div>
+            <h3>تعليمات هامة للتقييم</h3>
+            <p>يرجى الإجابة بدقة على الأسئلة التالية (نعم / لا) مع إعطاء الأولوية القصوى لسلامة المريض واتخاذ التدابير العاجلة عند وجود أي مؤشرات خطر إيجابية.</p>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         Questions Card
+    ============================================================ -->
+    <section class="questions-card">
+        <form id="cssrsForm" data-autosave="cssrsDraft" novalidate>
+
+            <div id="cssrsQuestionsContainer"></div>
+
+            <section class="result-card" id="cssrsResultCard">
+                <div class="result-main">
+                    <div class="score-display">
+                        <div class="score-circle">
+                            <span class="score-number" id="cssrsTotalScore">0</span>
+                            <span class="score-max">من 6</span>
+                        </div>
+                        <div class="result-info">
+                            <h3>نتيجة تقييم خطورة الانتحار (C-SSRS)</h3>
+                            <p id="cssrsResultDescription">سيتم عرض تصنيف مستوى الخطورة والإجراء الموصى به هنا.</p>
+                        </div>
+                    </div>
+                    <div class="severity-badge" id="cssrsSeverityBadge">لم يتم التقييم</div>
+                </div>
+
+                <div class="critical-alert" id="cssrsCriticalAlert">
+                    <div class="critical-alert-icon">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+                    <div class="critical-alert-content">
+                        <h4>تنبيه عاجل: خطر انتحاري حرج</h4>
+                        <p>
+                            تم رصد مؤشرات خطورة حرجة تتطلب <strong>تدخلاً طارئاً فورياً</strong>.
+                            يجب إبلاغ الطبيب المعالج مباشرة، وعدم ترك المريض بمفرده، واتخاذ كافة التدابير الوقائية اللازمة لسلامته.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="progress-wrapper">
+                    <div class="progress-label">
+                        <span>مؤشر مقياس الخطر</span>
+                        <span id="cssrsProgressPercentage">0%</span>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar" id="cssrsScoreProgress" style="width: 0%"></div>
+                    </div>
+                </div>
+            </section>
+
+            <div class="cssrs-actions">
+                <div class="answers-status" id="cssrsAnswersStatus">تمت الإجابة على 0 من 6 أسئلة</div>
+                <button type="button" class="btn-calculate" id="cssrsCalculateButton">
+                    <i class="fa-solid fa-calculator"></i>
+                    حساب مستوى الخطر
+                </button>
+            </div>
+
+            <div class="save-section" id="cssrsSaveSection">
+                <button type="submit" class="btn-save-cssrs" id="saveCssrsButton">
+                    <span id="saveCssrsButtonText">
+                        <i class="fa-solid fa-floppy-disk"></i>
+                        حفظ تقييم الخطورة
+                    </span>
+                    <span id="saveCssrsSpinner" class="d-none">
+                        <span class="spinner-border spinner-border-sm"></span>
+                        جاري الحفظ...
+                    </span>
+                </button>
+            </div>
+
+        </form>
+    </section>
+
+</div>
+
+<!-- Confetti -->
+<div class="bn-confetti" id="bnConfetti" aria-hidden="true"></div>
+
+<script src="~/js/doctor/tabs/cssrs.js"></script>

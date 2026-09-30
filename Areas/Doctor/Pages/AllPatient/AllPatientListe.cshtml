@@ -1,0 +1,226 @@
+﻿@page
+@model Balancy.Areas.Doctor.Pages.AllPatient.AllPatientListeModel
+@{
+}
+<!-- Top Controls -->
+<div class="bn-top-controls">
+    <button type="button" class="bn-icon-btn bn-theme-toggle" id="themeToggle" aria-label="تبديل الوضع الليلي">
+        <i class="fa-solid fa-moon icon-moon"></i>
+        <i class="fa-solid fa-sun icon-sun"></i>
+    </button>
+</div>
+
+<!-- Page Header -->
+<section class="patients-page-header">
+    <div class="header-content">
+        <div class="header-icon"><i class="fa-solid fa-users"></i></div>
+        <div class="header-text">
+            <h1>جميع المرضى المسجّلين</h1>
+            <p>عرض وإدارة ملفات جميع المرضى في النظام</p>
+        </div>
+    </div>
+    <div class="header-actions">
+        <button type="button" class="btn-primary-action" onclick="showToast('info','إضافة مريض','سيتم فتح صفحة إضافة مريض جديد.')">
+            <i class="fa-solid fa-user-plus"></i>
+            إضافة مريض جديد
+        </button>
+    </div>
+</section>
+
+<!-- Stats -->
+<section class="stats-grid">
+    <div class="stat-card stat-total">
+        <div class="stat-icon"><i class="fa-solid fa-users"></i></div>
+        <div class="stat-info">
+            <span class="stat-label">إجمالي المرضى</span>
+            <strong class="stat-value" id="statTotal">0</strong>
+        </div>
+    </div>
+    <div class="stat-card stat-active">
+        <div class="stat-icon"><i class="fa-solid fa-user-check"></i></div>
+        <div class="stat-info">
+            <span class="stat-label">مرضى نشطون</span>
+            <strong class="stat-value" id="statActive">0</strong>
+        </div>
+    </div>
+    <div class="stat-card stat-critical">
+        <div class="stat-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+        <div class="stat-info">
+            <span class="stat-label">حالات حرجة</span>
+            <strong class="stat-value" id="statCritical">0</strong>
+        </div>
+    </div>
+    <div class="stat-card stat-visits">
+        <div class="stat-icon"><i class="fa-solid fa-calendar-check"></i></div>
+        <div class="stat-info">
+            <span class="stat-label">زيارات هذا الشهر</span>
+            <strong class="stat-value" id="statVisits">0</strong>
+        </div>
+    </div>
+</section>
+
+<!-- Filters -->
+<section class="filters-card">
+    <div class="search-wrapper">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" id="globalSearch" class="search-field" placeholder="ابحث بالاسم أو الكود أو الهاتف أو المدينة...">
+        <button type="button" class="clear-search d-none" id="clearSearch"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="filters-row">
+        <div class="filter-group">
+            <label><i class="fa-solid fa-venus-mars"></i> الجنس</label>
+            <select id="filterGender" class="filter-select">
+                <option value="">الكل</option>
+                <option value="male">ذكر</option>
+                <option value="female">أنثى</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label><i class="fa-solid fa-circle-check"></i> الحالة</label>
+            <select id="filterStatus" class="filter-select">
+                <option value="">الكل</option>
+                <option value="active">نشط</option>
+                <option value="inactive">غير نشط</option>
+                <option value="critical">حرج</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label><i class="fa-solid fa-arrow-down-wide-short"></i> ترتيب حسب</label>
+            <select id="filterSort" class="filter-select">
+                <option value="name">الاسم (أ - ي)</option>
+                <option value="nameDesc">الاسم (ي - أ)</option>
+                <option value="dateNewest">الأحدث إضافة</option>
+                <option value="dateOldest">الأقدم إضافة</option>
+                <option value="ageAsc">العمر (تصاعدي)</option>
+                <option value="ageDesc">العمر (تنازلي)</option>
+            </select>
+        </div>
+        <div class="filter-group filter-view-toggle">
+            <label><i class="fa-solid fa-table-cells-large"></i> عرض</label>
+            <div class="view-toggle">
+                <button type="button" class="view-btn active" data-view="grid"><i class="fa-solid fa-grip"></i></button>
+                <button type="button" class="view-btn" data-view="table"><i class="fa-solid fa-list"></i></button>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Results -->
+<div class="results-count">
+    <i class="fa-solid fa-circle-info"></i>
+    <span id="resultsText">جاري التحميل...</span>
+    <button type="button" class="btn-reset-filters d-none" id="resetFilters">
+        <i class="fa-solid fa-rotate-left"></i>
+        إعادة تعيين الفلاتر
+    </button>
+</div>
+
+<!-- Grid View -->
+<div id="patientsGridView">
+    <div id="patientsGrid" class="patients-grid"></div>
+</div>
+
+<!-- Table View -->
+<div id="patientsTableView" class="d-none">
+    <div class="table-wrapper">
+        <table class="patients-table">
+            <thead>
+                <tr>
+                    <th>المريض</th>
+                    <th>الكود</th>
+                    <th>العمر</th>
+                    <th>الجنس</th>
+                    <th>الهاتف</th>
+                    <th>المدينة</th>
+                    <th>الحالة</th>
+                    <th>آخر زيارة</th>
+                    <th>الإجراءات</th>
+                </tr>
+            </thead>
+            <tbody id="patientsTableBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Empty State -->
+<div id="emptyState" class="empty-state d-none">
+    <div class="empty-icon"><i class="fa-solid fa-user-slash"></i></div>
+    <h3>لا يوجد مرضى مطابقون</h3>
+    <p>لم يتم العثور على أي مريض يطابق معايير البحث الحالية.</p>
+    <button type="button" class="btn-reset-filters-main" id="emptyResetBtn">
+        <i class="fa-solid fa-rotate-left"></i>
+        إعادة تعيين الفلاتر
+    </button>
+</div>
+
+<!-- Toast -->
+<div class="toast-container" id="toastContainer">
+    <div id="notificationToast" class="toast toast-custom" role="alert">
+        <div class="toast-body">
+            <div class="toast-icon-wrap" id="toastIcon"></div>
+            <div class="toast-content">
+                <strong id="toastTitle"></strong>
+                <div id="toastMessage" class="small"></div>
+            </div>
+            <button type="button" class="btn-close" id="toastCloseBtn" aria-label="إغلاق"></button>
+        </div>
+        <div class="toast-progress"><div class="toast-progress-bar" id="toastProgressBar"></div></div>
+    </div>
+</div>
+
+<!-- Confetti -->
+<div class="bn-confetti" id="bnConfetti"></div>
+
+<!-- Delete Modal -->
+<div class="bn-modal-overlay" id="deleteModal">
+    <div class="bn-modal bn-modal-danger">
+        <div class="bn-modal-header">
+            <div class="bn-modal-header-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <div class="bn-modal-header-text">
+                <h3>تأكيد حذف المريض</h3>
+                <p>لا يمكن التراجع عن هذه العملية نهائياً</p>
+            </div>
+        </div>
+        <div class="bn-modal-body">
+            <p class="bn-modal-message" id="deleteModalMessage">هل أنت متأكد؟</p>
+            <div class="delete-warning">
+                <i class="fa-solid fa-shield-halved"></i>
+                <span>سيتم حذف جميع البيانات الطبية المرتبطة بهذا المريض نهائياً.</span>
+            </div>
+            <label class="delete-confirm-label">اكتب <strong>حذف</strong> لتأكيد العملية:</label>
+            <input type="text" id="deleteConfirmInput" class="bn-modal-input" placeholder="اكتب: حذف" autocomplete="off">
+        </div>
+        <div class="bn-modal-footer">
+            <button type="button" class="bn-btn bn-btn-ghost" id="deleteCancelBtn">
+                <i class="fa-solid fa-xmark"></i> إلغاء
+            </button>
+            <button type="button" class="bn-btn bn-btn-danger" id="deleteConfirmBtn" disabled>
+                <i class="fa-solid fa-trash"></i> حذف نهائي
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Details Modal -->
+<div class="bn-modal-overlay" id="detailsModal">
+    <div class="bn-modal bn-modal-large">
+        <div class="bn-modal-header">
+            <div class="bn-modal-header-icon"><i class="fa-solid fa-user"></i></div>
+            <div class="bn-modal-header-text">
+                <h3>تفاصيل المريض</h3>
+                <p id="detailsModalSubtitle">معلومات شاملة</p>
+            </div>
+            <button type="button" class="btn-close" id="detailsCloseBtn"></button>
+        </div>
+        <div class="bn-modal-body" id="detailsModalBody"></div>
+        <div class="bn-modal-footer">
+            <button type="button" class="bn-btn bn-btn-ghost" id="detailsCloseFooterBtn">إغلاق</button>
+            <button type="button" class="bn-btn bn-btn-primary" id="detailsOpenFileBtn">
+                <i class="fa-solid fa-folder-open"></i> فتح الملف الطبي
+            </button>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <script src="~/js/doctor/AllPatient/AllPatientListe.js"></script>
+}

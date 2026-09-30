@@ -1,0 +1,211 @@
+﻿@page
+@model Balancy.Areas.Doctor.Pages.Tabs.VitalSignsModel
+@{
+    Layout = null;
+}
+
+<link rel="stylesheet" href="~/css/doctor/tabs/vitalsigns.css" />
+
+<section class="vital-signs-wrapper">
+
+    <section class="personal-info-card">
+
+        <div class="form-card-header">
+            <div class="form-header-title">
+                <div class="form-header-icon">
+                    <i class="fa-solid fa-heart-pulse"></i>
+                </div>
+                <div>
+                    <h1>المؤشرات الحيوية</h1>
+                    <p>تسجيل ومتابعة العلامات الحيوية للمريض بشكل دوري</p>
+                </div>
+            </div>
+            <div class="edit-status">
+                <i class="fa-solid fa-stethoscope"></i>
+                <span id="vitalsCountBadge">0 قراءة</span>
+            </div>
+        </div>
+
+        <div class="personal-form">
+
+            <!-- Stats Bar -->
+            <div class="stats-bar">
+                <div class="stat-chip">
+                    <div class="stat-chip-icon total"><i class="fa-solid fa-clipboard-list"></i></div>
+                    <div class="stat-chip-info">
+                        <span class="stat-chip-label">إجمالي القراءات</span>
+                        <span class="stat-chip-value" id="statTotal">0</span>
+                    </div>
+                </div>
+                <div class="stat-chip">
+                    <div class="stat-chip-icon bp"><i class="fa-solid fa-droplet"></i></div>
+                    <div class="stat-chip-info">
+                        <span class="stat-chip-label">قراءات الضغط</span>
+                        <span class="stat-chip-value" id="statBP">0</span>
+                    </div>
+                </div>
+                <div class="stat-chip">
+                    <div class="stat-chip-icon weight"><i class="fa-solid fa-weight-scale"></i></div>
+                    <div class="stat-chip-info">
+                        <span class="stat-chip-label">قراءات الوزن</span>
+                        <span class="stat-chip-value" id="statWeight">0</span>
+                    </div>
+                </div>
+                <div class="stat-chip">
+                    <div class="stat-chip-icon glucose"><i class="fa-solid fa-flask-vial"></i></div>
+                    <div class="stat-chip-info">
+                        <span class="stat-chip-label">قراءات السكر</span>
+                        <span class="stat-chip-value" id="statGlucose">0</span>
+                    </div>
+                </div>
+                <div class="stat-chip">
+                    <div class="stat-chip-icon heart"><i class="fa-solid fa-heart"></i></div>
+                    <div class="stat-chip-info">
+                        <span class="stat-chip-label">قراءات النبض</span>
+                        <span class="stat-chip-value" id="statHeart">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add Vital Form -->
+            <div class="add-vital-card">
+                <h3 id="formTitle" class="form-section-title">
+                    <i class="fa-solid fa-plus-circle"></i>
+                    إضافة قراءة حيوية جديدة
+                </h3>
+
+                <form id="vitalForm" novalidate>
+                    <input type="hidden" id="editIndex" value="-1">
+
+                    <div class="row g-4">
+
+                        <!-- نوع القياس -->
+                        <div class="col-md-6">
+                            <label for="vitalType" class="form-label-custom">
+                                <i class="fa-solid fa-list-check"></i>
+                                نوع القياس
+                            </label>
+                            <select class="form-control form-control-custom form-select" id="vitalType" name="vitalType" required>
+                                <option value="">اختر نوع القياس</option>
+                                <option value="bloodPressure">ضغط الدم (Blood Pressure)</option>
+                                <option value="heartRate">معدل النبض (Heart Rate)</option>
+                                <option value="weight">الوزن (Weight)</option>
+                                <option value="height">الطول (Height)</option>
+                                <option value="bmi">مؤشر كتلة الجسم (BMI)</option>
+                                <option value="glucose">سكر الدم (Blood Glucose)</option>
+                                <option value="temperature">درجة الحرارة (Temperature)</option>
+                                <option value="oxygen">تشبع الأكسجين (SpO₂)</option>
+                                <option value="respiratory">معدل التنفس (Respiratory Rate)</option>
+                                <option value="waist">محيط الخصر (Waist Circumference)</option>
+                            </select>
+                        </div>
+
+                        <!-- تاريخ القياس -->
+                        <div class="col-md-6">
+                            <label for="vitalDate" class="form-label-custom">
+                                <i class="fa-solid fa-calendar-days"></i>
+                                تاريخ القياس
+                            </label>
+                            <input type="datetime-local" class="form-control form-control-custom" id="vitalDate" name="vitalDate" required>
+                        </div>
+
+                        <!-- قيمة 1 -->
+                        <div class="col-md-6">
+                            <label for="vitalValue1" class="form-label-custom">
+                                <i class="fa-solid fa-chart-simple"></i>
+                                <span id="value1Label">القيمة الأولى</span>
+                            </label>
+                            <div class="input-group">
+                                <input type="number" step="0.1" class="form-control form-control-custom" id="vitalValue1" name="vitalValue1" placeholder="مثال: 120" required>
+                                <span class="input-group-text" id="value1Unit" style="border-radius: 14px; font-weight: 800; background: var(--bn-surface-soft); border: 2px solid var(--bn-border); border-right: 0;">--</span>
+                            </div>
+                        </div>
+
+                        <!-- قيمة 2 (اختياري - للضغط) -->
+                        <div class="col-md-6" id="value2Wrapper" style="display: none;">
+                            <label for="vitalValue2" class="form-label-custom">
+                                <i class="fa-solid fa-chart-simple"></i>
+                                <span id="value2Label">القيمة الثانية</span>
+                            </label>
+                            <div class="input-group">
+                                <input type="number" step="0.1" class="form-control form-control-custom" id="vitalValue2" name="vitalValue2" placeholder="مثال: 80">
+                                <span class="input-group-text" id="value2Unit" style="border-radius: 14px; font-weight: 800; background: var(--bn-surface-soft); border: 2px solid var(--bn-border); border-right: 0;">--</span>
+                            </div>
+                        </div>
+
+                        <!-- الحالة (تُحسب تلقائياً) -->
+                        <div class="col-md-6">
+                            <label for="vitalStatus" class="form-label-custom">
+                                <i class="fa-solid fa-circle-check"></i>
+                                تقييم الحالة
+                            </label>
+                            <select class="form-control form-control-custom form-select" id="vitalStatus" name="vitalStatus">
+                                <option value="normal">طبيعي</option>
+                                <option value="warning">تحذير</option>
+                                <option value="danger">خطر</option>
+                            </select>
+                        </div>
+
+                        <!-- ملاحظات -->
+                        <div class="col-12">
+                            <label for="vitalNotes" class="form-label-custom">
+                                <i class="fa-solid fa-note-sticky"></i>
+                                ملاحظات (اختياري)
+                            </label>
+                            <textarea class="form-control form-control-custom" id="vitalNotes" name="vitalNotes" placeholder="مثال: تم القياس بعد الراحة، المريض صائم..."></textarea>
+                        </div>
+
+                    </div>
+
+                    <div class="d-flex gap-2 justify-content-end mt-4 flex-wrap">
+                        <button type="button" id="cancelBtn" class="btn btn-secondary px-4 py-2 d-none">
+                            <i class="fa-solid fa-xmark ms-1"></i>
+                            إلغاء التعديل
+                        </button>
+                        <button type="submit" id="submitBtn" class="btn-save">
+                            <i class="fa-solid fa-plus ms-1"></i>
+                            إضافة القراءة
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <hr class="form-divider">
+
+            <!-- Filter Bar -->
+            <div class="d-flex gap-2 flex-wrap mb-3 align-items-center">
+                <div class="form-section-title mb-0" style="flex: 1;">
+                    <i class="fa-solid fa-list-check"></i>
+                    القراءات المسجّلة
+                </div>
+                <select class="form-control form-control-custom form-select" id="filterType" style="max-width: 220px; min-height: 42px; padding: 0.4rem 0.85rem; font-size: 0.82rem;">
+                    <option value="">كل الأنواع</option>
+                    <option value="bloodPressure">ضغط الدم</option>
+                    <option value="heartRate">النبض</option>
+                    <option value="weight">الوزن</option>
+                    <option value="height">الطول</option>
+                    <option value="bmi">مؤشر كتلة الجسم</option>
+                    <option value="glucose">سكر الدم</option>
+                    <option value="temperature">درجة الحرارة</option>
+                    <option value="oxygen">الأكسجين</option>
+                    <option value="respiratory">معدل التنفس</option>
+                    <option value="waist">محيط الخصر</option>
+                </select>
+                <select class="form-control form-control-custom form-select" id="filterStatus" style="max-width: 180px; min-height: 42px; padding: 0.4rem 0.85rem; font-size: 0.82rem;">
+                    <option value="">كل الحالات</option>
+                    <option value="normal">طبيعي</option>
+                    <option value="warning">تحذير</option>
+                    <option value="danger">خطر</option>
+                </select>
+            </div>
+
+            <!-- Vitals Grid -->
+            <div class="vitals-grid" id="vitalsGrid"></div>
+
+        </div>
+
+    </section>
+
+</section>
+
+<script src="~/js/doctor/tabs/vitalsigns.js"></script>

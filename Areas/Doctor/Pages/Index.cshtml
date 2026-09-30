@@ -1,53 +1,130 @@
 ﻿@page
 @model Balancy.Areas.Doctor.Pages.IndexModel
 @{
+    ViewData["Title"] = "الأطباء | بالنسي";
 }
-<div class="bg-shape bg-shape-1"></div>
-<div class="bg-shape bg-shape-2"></div>
-<div class="bg-shape bg-shape-3"></div>
 
-<div class="glass-card">
-    <div class="construction-tape">قيد التنفيذ</div>
+<!-- Background Shapes -->
+<div class="bg-shapes">
+    <div class="shape shape-1"></div>
+    <div class="shape shape-2"></div>
+    <div class="shape shape-3"></div>
+</div>
 
-    <div class="brand-logo">
-        <i class="fa-solid fa-heart-pulse"></i>
-        بالنسي <span>·</span> رعاية · أمل · شفاء
-    </div>
+<!-- Top Controls -->
+<div class="bn-top-controls">
+    <button type="button" class="bn-icon-btn bn-theme-toggle" id="themeToggle" aria-label="تبديل الوضع الليلي" title="تبديل الوضع الليلي">
+        <i class="fa-solid fa-moon icon-moon"></i>
+        <i class="fa-solid fa-sun icon-sun"></i>
+    </button>
+    <a href="/" class="bn-icon-btn" aria-label="العودة للصفحة الرئيسية" title="العودة للصفحة الرئيسية">
+        <i class="fa-solid fa-house"></i>
+    </a>
+</div>
 
-    <div class="role-badge">
-        <i class="fa-solid fa-user-doctor"></i>
-        طبيب
-    </div>
+<!-- App Layout -->
+<div class="app-layout">
 
-    <div class="icon-container">
-        <i class="fa-solid fa-stethoscope"></i>
-    </div>
+    <!-- Sidebar (Right in RTL) -->
+    <aside class="sidebar-wrapper">
+        <div class="patients-panel">
 
-    <h1 class="page-title">صفحات الطبيب قيد التنفيذ</h1>
+            <div class="patients-header">
+                <h2>
+                    <i class="fa-solid fa-users"></i>
+                    قائمة المرضى
+                </h2>
+                <span class="patients-count" id="patientsCount">6</span>
+            </div>
 
-    <p class="page-subtitle">
-        نعمل على تجهيز لوحة تحكم خاصة بك لإدارة المرضى والمواعيد.
-    </p>
+            <div class="search-box">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" class="search-input" id="patientSearch"
+                       placeholder="ابحث بالاسم أو الكود..."
+                       aria-label="بحث عن مريض">
+            </div>
 
-    <div class="progress-dots">
-        <div class="progress-dot"></div>
-        <div class="progress-dot"></div>
-        <div class="progress-dot"></div>
-    </div>
+            <ul class="patients-list" id="patientsList" role="listbox" aria-label="قائمة المرضى"></ul>
 
-    <div class="page-message">
-        <i class="fa-solid fa-circle-info" style="color: #3b82f6; margin-left: 6px;"></i>
-        سيتم إتاحة جميع الأدوات الطبية والإحصائيات الخاصة بك قريباً. نشكر صبرك وتفهمك.
-    </div>
+            <div class="patients-empty-state" id="patientsEmptyState">
+                <i class="fa-solid fa-user-slash"></i>
+                <p>لا يوجد مرضى مطابقون للبحث</p>
+            </div>
 
-    <div class="d-flex justify-content-center flex-wrap">
-        <a href="#" class="btn-primary-custom">
-            <i class="fa-solid fa-rotate-left" style="margin-left: 8px;"></i>
-            العودة للرئيسية
-        </a>
-        <a href="#" class="btn-outline-custom">
-            <i class="fa-solid fa-right-from-bracket" style="margin-left: 8px;"></i>
-            تسجيل الخروج
-        </a>
+            <div class="patients-footer">
+                <span><i class="fa-solid fa-database ms-1"></i> الإجمالي</span>
+                <span id="footerCount">6</span>
+            </div>
+
+        </div>
+    </aside>
+
+    <!-- Main Content Area (Details will be injected here) -->
+    <main class="main-content-area">
+
+        <div class="content-placeholder" id="mainContentPlaceholder">
+            <div class="content-placeholder-icon">
+                <i class="fa-solid fa-folder-open"></i>
+            </div>
+            <h3>مرحباً بك في لوحة إدارة المرضى</h3>
+            <p>
+                اختر مريضاً من القائمة على اليمين لعرض ملفه الطبي الكامل هنا.
+            </p>
+            <span class="hint">
+                <i class="fa-solid fa-lightbulb"></i>
+                يمكنك البحث بالاسم أو الكود أو العمر
+            </span>
+        </div>
+
+    </main>
+
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer">
+    <div id="notificationToast" class="toast toast-custom" role="alert"
+         aria-live="assertive" aria-atomic="true" data-bs-autohide="false">
+        <div class="toast-body">
+            <div class="toast-icon-wrap" id="toastIcon"></div>
+            <div class="toast-content">
+                <strong id="toastTitle"></strong>
+                <div id="toastMessage" class="small"></div>
+            </div>
+            <button type="button" class="btn-close" id="toastCloseBtn" aria-label="إغلاق"></button>
+        </div>
+        <div class="toast-progress">
+            <div class="toast-progress-bar" id="toastProgressBar"></div>
+        </div>
     </div>
 </div>
+
+<!-- Confirm Modal -->
+<div class="bn-modal-overlay" id="bnConfirmModal" role="dialog" aria-modal="true" aria-labelledby="bnConfirmModalTitle">
+    <div class="bn-modal bn-modal-danger">
+        <div class="bn-modal-header">
+            <div class="bn-modal-header-icon">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <div class="bn-modal-header-text">
+                <h3 id="bnConfirmModalTitle">تأكيد التبديل</h3>
+                <p id="bnConfirmModalSubtitle">سيتم تحميل ملف المريض المحدد</p>
+            </div>
+        </div>
+        <div class="bn-modal-body">
+            <p class="bn-modal-message" id="bnConfirmModalMessage">هل أنت متأكد؟</p>
+        </div>
+        <div class="bn-modal-footer">
+            <button type="button" class="bn-btn bn-btn-ghost" id="bnConfirmModalCancel">
+                <i class="fa-solid fa-xmark"></i>
+                إلغاء
+            </button>
+            <button type="button" class="bn-btn bn-btn-danger" id="bnConfirmModalConfirm">
+                <i class="fa-solid fa-check"></i>
+                نعم، انتقل
+            </button>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="~/js/doctor/index.js" asp-append-version="true"></script>

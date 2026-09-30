@@ -1,0 +1,200 @@
+﻿@page
+@model Balancy.Areas.Doctor.Pages.Tabs.FamilyHistoryModel
+@{
+    Layout = null;
+}
+
+<link rel="stylesheet" href="~/css/doctor/tabs/familyhistory.css" />
+
+<section class="family-history-wrapper">
+
+    <section class="personal-info-card">
+
+        <div class="form-card-header">
+            <div class="form-header-title">
+                <div class="form-header-icon">
+                    <i class="fa-solid fa-people-roof"></i>
+                </div>
+                <div>
+                    <h1>التاريخ الطبي العائلي</h1>
+                    <p>سجل الأمراض الوراثية والمزمنة في عائلة المريض</p>
+                </div>
+            </div>
+            <div class="edit-status">
+                <i class="fa-solid fa-dna"></i>
+                <span id="relativesCountBadge">0 أفراد</span>
+            </div>
+        </div>
+
+        <div class="personal-form">
+
+            <!-- Stats Bar -->
+            <div class="stats-bar">
+                <div class="stat-chip">
+                    <div class="stat-chip-icon total"><i class="fa-solid fa-users"></i></div>
+                    <div class="stat-chip-info">
+                        <span class="stat-chip-label">إجمالي الأفراد</span>
+                        <span class="stat-chip-value" id="statTotal">0</span>
+                    </div>
+                </div>
+                <div class="stat-chip">
+                    <div class="stat-chip-icon genetic"><i class="fa-solid fa-dna"></i></div>
+                    <div class="stat-chip-info">
+                        <span class="stat-chip-label">أمراض وراثية</span>
+                        <span class="stat-chip-value" id="statGenetic">0</span>
+                    </div>
+                </div>
+                <div class="stat-chip">
+                    <div class="stat-chip-icon psych"><i class="fa-solid fa-brain"></i></div>
+                    <div class="stat-chip-info">
+                        <span class="stat-chip-label">أمراض نفسية</span>
+                        <span class="stat-chip-value" id="statPsych">0</span>
+                    </div>
+                </div>
+                <div class="stat-chip">
+                    <div class="stat-chip-icon chronic"><i class="fa-solid fa-notes-medical"></i></div>
+                    <div class="stat-chip-info">
+                        <span class="stat-chip-label">أمراض مزمنة</span>
+                        <span class="stat-chip-value" id="statChronic">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add Relative Form -->
+            <div class="add-relative-card">
+                <h3 id="formTitle" class="form-section-title">
+                    <i class="fa-solid fa-plus-circle"></i>
+                    إضافة فرد من العائلة
+                </h3>
+
+                <form id="relativeForm" novalidate>
+                    <input type="hidden" id="editIndex" value="-1">
+
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <label for="relativeRelation" class="form-label-custom">
+                                <i class="fa-solid fa-users-line"></i>
+                                صلة القرابة
+                            </label>
+                            <select class="form-control form-control-custom form-select" id="relativeRelation" name="relativeRelation" required>
+                                <option value="">اختر صلة القرابة</option>
+                                <option value="أب">الأب</option>
+                                <option value="أم">الأم</option>
+                                <option value="جد">الجد</option>
+                                <option value="جدة">الجدة</option>
+                                <option value="أخ">أخ</option>
+                                <option value="أخت">أخت</option>
+                                <option value="عم">عم</option>
+                                <option value="عمة">عمة</option>
+                                <option value="خال">خال</option>
+                                <option value="خالة">خالة</option>
+                                <option value="ابن عم">ابن عم</option>
+                                <option value="ابنة عم">ابنة عم</option>
+                                <option value="ابن خال">ابن خال</option>
+                                <option value="ابنة خال">ابنة خال</option>
+                                <option value="أخرى">أخرى</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="relativeName" class="form-label-custom">
+                                <i class="fa-solid fa-user"></i>
+                                الاسم (اختياري)
+                            </label>
+                            <input type="text" class="form-control form-control-custom" id="relativeName" name="relativeName" placeholder="مثال: محمد">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="relativeAge" class="form-label-custom">
+                                <i class="fa-solid fa-cake-candles"></i>
+                                العمر (اختياري)
+                            </label>
+                            <input type="number" class="form-control form-control-custom" id="relativeAge" name="relativeAge" placeholder="مثال: 65" min="0" max="120">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="relativeStatus" class="form-label-custom">
+                                <i class="fa-solid fa-heart-pulse"></i>
+                                الحالة (اختياري)
+                            </label>
+                            <select class="form-control form-control-custom form-select" id="relativeStatus" name="relativeStatus">
+                                <option value="">اختر الحالة</option>
+                                <option value="حي">حي</option>
+                                <option value="متوفى">متوفى</option>
+                                <option value="غير معروف">غير معروف</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="relativeSeverity" class="form-label-custom">
+                                <i class="fa-solid fa-gauge-high"></i>
+                                شدة التأثير
+                            </label>
+                            <select class="form-control form-control-custom form-select" id="relativeSeverity" name="relativeSeverity">
+                                <option value="unknown">غير معروف</option>
+                                <option value="low">منخفض</option>
+                                <option value="medium">متوسط</option>
+                                <option value="high">مرتفع</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="relativeConditionType" class="form-label-custom">
+                                <i class="fa-solid fa-tag"></i>
+                                نوع المرض
+                            </label>
+                            <select class="form-control form-control-custom form-select" id="relativeConditionType" name="relativeConditionType">
+                                <option value="genetic">وراثي</option>
+                                <option value="psych">نفسي</option>
+                                <option value="chronic">مزمن</option>
+                                <option value="other">آخر</option>
+                            </select>
+                        </div>
+
+                        <div class="col-12">
+                            <label for="relativeConditions" class="form-label-custom">
+                                <i class="fa-solid fa-notes-medical"></i>
+                                الأمراض / الحالات (افصل بفاصلة)
+                            </label>
+                            <input type="text" class="form-control form-control-custom" id="relativeConditions" name="relativeConditions" placeholder="مثال: السكري، ارتفاع ضغط الدم، اكتئاب" required>
+                        </div>
+
+                        <div class="col-12">
+                            <label for="relativeNotes" class="form-label-custom">
+                                <i class="fa-solid fa-note-sticky"></i>
+                                ملاحظات (اختياري)
+                            </label>
+                            <textarea class="form-control form-control-custom" id="relativeNotes" name="relativeNotes" placeholder="مثال: توفي بسبب مضاعفات السكري"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2 justify-content-end mt-4 flex-wrap">
+                        <button type="button" id="cancelBtn" class="btn btn-secondary px-4 py-2 d-none">
+                            <i class="fa-solid fa-xmark ms-1"></i>
+                            إلغاء التعديل
+                        </button>
+                        <button type="submit" id="submitBtn" class="btn-save">
+                            <i class="fa-solid fa-plus ms-1"></i>
+                            إضافة الفرد
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <hr class="form-divider">
+
+            <!-- Relatives Grid -->
+            <div class="form-section-title mb-3">
+                <i class="fa-solid fa-list-check"></i>
+                أفراد العائلة المسجّلون
+            </div>
+
+            <div class="relatives-grid" id="relativesGrid"></div>
+
+        </div>
+
+    </section>
+
+</section>
+
+<script src="~/js/doctor/tabs/familyhistory.js"></script>
