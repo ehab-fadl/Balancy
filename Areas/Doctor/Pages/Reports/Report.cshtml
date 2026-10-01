@@ -1,0 +1,343 @@
+﻿@page
+@model Balancy.Areas.Doctor.Pages.Reports.ReportModel
+@{
+    ViewData["Title"] = "مدير التقارير";
+
+}
+ 
+
+<!-- ============================================================
+     Body
+============================================================ -->
+<main class="app-body">
+    <div class="container">
+
+        <!-- Welcome Strip -->
+        <section class="welcome-strip">
+            <div class="welcome-content">
+                <div class="welcome-eyebrow">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    تقارير ذكية
+                </div>
+                <h1 class="welcome-title">مرحباً بك في مدير التقارير</h1>
+                <p class="welcome-desc">
+                    أنشئ تقارير طبية احترافية بنقرة واحدة — تقارير شاملة، تقييمات نفسية، أدوية، مؤشرات حيوية، وزيارات. جميع التقارير قابلة للتحميل بصيغة PDF و HTML ومحفوظة باسم المريض.
+                </p>
+            </div>
+            <div class="welcome-badge">
+                <i class="fa-solid fa-file-medical"></i>
+            </div>
+        </section>
+
+        <!-- Stats -->
+        <section class="stats-row">
+            <div class="stat-card">
+                <div class="stat-card-icon i-1"><i class="fa-solid fa-file-lines"></i></div>
+                <div class="stat-card-body">
+                    <span class="stat-card-value" id="stTotal">0</span>
+                    <span class="stat-card-label">إجمالي التقارير</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-icon i-2"><i class="fa-solid fa-star"></i></div>
+                <div class="stat-card-body">
+                    <span class="stat-card-value" id="stFav">0</span>
+                    <span class="stat-card-label">المفضلة</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-icon i-3"><i class="fa-solid fa-calendar-day"></i></div>
+                <div class="stat-card-body">
+                    <span class="stat-card-value" id="stToday">0</span>
+                    <span class="stat-card-label">تقارير اليوم</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-icon i-4"><i class="fa-solid fa-users"></i></div>
+                <div class="stat-card-body">
+                    <span class="stat-card-value" id="stPatients">0</span>
+                    <span class="stat-card-label">عدد المرضى</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Templates Section -->
+        <div class="section-head">
+            <div class="section-head-title">
+                <div class="section-head-icon"><i class="fa-solid fa-layer-group"></i></div>
+                <div class="section-head-text">
+                    <h2>قوالب التقارير</h2>
+                    <p>اختر قالباً لإنشاء تقرير جديد</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="templates-grid" id="templatesGrid"></div>
+
+        <!-- Reports Section -->
+        <div class="section-head">
+            <div class="section-head-title">
+                <div class="section-head-icon"><i class="fa-solid fa-folder-open"></i></div>
+                <div class="section-head-text">
+                    <h2>التقارير المحفوظة</h2>
+                    <p id="reportsSubtitle">0 تقرير</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="toolbar">
+            <div class="toolbar-search">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="searchInput" placeholder="ابحث باسم المريض، عنوان التقرير، أو النوع...">
+            </div>
+
+            <div class="toolbar-field">
+                <label for="patientFilter">تصفية حسب المريض</label>
+                <select class="toolbar-select" id="patientFilter">
+                    <option value="">كل المرضى</option>
+                </select>
+            </div>
+
+            <div class="toolbar-field">
+                <label for="sortSelect">الترتيب</label>
+                <select class="toolbar-select" id="sortSelect">
+                    <option value="newest">الأحدث أولاً</option>
+                    <option value="oldest">الأقدم أولاً</option>
+                    <option value="name">الاسم (أ-ي)</option>
+                    <option value="patient">اسم المريض (أ-ي)</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs-bar" id="tabsBar">
+            <button class="tab-btn is-active" data-filter="all">
+                <i class="fa-solid fa-layer-group"></i>
+                <span>الكل</span>
+                <span class="tab-count" id="tcAll">0</span>
+            </button>
+            <button class="tab-btn" data-filter="medical">
+                <i class="fa-solid fa-notes-medical"></i>
+                <span>طبية</span>
+                <span class="tab-count" id="tcMedical">0</span>
+            </button>
+            <button class="tab-btn" data-filter="psych">
+                <i class="fa-solid fa-brain"></i>
+                <span>نفسية</span>
+                <span class="tab-count" id="tcPsych">0</span>
+            </button>
+            <button class="tab-btn" data-filter="meds">
+                <i class="fa-solid fa-prescription"></i>
+                <span>أدوية</span>
+                <span class="tab-count" id="tcMeds">0</span>
+            </button>
+            <button class="tab-btn" data-filter="vitals">
+                <i class="fa-solid fa-heart-pulse"></i>
+                <span>حيوية</span>
+                <span class="tab-count" id="tcVitals">0</span>
+            </button>
+            <button class="tab-btn" data-filter="visits">
+                <i class="fa-solid fa-calendar-check"></i>
+                <span>زيارات</span>
+                <span class="tab-count" id="tcVisits">0</span>
+            </button>
+            <button class="tab-btn" data-filter="favorite">
+                <i class="fa-solid fa-star"></i>
+                <span>المفضلة</span>
+                <span class="tab-count" id="tcFav">0</span>
+            </button>
+            <button class="tab-btn" data-filter="deleted">
+                <i class="fa-solid fa-trash"></i>
+                <span>المحذوفات</span>
+                <span class="tab-count" id="tcDel">0</span>
+            </button>
+        </div>
+
+        <!-- Reports Grid -->
+        <div class="reports-grid" id="reportsGrid"></div>
+
+    </div>
+</main>
+
+<!-- FAB -->
+<div class="fab">
+    <button type="button" class="fab-btn" id="fabBtn" title="تقرير جديد">
+        <i class="fa-solid fa-plus"></i>
+    </button>
+</div>
+
+<!-- ============================================================
+     Wizard Modal
+============================================================ -->
+<div class="modal-overlay" id="wizardModal" role="dialog" aria-modal="true">
+    <div class="modal modal-lg">
+        <div class="modal-head">
+            <div class="modal-head-icon"><i class="fa-solid fa-file-circle-plus"></i></div>
+            <div class="modal-head-text">
+                <h3>توليد تقرير جديد</h3>
+                <p>اتبع الخطوات لإنشاء تقريرك</p>
+            </div>
+            <button type="button" class="modal-close" id="wizClose"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <div class="modal-body">
+            <div class="steps">
+                <div class="step is-active" data-step="1">
+                    <div class="step-circle">1</div>
+                    <span class="step-label">نوع التقرير</span>
+                </div>
+                <div class="step" data-step="2">
+                    <div class="step-circle">2</div>
+                    <span class="step-label">الأقسام</span>
+                </div>
+                <div class="step" data-step="3">
+                    <div class="step-circle">3</div>
+                    <span class="step-label">المعاينة</span>
+                </div>
+            </div>
+
+            <div class="step-panel is-active" data-panel="1">
+                <div class="field">
+                    <label class="field-label"><i class="fa-solid fa-user"></i> اسم المريض <span style="color: var(--c-danger);">*</span></label>
+                    <input type="text" class="field-input field-patient-highlight" id="wizPatient" placeholder="اكتب اسم المريض كاملاً...">
+                </div>
+
+                <div class="field">
+                    <label class="field-label"><i class="fa-solid fa-tag"></i> نوع التقرير</label>
+                    <select class="field-select" id="wizType">
+                        <option value="medical">تقرير طبي شامل</option>
+                        <option value="psych">تقرير تقييم نفسي</option>
+                        <option value="meds">تقرير الأدوية والوصفات</option>
+                        <option value="vitals">تقرير المؤشرات الحيوية</option>
+                        <option value="visits">تقرير الزيارات والمواعيد</option>
+                        <option value="custom">تقرير مخصص</option>
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label class="field-label"><i class="fa-solid fa-heading"></i> عنوان التقرير</label>
+                    <input type="text" class="field-input" id="wizTitle" placeholder="مثال: تقرير طبي شامل - أكتوبر 2024">
+                </div>
+            </div>
+
+            <div class="step-panel" data-panel="2">
+                <div class="field">
+                    <label class="field-label"><i class="fa-solid fa-list-check"></i> اختر الأقسام</label>
+                    <div class="sections-grid" id="wizSections"></div>
+                </div>
+                <div class="field">
+                    <label class="field-label"><i class="fa-solid fa-calendar-days"></i> النطاق الزمني</label>
+                    <select class="field-select" id="wizRange">
+                        <option value="all">كل الفترات</option>
+                        <option value="month">آخر 30 يوم</option>
+                        <option value="3months">آخر 3 أشهر</option>
+                        <option value="6months">آخر 6 أشهر</option>
+                        <option value="year">آخر سنة</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label class="field-label"><i class="fa-solid fa-note-sticky"></i> ملاحظات إضافية</label>
+                    <textarea class="field-textarea" id="wizNotes" placeholder="ملاحظات ستظهر في نهاية التقرير..."></textarea>
+                </div>
+            </div>
+
+            <div class="step-panel" data-panel="3">
+                <div class="preview-panel" id="wizPreview"></div>
+            </div>
+        </div>
+
+        <div class="modal-foot">
+            <button type="button" class="btn btn-ghost" id="wizPrev" style="display:none;">
+                <i class="fa-solid fa-arrow-right"></i> السابق
+            </button>
+            <button type="button" class="btn btn-ghost" id="wizCancel">
+                <i class="fa-solid fa-xmark"></i> إلغاء
+            </button>
+            <button type="button" class="btn btn-primary" id="wizNext">
+                التالي <i class="fa-solid fa-arrow-left"></i>
+            </button>
+            <button type="button" class="btn btn-success" id="wizSave" style="display:none;">
+                <i class="fa-solid fa-floppy-disk"></i> حفظ التقرير
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================
+     Preview Modal
+============================================================ -->
+<div class="modal-overlay" id="previewModal" role="dialog" aria-modal="true">
+    <div class="modal modal-xl">
+        <div class="modal-head">
+            <div class="modal-head-icon"><i class="fa-solid fa-file-lines"></i></div>
+            <div class="modal-head-text">
+                <h3 id="previewTitle">معاينة التقرير</h3>
+                <p id="previewSubtitle">-</p>
+            </div>
+            <button type="button" class="modal-close" id="previewClose"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body">
+            <div class="printable" id="printableContainer"></div>
+        </div>
+        <div class="modal-foot">
+            <button type="button" class="btn btn-danger" id="pdfBtn">
+                <i class="fa-solid fa-file-pdf"></i> PDF
+            </button>
+            <button type="button" class="btn btn-ghost" id="printBtn2">
+                <i class="fa-solid fa-print"></i> طباعة
+            </button>
+            <button type="button" class="btn btn-ghost" id="htmlBtn">
+                <i class="fa-solid fa-download"></i> HTML
+            </button>
+            <button type="button" class="btn btn-primary" id="previewClose2">
+                <i class="fa-solid fa-check"></i> إغلاق
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================
+     Confirm Modal
+============================================================ -->
+<div class="modal-overlay" id="confirmModal" role="dialog" aria-modal="true">
+    <div class="modal">
+        <div class="modal-head">
+            <div class="modal-head-icon danger"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <div class="modal-head-text">
+                <h3 id="confirmTitle">تأكيد الحذف</h3>
+                <p id="confirmSub">لا يمكن التراجع عن هذه العملية</p>
+            </div>
+        </div>
+        <div class="modal-body">
+            <p id="confirmMsg" style="font-size: 14px; color: var(--c-text-2); line-height: 1.9; font-weight: 500; margin: 0;">هل أنت متأكد؟</p>
+        </div>
+        <div class="modal-foot">
+            <button type="button" class="btn btn-ghost" id="confirmCancel">
+                <i class="fa-solid fa-xmark"></i> إلغاء
+            </button>
+            <button type="button" class="btn btn-danger" id="confirmOk">
+                <i class="fa-solid fa-trash"></i> نعم، احذف
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toastEl" role="alert">
+    <div class="toast-ic" id="toastIc"></div>
+    <div class="toast-body">
+        <p class="toast-title" id="toastTitle"></p>
+        <p class="toast-msg" id="toastMsg"></p>
+    </div>
+</div>
+
+<!-- Loading -->
+<div class="loading" id="loadingEl">
+    <div class="loading-spinner"></div>
+    <div class="loading-text"><i class="fa-solid fa-file-pdf"></i> جاري توليد ملف PDF...</div>
+</div>
+
+<script src="~/js/doctor/Reports/Report.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>

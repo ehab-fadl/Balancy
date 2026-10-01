@@ -32,44 +32,29 @@
                 <span class="code-char">6</span>
             </div>
 
-            <!-- ✅ زر مدير الوثائق - المسار الصحيح -->
-            <a href="/Doctor/DocumentManager/DocumentManager"
-               class="btn-copy btn-docs"
-               id="openDocsBtn"
-               title="فتح مدير وثائق المريض"
-               aria-label="فتح مدير وثائق المريض">
-                <i class="fa-solid fa-folder-open ms-1"></i>
-                الوثائق
-            </a>
+                       <a href="/Doctor/DocumentManager/DocumentManager"
+                           class="btn btn-primary d-inline-flex align-items-center gap-2 px-3 py-2 shadow-sm rounded-pill transition"
+                           id="openDocsBtn"
+                           title="فتح مدير وثائق المريض"
+                           aria-label="فتح مدير وثائق المريض"
+                           style="background-color: #0d6efd; border: none; font-weight: 500;">
+                            <i class="fa-solid fa-file-lines"></i>
+                            <span>الوثائق</span>
+                       </a>
 
+                       <a href="/Doctor/Reports/Report"
+                           class="btn btn-primary d-inline-flex align-items-center gap-2 px-3 py-2 shadow-sm rounded-pill transition"
+                           id="openDocsBtn"
+                           title="فتح مدير تقارير المريض"
+                           aria-label="فتح مدير تقارير المريض"
+                           style="background-color: #0d6efd; border: none; font-weight: 500;">
+                            <i class="fa-solid fa-notes-medical"></i>
+                            <span>التقارير</span>
+                        </a>
+    
             <button type="button" class="btn-copy" id="copyBtn" aria-label="نسخ كود المريض">
                 <i class="fa-regular fa-copy ms-1"></i>
                 نسخ الكود
-            </button>
-        </div>
-    </div>
-
-    <!-- File Progress Card -->
-    <div class="file-progress-card" role="region" aria-label="اكتمال الملف الطبي">
-        <div class="fp-label">
-            <i class="fa-solid fa-chart-pie"></i>
-            <span>اكتمال الملف الطبي</span>
-        </div>
-        <div class="fp-bar-wrap">
-            <div class="fp-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="fpBarAria">
-                <div class="fp-bar-fill" id="fpBarFill"></div>
-            </div>
-        </div>
-        <div class="fp-percent" id="fpPercent">0%</div>
-      
-
-            <button type="button" class="fp-btn" id="fpPrintBtn" aria-label="طباعة الملف">
-                <i class="fa-solid fa-print"></i>
-                طباعة
-            </button>
-            <button type="button" class="fp-btn" id="fpExportBtn" aria-label="تصدير JSON">
-                <i class="fa-solid fa-file-export"></i>
-                تصدير
             </button>
         </div>
     </div>
