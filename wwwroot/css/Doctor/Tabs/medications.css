@@ -2,7 +2,6 @@
    Prescribed Medications Tab — Styles
 ============================================================ */
 
-/* -------- Theme Variables (Green theme) -------- */
 .medications-container {
     --bn-primary: #0891b2;
     --bn-primary-dark: #0e7490;
@@ -265,6 +264,69 @@
     background: rgba(52, 211, 153, 0.1);
 }
 
+/* ============================================================
+   زر طباعة خطة دوائية
+============================================================ */
+.medications-container .btn-print-plan {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    border: none;
+    border-radius: 14px;
+    padding: 0.65rem 1.25rem;
+    background: linear-gradient(135deg, #ef4444, #b91c1c);
+    color: #fff;
+    font-family: 'Tajawal', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 900;
+    cursor: pointer;
+    box-shadow: 0 8px 20px -8px rgba(239, 68, 68, 0.6);
+    transition: all var(--bn-transition);
+    position: relative;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+    .medications-container .btn-print-plan::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.28), transparent);
+        background-size: 200% 100%;
+        opacity: 0;
+        transition: opacity var(--bn-transition);
+    }
+
+    .medications-container .btn-print-plan:hover:not(:disabled) {
+        transform: translateY(-3px);
+        box-shadow: 0 15px 32px -10px rgba(239, 68, 68, 0.75);
+    }
+
+        .medications-container .btn-print-plan:hover:not(:disabled)::after {
+            opacity: 1;
+            animation: med-shimmer 1.5s ease-in-out infinite;
+        }
+
+    .medications-container .btn-print-plan:active:not(:disabled) {
+        transform: translateY(-1px);
+    }
+
+    .medications-container .btn-print-plan:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .medications-container .btn-print-plan .fa-spinner {
+        animation: med-spin 0.9s linear infinite;
+    }
+
+@keyframes med-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
 .medications-container .personal-form {
     padding: 1.75rem;
 }
@@ -299,6 +361,10 @@
         font-size: 0.78rem;
         transition: transform var(--bn-transition);
     }
+
+.medications-container label[for="medicationIntakePeriod"] i {
+    color: var(--bn-warning);
+}
 
 .medications-container .col-md-6:focus-within .form-label-custom,
 .medications-container .col-md-12:focus-within .form-label-custom,
@@ -490,7 +556,6 @@
     color: #fcd34d;
 }
 
-/* Bootstrap Table Adjustments */
 .medications-container .table {
     --bs-table-bg: transparent;
     color: var(--bn-text);
@@ -925,17 +990,17 @@
     }
 
 /* ============================================================
-   Toast — يُدار بالكامل من index.css
-   ⚠️ لا نضع قواعد .toast-container هنا لتجنب التعارض
-============================================================ */
-
-/* ============================================================
    Responsive
 ============================================================ */
 @media (max-width: 767px) {
     .medications-container .form-card-header {
         align-items: flex-start;
         flex-direction: column;
+    }
+
+    .medications-container .btn-print-plan {
+        width: 100%;
+        justify-content: center;
     }
 
     .medications-container .table-mobile-cards thead {
@@ -1024,6 +1089,7 @@
 @media print {
     .medications-container .medication-form-card,
     .medications-container .btn-save,
+    .medications-container .btn-print-plan,
     .medications-container .edit-status,
     .medications-container .bn-field-message,
     .medications-container .bn-validation-summary,

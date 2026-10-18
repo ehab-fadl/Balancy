@@ -4,7 +4,6 @@
     Layout = null;
 }
 
-
 <main class="patient-main-content">
 
     <!-- Patient Code Bar -->
@@ -32,26 +31,26 @@
                 <span class="code-char">6</span>
             </div>
 
-                       <a href="/Doctor/DocumentManager/DocumentManager"
-                           class="btn btn-primary d-inline-flex align-items-center gap-2 px-3 py-2 shadow-sm rounded-pill transition"
-                           id="openDocsBtn"
-                           title="فتح مدير وثائق المريض"
-                           aria-label="فتح مدير وثائق المريض"
-                           style="background-color: #0d6efd; border: none; font-weight: 500;">
-                            <i class="fa-solid fa-file-lines"></i>
-                            <span>الوثائق</span>
-                       </a>
+            <a href="/Doctor/DocumentManager/DocumentManager"
+               class="btn btn-primary d-inline-flex align-items-center gap-2 px-3 py-2 shadow-sm rounded-pill transition"
+               id="openDocsBtn"
+               title="فتح مدير وثائق المريض"
+               aria-label="فتح مدير وثائق المريض"
+               style="background-color: #0d6efd; border: none; font-weight: 500;">
+                <i class="fa-solid fa-file-lines"></i>
+                <span>الوثائق</span>
+            </a>
 
-                       <a href="/Doctor/Reports/Report"
-                           class="btn btn-primary d-inline-flex align-items-center gap-2 px-3 py-2 shadow-sm rounded-pill transition"
-                           id="openDocsBtn"
-                           title="فتح مدير تقارير المريض"
-                           aria-label="فتح مدير تقارير المريض"
-                           style="background-color: #0d6efd; border: none; font-weight: 500;">
-                            <i class="fa-solid fa-notes-medical"></i>
-                            <span>التقارير</span>
-                        </a>
-    
+            <a href="/Doctor/Reports/Report"
+               class="btn btn-primary d-inline-flex align-items-center gap-2 px-3 py-2 shadow-sm rounded-pill transition"
+               id="openReportsBtn"
+               title="فتح مدير تقارير المريض"
+               aria-label="فتح مدير تقارير المريض"
+               style="background-color: #0d6efd; border: none; font-weight: 500;">
+                <i class="fa-solid fa-notes-medical"></i>
+                <span>التقارير</span>
+            </a>
+
             <button type="button" class="btn-copy" id="copyBtn" aria-label="نسخ كود المريض">
                 <i class="fa-regular fa-copy ms-1"></i>
                 نسخ الكود
@@ -62,7 +61,6 @@
     <!-- Nav Groups -->
     <div class="nav-groups-wrapper">
 
-        <!-- Group 1 -->
         <div class="nav-group">
             <div class="nav-group-header">
                 <i class="fa-solid fa-user-circle"></i>
@@ -101,7 +99,6 @@
             </nav>
         </div>
 
-        <!-- Group 2 -->
         <div class="nav-group">
             <div class="nav-group-header">
                 <i class="fa-solid fa-clipboard-question"></i>
@@ -132,7 +129,6 @@
             </nav>
         </div>
 
-        <!-- Group 3 -->
         <div class="nav-group">
             <div class="nav-group-header">
                 <i class="fa-solid fa-pills"></i>
@@ -168,7 +164,6 @@
             </nav>
         </div>
 
-        <!-- Group 4 -->
         <div class="nav-group">
             <div class="nav-group-header">
                 <i class="fa-solid fa-folder-open"></i>
@@ -201,11 +196,25 @@
 
     </div>
 
-    <!-- Tab Content Container -->
     <div id="tabContentContainer" class="tab-content-container"></div>
 
 </main>
 
-@section Scripts {
-    <script src="~/js/doctor/patientdetails.js"></script>
-}
+<div class="toast-container" id="toastContainer">
+    <div id="notificationToast" class="toast toast-custom" role="alert"
+         aria-live="assertive" aria-atomic="true" data-bs-autohide="false">
+        <div class="toast-body">
+            <div class="toast-icon-wrap" id="toastIcon"></div>
+            <div class="toast-content">
+                <strong id="toastTitle"></strong>
+                <div id="toastMessage" class="small"></div>
+            </div>
+            <button type="button" class="btn-close" id="toastCloseBtn" aria-label="إغلاق"></button>
+        </div>
+        <div class="toast-progress">
+            <div class="toast-progress-bar" id="toastProgressBar"></div>
+        </div>
+    </div>
+</div>
+
+<script src="~/js/doctor/patientdetails.js" asp-append-version="true"></script>

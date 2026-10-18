@@ -3,31 +3,102 @@
 ============================================================ */
 
 (function initPatientDetails() {
+    if (window.__bnPatientDetailsInit) {
+        console.warn('⚠️ PatientDetails.js محمّل مسبقاً');
+        return;
+    }
+    window.__bnPatientDetailsInit = true;
+
     console.log('🚀 PatientDetails.js initialized');
 
     /* ============================================================
-       0. Toast Helper (داخل IIFE — قبل أي استخدام)
+       0. Emergency Toast — مستقل تماماً
+    ============================================================ */
+    function bnEmergencyToast(type, title, message, duration = 3500) {
+        let container = document.getElementById('bnEmergencyToastContainer');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'bnEmergencyToastContainer';
+            container.style.cssText = `
+                position: fixed !important;
+                top: 20px !important;
+                left: 20px !important;
+                z-index: 2147483647 !important;
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 10px !important;
+                pointer-events: none !important;
+            `;
+            document.body.appendChild(container);
+        }
+
+        const colors = { success: '#16a34a', error: '#dc2626', warning: '#f59e0b', info: '#0ea5e9' };
+        const icons = { success: '✓', error: '✕', warning: '⚠', info: 'ℹ' };
+
+        const el = document.createElement('div');
+        el.style.cssText = `
+            background: ${colors[type] || colors.info} !important;
+            color: white !important;
+            padding: 14px 20px !important;
+            border-radius: 12px !important;
+            font-family: system-ui, -apple-system, sans-serif !important;
+            font-size: 14px !important;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.25) !important;
+            pointer-events: auto !important;
+            min-width: 280px !important;
+            max-width: 420px !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 12px !important;
+            opacity: 0 !important;
+            transform: translateX(-30px) !important;
+            transition: all 0.3s ease !important;
+            direction: rtl !important;
+        `;
+        el.innerHTML = `
+            <span style="font-size:22px;font-weight:bold;flex-shrink:0;">${icons[type] || 'ℹ'}</span>
+            <div style="flex:1;min-width:0;">
+                <div style="font-weight:700;margin-bottom:3px;font-size:14px;">${title}</div>
+                <div style="font-size:12px;opacity:0.95;line-height:1.4;">${message}</div>
+            </div>
+        `;
+
+        container.appendChild(el);
+
+        requestAnimationFrame(() => {
+            el.style.opacity = '1';
+            el.style.transform = 'translateX(0)';
+        });
+
+        setTimeout(() => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateX(-30px)';
+            setTimeout(() => el.remove(), 300);
+        }, duration);
+    }
+
+    /* ============================================================
+       0.b Toast Helper — fallback chain
     ============================================================ */
     function toast(type, title, message, duration = 3500) {
-        if (window.bnApp && typeof window.bnApp.showToast === 'function') {
-            return window.bnApp.showToast(type, title, message, duration);
-        }
+        // 1. window.showToast
         if (typeof window.showToast === 'function') {
-            return window.showToast(type, title, message, duration);
+            try {
+                window.showToast(type, title, message, duration);
+                return;
+            } catch (e) {
+                console.warn('⚠️ showToast فشلت:', e);
+            }
         }
-        if (!window.__bnToastRetryScheduled) {
-            window.__bnToastRetryScheduled = true;
-            setTimeout(() => {
-                window.__bnToastRetryScheduled = false;
-                if (typeof window.showToast === 'function') {
-                    window.showToast(type, title, message, duration);
-                } else {
-                    console.log(`[Toast ${type}] ${title}: ${message}`);
-                }
-            }, 300);
-        } else {
-            console.log(`[Toast ${type}] ${title}: ${message}`);
+        // 2. bnApp.showToast
+        if (window.bnApp && typeof window.bnApp.showToast === 'function') {
+            try {
+                window.bnApp.showToast(type, title, message, duration);
+                return;
+            } catch (e) { }
         }
+        // 3. Emergency Toast (مضمون)
+        bnEmergencyToast(type, title, message, duration);
     }
 
     /* ============================================================
@@ -120,7 +191,9 @@
         highlightTab(btnEl);
 
         try {
-            const patientId = window.bnCurrentPatientId || 1;
+            const patientId = window.bnCurrentPatientId
+                || sessionStorage.getItem('bnCurrentPatientId')
+                || 1;
             const url = `${route}?patientId=${patientId}&t=${Date.now()}`;
             console.log('📡 Fetching tab:', url);
 
@@ -343,7 +416,8 @@
         bindOtherButtons();
 
         const personalBtn = document.querySelector('.patient-tab-btn[data-tab="personal"]');
-        if (personalBtn) {
+        if (personalBtn && !personalBtn.dataset.autoOpened) {
+            personalBtn.dataset.autoOpened = '1';
             console.log('📂 فتح تبويب البيانات الشخصية تلقائياً');
             loadTabContent('personal', personalBtn);
         }
@@ -356,18 +430,24 @@
     }
 
     /* ============================================================
-       11. Expose
+       11. Expose — يُستدعى من Index.js
     ============================================================ */
     window.bnRebindTabs = function () {
+        console.log('🔄 إعادة ربط التبويبات');
+
+        const personalBtn = document.querySelector('.patient-tab-btn[data-tab="personal"]');
+        if (personalBtn) delete personalBtn.dataset.autoOpened;
+
+        document.querySelectorAll('.patient-tab-btn').forEach(b => {
+            delete b.dataset.bound;
+        });
+
         bindTabButtons();
         bindOtherButtons();
     };
 
     /* ============================================================
-       12. Global Network Observer — إظهار Toast تلقائي
-           عند عمليات الإضافة/التعديل/الحذف/الحفظ
-           يعترض: fetch + XHR + jQuery.ajax + form.submit
-           ⚠️ لا يعدّل أي منطق قديم — فقط يراقب ويُظهر تنبيه
+       12. Global Network Observer
     ============================================================ */
     (function installNetworkObserver() {
         if (window.__bnNetworkObserverInstalled) return;
@@ -382,6 +462,10 @@
 
         function isTabLoader(url) {
             return url && url.toString().includes('/Doctor/Tabs/');
+        }
+
+        function isPatientDetails(url) {
+            return url && url.toString().includes('/Doctor/PatientDetails');
         }
 
         function detectAction(url, method) {
@@ -419,12 +503,12 @@
 
             try {
                 const response = await originalFetch(input, init);
-                if (action && !isTabLoader(url)) {
+                if (action && !isTabLoader(url) && !isPatientDetails(url)) {
                     response.ok ? notifySuccess(action) : notifyError(response.status);
                 }
                 return response;
             } catch (err) {
-                if (action && !isTabLoader(url)) notifyError();
+                if (action && !isTabLoader(url) && !isPatientDetails(url)) notifyError();
                 throw err;
             }
         };
@@ -446,7 +530,7 @@
                 const method = this.__bnMethod || 'GET';
                 const action = detectAction(url, method);
 
-                if (action && !isTabLoader(url)) {
+                if (action && !isTabLoader(url) && !isPatientDetails(url)) {
                     this.addEventListener('load', () => {
                         if (this.status >= 200 && this.status < 300) notifySuccess(action);
                         else notifyError(this.status);
@@ -468,7 +552,7 @@
                     const method = (options && (options.type || options.method)) || 'GET';
                     const action = detectAction(url, method);
 
-                    if (action && !isTabLoader(url)) {
+                    if (action && !isTabLoader(url) && !isPatientDetails(url)) {
                         const originalSuccess = options.success;
                         const originalError = options.error;
 
@@ -487,7 +571,7 @@
             window.jQuery.ajax.__bnWrapped = true;
         }
 
-        /* ---------- 4. HTMLFormElement.submit (form عادي) ---------- */
+        /* ---------- 4. HTMLFormElement.submit ---------- */
         if (window.HTMLFormElement && !HTMLFormElement.prototype.submit.__bnWrapped) {
             const originalFormSubmit = HTMLFormElement.prototype.submit;
             HTMLFormElement.prototype.submit = function () {
@@ -495,7 +579,7 @@
                     const action = this.getAttribute('action') || window.location.pathname;
                     const method = (this.getAttribute('method') || 'GET').toUpperCase();
                     const detected = detectAction(action, method);
-                    if (detected && !isTabLoader(action)) {
+                    if (detected && !isTabLoader(action) && !isPatientDetails(action)) {
                         notifySuccess(detected);
                     }
                 } catch (e) { /* silent */ }
@@ -504,191 +588,35 @@
             HTMLFormElement.prototype.submit.__bnWrapped = true;
         }
 
-        console.log('✅ Network Observer installed (fetch + XHR + jQuery + form.submit)');
-    })();
-
-    /* ============================================================
-       13. Toast Fallback — يضمن وجود window.showToast دائماً
-           حتى لو فُقد Index.js أثناء SPA Navigation
-           ⚠️ لا يستبدل النسخة الأصلية إن وُجدت
-    ============================================================ */
-    (function ensureGlobalToast() {
-        if (typeof window.showToast === 'function') {
-            console.log('✅ window.showToast موجود مسبقاً (Index.js)');
-            return;
-        }
-
-        console.warn('⚠️ window.showToast غير موجود — تركيب نسخة احتياطية...');
-
-        let toastTimeoutId = null;
-        let toastHideTimeoutId = null;
-
-        window.showToast = function (type, title, message, duration = 3500) {
-            const toastEl = document.getElementById('notificationToast');
-            if (!toastEl) {
-                console.log(`[Toast ${type}] ${title}: ${message}`);
-                return;
-            }
-
-            const toastIcon = document.getElementById('toastIcon');
-            const toastTitle = document.getElementById('toastTitle');
-            const toastMessage = document.getElementById('toastMessage');
-            const progressBar = document.getElementById('toastProgressBar');
-
-            if (toastTimeoutId) clearTimeout(toastTimeoutId);
-            if (toastHideTimeoutId) clearTimeout(toastHideTimeoutId);
-
-            toastEl.className = 'toast toast-custom';
-            toastEl.classList.remove('show', 'hiding');
-
-            if (type === 'success') {
-                toastEl.classList.add('toast-success');
-                toastIcon.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
-            } else if (type === 'error') {
-                toastEl.classList.add('toast-error');
-                toastIcon.innerHTML = '<i class="fa-solid fa-circle-xmark"></i>';
-            } else if (type === 'warning') {
-                toastEl.classList.add('toast-warning');
-                toastIcon.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
-            } else {
-                toastEl.classList.add('toast-info');
-                toastIcon.innerHTML = '<i class="fa-solid fa-circle-info"></i>';
-            }
-
-            toastTitle.textContent = title;
-            toastMessage.textContent = message;
-
-            progressBar.style.transition = 'none';
-            progressBar.style.width = '100%';
-            void toastEl.offsetWidth;
-            toastEl.classList.add('show');
-
-            setTimeout(() => {
-                progressBar.style.transition = `width ${duration}ms linear`;
-                progressBar.style.width = '0%';
-            }, 50);
-
-            toastTimeoutId = setTimeout(() => {
-                if (!toastEl.classList.contains('show')) return;
-                toastEl.classList.add('hiding');
-                toastHideTimeoutId = setTimeout(() => {
-                    toastEl.classList.remove('show', 'hiding');
-                }, 280);
-            }, duration);
-        };
-
-        console.log('✅ window.showToast (backup) installed');
-    })();
-
-    /* ============================================================
-       14. Console → Toast Bridge — الأهم!
-           يعترض console.log ويلتقط أي رسالة تبدأ بـ "[Toast"
-           ويحوّلها إلى Toast مرئي حقيقي.
-           ⚠️ لا يعدّل أي منطق قديم — فقط يراقب console.log
-    ============================================================ */
-    (function installConsoleToastBridge() {
-        if (window.__bnConsoleToastBridgeInstalled) return;
-        window.__bnConsoleToastBridgeInstalled = true;
-
-        const originalLog = console.log.bind(console);
-        const originalWarn = console.warn.bind(console);
-        const originalError = console.error.bind(console);
-
-        // نمط: [Toast type] title: message
-        const TOAST_PATTERN = /^\[Toast\s+(info|success|error|warning)\]\s*([^:]+):\s*(.+)$/i;
-
-        // منع التكرار السريع (debounce 200ms على نفس الرسالة)
-        const recentToasts = new Map();
-
-        function tryEmitToast(text) {
-            if (typeof text !== 'string') return false;
-            const match = text.match(TOAST_PATTERN);
-            if (!match) return false;
-
-            const type = match[1].toLowerCase();
-            const title = (match[2] || '').trim();
-            const message = (match[3] || '').trim();
-
-            const key = `${type}|${title}|${message}`;
-            const now = Date.now();
-            if (recentToasts.has(key) && (now - recentToasts.get(key)) < 200) {
-                return true; // تجاهل التكرار
-            }
-            recentToasts.set(key, now);
-
-            // نظّف الخريطة دورياً
-            if (recentToasts.size > 50) {
-                for (const [k, ts] of recentToasts) {
-                    if (now - ts > 5000) recentToasts.delete(k);
-                }
-            }
-
-            // استخدم showToast الأصلي (من Index.js)
-            if (typeof window.showToast === 'function') {
-                try {
-                    window.showToast(type, title, message, 3500);
-                } catch (e) { /* silent */ }
-            }
-            return true;
-        }
-
-        console.log = function (...args) {
-            const first = args[0];
-            if (typeof first === 'string') {
-                tryEmitToast(first);
-            }
-            return originalLog(...args);
-        };
-
-        console.warn = function (...args) {
-            const first = args[0];
-            if (typeof first === 'string') {
-                tryEmitToast(first);
-            }
-            return originalWarn(...args);
-        };
-
-        console.error = function (...args) {
-            const first = args[0];
-            if (typeof first === 'string') {
-                tryEmitToast(first);
-            }
-            return originalError(...args);
-        };
-
-        console.log('✅ Console → Toast Bridge installed');
+        console.log('✅ Network Observer installed');
     })();
 
 })();
 
 /* ============================================================
    15. Bind patientId to Document Manager links
-       ✅ المسار الصحيح: /Doctor/DocumentManager/DocumentManager
 ============================================================ */
 (function bindPatientIdToDocLinks() {
     const params = new URLSearchParams(window.location.search);
     const patientId = params.get('patientId')
         || params.get('id')
         || sessionStorage.getItem('bnCurrentPatientId')
+        || window.bnCurrentPatientId
         || '';
 
-    // حفظ في window و sessionStorage للاستخدام العام
     window.bnCurrentPatientId = patientId;
     if (patientId) sessionStorage.setItem('bnCurrentPatientId', patientId);
 
-    console.log('🆔 PatientId المستخرج من URL:', patientId || '(غير محدد)');
+    console.log('🆔 PatientId المستخرج:', patientId || '(غير محدد)');
 
-    // ✅ المسار الصحيح لمدير الوثائق
     const DOCS_BASE_URL = '/Doctor/DocumentManager/DocumentManager';
 
-    // إضافة patientId لكل زر وثائق
     ['openDocsBtn', 'fpDocsBtn'].forEach(id => {
         const btn = document.getElementById(id);
         if (btn) {
             btn.href = patientId
                 ? `${DOCS_BASE_URL}?patientId=${patientId}`
                 : DOCS_BASE_URL;
-            console.log(`✅ تم تحديث رابط ${id} → ${btn.href}`);
         }
     });
 })();

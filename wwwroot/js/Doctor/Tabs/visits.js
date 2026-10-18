@@ -39,31 +39,169 @@
     };
 
     /* ============================================================
-       2. Toast (fallback)
+       2. Utilities — escapeHtml (مبكّر)
     ============================================================ */
-    const showToast = (window.bnApp && window.bnApp.showToast)
-        ? window.bnApp.showToast
-        : function (type, title, message, duration = 3500) {
-            console.log(`[Toast ${type}] ${title}: ${message}`);
-        };
+    function escapeHtml(value) {
+        const div = document.createElement('div');
+        div.textContent = value ?? '';
+        return div.innerHTML;
+    }
 
     /* ============================================================
-       3. Confetti
+       3. Toast — نظام مدمج مضمون العمل
+    ============================================================ */
+    function ensureToastStyles() {
+        if (document.getElementById('bn-vis-toast-styles')) return;
+        const style = document.createElement('style');
+        style.id = 'bn-vis-toast-styles';
+        style.textContent = `
+            .bn-vis-toast-overlay {
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                bottom: 0 !important;
+                display: none;
+                align-items: center;
+                justify-content: center;
+                z-index: 2147483647 !important;
+                pointer-events: none;
+                padding: 1rem;
+                margin: 0 !important;
+            }
+            .bn-vis-toast-overlay.show { display: flex !important; }
+            .bn-vis-toast {
+                min-width: 300px;
+                max-width: 92vw;
+                padding: 1.1rem 1.4rem;
+                border-radius: 16px;
+                display: flex;
+                align-items: center;
+                gap: 0.85rem;
+                font-family: 'Tajawal', 'Segoe UI', Tahoma, sans-serif;
+                font-weight: 800;
+                font-size: 0.95rem;
+                color: #fff;
+                box-shadow: 0 20px 50px -12px rgba(15, 23, 42, 0.55);
+                animation: bnVisToastIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+                pointer-events: auto;
+                direction: rtl;
+                line-height: 1.5;
+                position: relative;
+            }
+            .bn-vis-toast.hide { animation: bnVisToastOut 0.3s ease forwards; }
+            .bn-vis-toast-icon {
+                width: 38px;
+                height: 38px;
+                min-width: 38px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: rgba(255, 255, 255, 0.22);
+                font-size: 1.05rem;
+            }
+            .bn-vis-toast-body {
+                display: flex;
+                flex-direction: column;
+                gap: 0.15rem;
+                text-align: right;
+            }
+            .bn-vis-toast-title { font-size: 0.95rem; font-weight: 900; }
+            .bn-vis-toast-message { font-size: 0.8rem; font-weight: 600; opacity: 0.95; }
+            .bn-vis-toast.error { background: linear-gradient(135deg, #ef4444, #b91c1c); }
+            .bn-vis-toast.success { background: linear-gradient(135deg, #10b981, #047857); }
+            .bn-vis-toast.warning { background: linear-gradient(135deg, #f59e0b, #b45309); }
+            .bn-vis-toast.info { background: linear-gradient(135deg, #1d4ed8, #1e40af); }
+            @keyframes bnVisToastIn {
+                from { opacity: 0; transform: translateY(20px) scale(0.92); }
+                to { opacity: 1; transform: translateY(0) scale(1); }
+            }
+            @keyframes bnVisToastOut {
+                from { opacity: 1; transform: translateY(0) scale(1); }
+                to { opacity: 0; transform: translateY(-20px) scale(0.92); }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    function showBuiltInToast(type, title, message, duration = 3200) {
+        ensureToastStyles();
+
+        if (!document.body) {
+            document.addEventListener('DOMContentLoaded',
+                () => showBuiltInToast(type, title, message, duration),
+                { once: true });
+            return;
+        }
+
+        let overlay = document.getElementById('bnVisToastOverlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'bnVisToastOverlay';
+            overlay.className = 'bn-vis-toast-overlay';
+            document.body.appendChild(overlay);
+        }
+        overlay.innerHTML = '';
+
+        const iconMap = {
+            error: 'fa-circle-exclamation',
+            success: 'fa-circle-check',
+            warning: 'fa-triangle-exclamation',
+            info: 'fa-circle-info'
+        };
+        const toast = document.createElement('div');
+        toast.className = `bn-vis-toast ${type}`;
+        toast.innerHTML = `
+            <div class="bn-vis-toast-icon"><i class="fa-solid ${iconMap[type] || 'fa-circle-info'}"></i></div>
+            <div class="bn-vis-toast-body">
+                <div class="bn-vis-toast-title">${escapeHtml(title || '')}</div>
+                <div class="bn-vis-toast-message">${escapeHtml(message || '')}</div>
+            </div>
+        `;
+        overlay.appendChild(toast);
+        overlay.classList.add('show');
+        clearTimeout(overlay._hideTimer);
+        clearTimeout(overlay._removeTimer);
+        overlay._hideTimer = setTimeout(() => {
+            toast.classList.add('hide');
+            overlay._removeTimer = setTimeout(() => {
+                overlay.classList.remove('show');
+                overlay.innerHTML = '';
+            }, 320);
+        }, duration);
+    }
+
+    /**
+     * showToast — يستخدم النظام المدمج مباشرة (مضمون)
+     */
+    const showToast = showBuiltInToast;
+
+    /* ============================================================
+       4. Confetti
     ============================================================ */
     const bnConfetti = {
-        el: document.getElementById('bnConfetti'),
+        el: null,
         colors: ['#1d4ed8', '#6366f1', '#f59e0b', '#10b981', '#ef4444', '#ec4899', '#8b5cf6'],
 
-        fire(duration = 2000) {
-            if (!this.el) {
-                const confettiEl = document.createElement('div');
-                confettiEl.className = 'bn-confetti';
-                confettiEl.id = 'bnConfetti';
-                document.body.appendChild(confettiEl);
-                this.el = confettiEl;
+        ensureEl() {
+            if (this.el && document.body.contains(this.el)) return this.el;
+            let existing = document.getElementById('bnConfetti');
+            if (!existing) {
+                existing = document.createElement('div');
+                existing.className = 'bn-confetti';
+                existing.id = 'bnConfetti';
+                document.body.appendChild(existing);
             }
-            this.el.innerHTML = '';
-            this.el.classList.add('active');
+            this.el = existing;
+            return existing;
+        },
+
+        fire(duration = 2000) {
+            const el = this.ensureEl();
+            if (!el) return;
+            el.innerHTML = '';
+            el.classList.add('active');
 
             const pieceCount = 60;
             for (let i = 0; i < pieceCount; i++) {
@@ -74,18 +212,18 @@
                 piece.style.animationDuration = (1.5 + Math.random() * 1.5) + 's';
                 piece.style.background = this.colors[Math.floor(Math.random() * this.colors.length)];
                 piece.style.transform = `rotate(${Math.random() * 360}deg)`;
-                this.el.appendChild(piece);
+                el.appendChild(piece);
             }
 
             setTimeout(() => {
-                this.el.classList.remove('active');
-                this.el.innerHTML = '';
+                el.classList.remove('active');
+                el.innerHTML = '';
             }, duration);
         }
     };
 
     /* ============================================================
-       4. Focus Trap Utility
+       5. Focus Trap Utility
     ============================================================ */
     const bnFocusTrap = {
         activeTrap: null,
@@ -141,7 +279,7 @@
     };
 
     /* ============================================================
-       5. Validation Engine — مبسّطة
+       6. Validation Engine — مبسّطة
     ============================================================ */
     const bnValidation = {
 
@@ -315,15 +453,6 @@
     };
 
     /* ============================================================
-       6. Utilities
-    ============================================================ */
-    function escapeHtml(value) {
-        const div = document.createElement('div');
-        div.textContent = value ?? '';
-        return div.innerHTML;
-    }
-
-    /* ============================================================
        7. Modals (Edit + Confirm)
     ============================================================ */
     function showEditModal({ title, subtitle, label, value, onSave, placeholder }) {
@@ -416,7 +545,7 @@
     }
 
     /* ============================================================
-       8. Visit Management CRUD — مبسّط
+       8. Visit Management CRUD
     ============================================================ */
     let visitsList = storage.get('visits', []);
 
@@ -426,8 +555,8 @@
         const count = visitsList.length;
         badge.textContent = count === 0 ? '0 زيارة' :
             count === 1 ? 'زيارة واحدة' :
-            count === 2 ? 'زيارتان' :
-            count <= 10 ? `${count} زيارات` : `${count} زيارة`;
+                count === 2 ? 'زيارتان' :
+                    count <= 10 ? `${count} زيارات` : `${count} زيارة`;
     }
 
     function renderVisitsTable() {
@@ -500,7 +629,6 @@
        8.5 Inline Appointment Booking — Modal داخل الزيارة
     ============================================================ */
 
-    // ✅ حقن Modal الحجز في DOM
     function injectAppointmentModal() {
         if (document.getElementById('inlineAppointmentModal')) return;
 
@@ -579,7 +707,6 @@
         document.body.appendChild(tempDiv.firstChild);
     }
 
-    // ✅ فتح المودال مع تعبئة تلقائية
     function openInlineAppointmentModal() {
         injectAppointmentModal();
 
@@ -594,10 +721,8 @@
 
         if (!modal) return;
 
-        // ✅ إعادة تعيين
         if (form) form.reset();
 
-        // ✅ تعبئة تلقائية من سياق الزيارة
         const editIndex = parseInt(document.getElementById('visitEditIndex').value, 10);
         const reasonField = document.getElementById('visitReason');
         const dateField = document.getElementById('visitDate');
@@ -607,7 +732,6 @@
         let visitReason = '';
         let lastVisitDate = '';
 
-        // محاولة استخراج اسم المريض من الصفحة الأم
         const patientNameEl = document.querySelector('[data-patient-name]');
         if (patientNameEl) patientName = patientNameEl.dataset.patientName || '';
 
@@ -622,28 +746,23 @@
             if (notesField && notesInput) notesInput.value = notesField.value.trim();
         }
 
-        // ✅ تعبئة الحقول
         if (patientInput) patientInput.value = patientName;
         if (reasonInput) reasonInput.value = visitReason;
         if (dateInput) dateInput.value = lastVisitDate;
 
-        // ✅ تحقق من صحة التاريخ
         if (dateInput && lastVisitDate) {
             const today = new Date().toISOString().slice(0, 10);
             if (dateInput.value < today) dateInput.value = today;
         }
 
-        // ✅ Subtitle ذكي
         if (subtitle) {
             subtitle.textContent = patientName
                 ? `سيتم إضافة الموعد إلى: ${patientName}`
                 : 'املأ بيانات الموعد ثم احفظ';
         }
 
-        // ✅ إظهار المودال
         modal.classList.add('show');
 
-        // ✅ Focus على أول حقل فارغ
         setTimeout(() => {
             if (patientInput && !patientInput.value) patientInput.focus();
             else if (dateInput && !dateInput.value) dateInput.focus();
@@ -651,13 +770,11 @@
         }, 150);
     }
 
-    // ✅ إغلاق المودال
     function closeInlineAppointmentModal() {
         const modal = document.getElementById('inlineAppointmentModal');
         if (modal) modal.classList.remove('show');
     }
 
-    // ✅ حفظ الموعد في localStorage
     function saveInlineAppointment(apt) {
         const prefix = 'balancy_';
         let appointments = [];
@@ -679,7 +796,6 @@
         }
     }
 
-    // ✅ ربط الأحداث (يُستدعى عند التهيئة)
     function bindInlineAppointmentEvents() {
         injectAppointmentModal();
 
@@ -697,20 +813,17 @@
                 const reason = document.getElementById('inlineAptReason')?.value.trim() || '';
                 const notes = document.getElementById('inlineAptNotes')?.value.trim() || '';
 
-                // ✅ فاليديشن
                 if (!patient || !date || !time || !reason) {
                     showToast('error', 'حقول ناقصة', 'يرجى ملء جميع الحقول المطلوبة.');
                     return;
                 }
 
-                // ✅ تحقق من أن التاريخ ليس في الماضي
                 const today = new Date().toISOString().slice(0, 10);
                 if (date < today) {
                     showToast('error', 'تاريخ غير صالح', 'لا يمكن حجز موعد في تاريخ سابق.');
                     return;
                 }
 
-                // ✅ إنشاء كائن الموعد
                 const apt = {
                     id: 'apt_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
                     patientName: patient,
@@ -722,13 +835,11 @@
                     createdAt: new Date().toISOString()
                 };
 
-                // ✅ حفظ
                 if (saveInlineAppointment(apt)) {
                     closeInlineAppointmentModal();
                     showToast('success', 'تم حفظ الموعد', `${patient} — ${date} ${time}`, 4000);
                     bnConfetti.fire();
 
-                    // ✅ إطلاق حدث مخصص
                     window.dispatchEvent(new CustomEvent('appointmentAdded', { detail: apt }));
                 } else {
                     showToast('error', 'فشل الحفظ', 'حدث خطأ أثناء حفظ الموعد.');
@@ -746,7 +857,6 @@
             });
         }
 
-        // ✅ ESC لإغلاق المودال
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 const m = document.getElementById('inlineAppointmentModal');
@@ -769,6 +879,7 @@
         document.getElementById('visitSubmitBtn').innerHTML = '<i class="fa-solid fa-floppy-disk ms-1"></i> حفظ التعديلات';
         document.getElementById('visitCancelBtn').classList.remove('d-none');
         document.getElementById('visitForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        showToast('info', 'وضع التعديل', `يمكنك الآن تعديل الزيارة: ${item.reason}`);
     };
 
     window.deleteVisitItem = function (index) {
@@ -813,13 +924,11 @@
         renderVisitsTable();
         bnValidation.attachToForm(document.getElementById('visitForm'));
 
-        // ✅ ربط زر حجز الموعد
         const bookAppointmentBtn = document.getElementById('bookAppointmentBtn');
         if (bookAppointmentBtn) {
             bookAppointmentBtn.addEventListener('click', openInlineAppointmentModal);
         }
 
-        // ✅ ربط أحداث المودال
         bindInlineAppointmentEvents();
 
         setTimeout(() => {

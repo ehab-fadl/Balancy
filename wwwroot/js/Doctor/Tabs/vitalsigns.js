@@ -1,8 +1,6 @@
 ﻿/* ============================================================
    Vital Signs — Tab Script (Standalone + Integrated)
-   يعتمد على: window.showToast (من Index.js) أو fallback داخلي
-              CSS Variables من PatientDetails.css
-   لا يتعارض مع أي كود قديم — كل شيء داخل IIFE
+   يعتمد على: نظام Toast مدمج مضمون العمل
 ============================================================ */
 (function initVitalSignsTab() {
     'use strict';
@@ -10,16 +8,144 @@
     console.log('🚀 VitalSigns.js initialized');
 
     /* ============================================================
-       0. Toast Helper
+       0. Utilities — escapeHtml (مبكّر)
     ============================================================ */
+    function escapeHtml(value) {
+        const div = document.createElement('div');
+        div.textContent = value ?? '';
+        return div.innerHTML;
+    }
+
+    /* ============================================================
+       0.1. Toast — نظام مدمج مضمون العمل
+    ============================================================ */
+    function ensureToastStyles() {
+        if (document.getElementById('bn-vs-toast-styles')) return;
+        const style = document.createElement('style');
+        style.id = 'bn-vs-toast-styles';
+        style.textContent = `
+            .bn-vs-toast-overlay {
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                bottom: 0 !important;
+                display: none;
+                align-items: center;
+                justify-content: center;
+                z-index: 2147483647 !important;
+                pointer-events: none;
+                padding: 1rem;
+                margin: 0 !important;
+            }
+            .bn-vs-toast-overlay.show { display: flex !important; }
+            .bn-vs-toast {
+                min-width: 300px;
+                max-width: 92vw;
+                padding: 1.1rem 1.4rem;
+                border-radius: 16px;
+                display: flex;
+                align-items: center;
+                gap: 0.85rem;
+                font-family: 'Tajawal', 'Segoe UI', Tahoma, sans-serif;
+                font-weight: 800;
+                font-size: 0.95rem;
+                color: #fff;
+                box-shadow: 0 20px 50px -12px rgba(15, 23, 42, 0.55);
+                animation: bnVsToastIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+                pointer-events: auto;
+                direction: rtl;
+                line-height: 1.5;
+                position: relative;
+            }
+            .bn-vs-toast.hide { animation: bnVsToastOut 0.3s ease forwards; }
+            .bn-vs-toast-icon {
+                width: 38px;
+                height: 38px;
+                min-width: 38px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: rgba(255, 255, 255, 0.22);
+                font-size: 1.05rem;
+            }
+            .bn-vs-toast-body {
+                display: flex;
+                flex-direction: column;
+                gap: 0.15rem;
+                text-align: right;
+            }
+            .bn-vs-toast-title { font-size: 0.95rem; font-weight: 900; }
+            .bn-vs-toast-message { font-size: 0.8rem; font-weight: 600; opacity: 0.95; }
+            .bn-vs-toast.error { background: linear-gradient(135deg, #ef4444, #b91c1c); }
+            .bn-vs-toast.success { background: linear-gradient(135deg, #10b981, #047857); }
+            .bn-vs-toast.warning { background: linear-gradient(135deg, #f59e0b, #b45309); }
+            .bn-vs-toast.info { background: linear-gradient(135deg, #10b981, #0891b2); }
+            @keyframes bnVsToastIn {
+                from { opacity: 0; transform: translateY(20px) scale(0.92); }
+                to { opacity: 1; transform: translateY(0) scale(1); }
+            }
+            @keyframes bnVsToastOut {
+                from { opacity: 1; transform: translateY(0) scale(1); }
+                to { opacity: 0; transform: translateY(-20px) scale(0.92); }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    function showBuiltInToast(type, title, message, duration = 3200) {
+        ensureToastStyles();
+
+        if (!document.body) {
+            document.addEventListener('DOMContentLoaded',
+                () => showBuiltInToast(type, title, message, duration),
+                { once: true });
+            return;
+        }
+
+        let overlay = document.getElementById('bnVsToastOverlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'bnVsToastOverlay';
+            overlay.className = 'bn-vs-toast-overlay';
+            document.body.appendChild(overlay);
+        }
+        overlay.innerHTML = '';
+
+        const iconMap = {
+            error: 'fa-circle-exclamation',
+            success: 'fa-circle-check',
+            warning: 'fa-triangle-exclamation',
+            info: 'fa-circle-info'
+        };
+        const toast = document.createElement('div');
+        toast.className = `bn-vs-toast ${type}`;
+        toast.innerHTML = `
+            <div class="bn-vs-toast-icon"><i class="fa-solid ${iconMap[type] || 'fa-circle-info'}"></i></div>
+            <div class="bn-vs-toast-body">
+                <div class="bn-vs-toast-title">${escapeHtml(title || '')}</div>
+                <div class="bn-vs-toast-message">${escapeHtml(message || '')}</div>
+            </div>
+        `;
+        overlay.appendChild(toast);
+        overlay.classList.add('show');
+        clearTimeout(overlay._hideTimer);
+        clearTimeout(overlay._removeTimer);
+        overlay._hideTimer = setTimeout(() => {
+            toast.classList.add('hide');
+            overlay._removeTimer = setTimeout(() => {
+                overlay.classList.remove('show');
+                overlay.innerHTML = '';
+            }, 320);
+        }, duration);
+    }
+
+    /**
+     * toast() — يستخدم النظام المدمج مباشرة (مضمون)
+     */
     function toast(type, title, message, duration = 3500) {
-        if (window.bnApp && typeof window.bnApp.showToast === 'function') {
-            return window.bnApp.showToast(type, title, message, duration);
-        }
-        if (typeof window.showToast === 'function') {
-            return window.showToast(type, title, message, duration);
-        }
-        console.log(`[Toast ${type}] ${title}: ${message}`);
+        return showBuiltInToast(type, title, message, duration);
     }
 
     /* ============================================================
@@ -76,7 +202,7 @@
     };
 
     /* ============================================================
-       3. Confetti (ينشئ حاويته إن لم توجد)
+       3. Confetti
     ============================================================ */
     const bnConfetti = {
         el: null,
@@ -444,16 +570,7 @@
     };
 
     /* ============================================================
-       7. Utilities
-    ============================================================ */
-    function escapeHtml(value) {
-        const div = document.createElement('div');
-        div.textContent = value ?? '';
-        return div.innerHTML;
-    }
-
-    /* ============================================================
-       8. Confirm Modal (يُنشأ ديناميكياً إن لم يوجد)
+       7. Confirm Modal
     ============================================================ */
     function ensureConfirmModal() {
         let modal = document.getElementById('bnConfirmModal');
@@ -532,7 +649,7 @@
     }
 
     /* ============================================================
-       9. Vitals Configuration
+       8. Vitals Configuration
     ============================================================ */
     const vitalTypesConfig = {
         bloodPressure: {
@@ -680,7 +797,7 @@
     };
 
     /* ============================================================
-       10. Status Calculation
+       9. Status Calculation
     ============================================================ */
     function calculateVitalStatus(type, value1, value2) {
         const config = vitalTypesConfig[type];
@@ -750,7 +867,7 @@
     }
 
     /* ============================================================
-       11. Vitals CRUD
+       10. Vitals CRUD
     ============================================================ */
     let vitalsList = bnStorage.get('vitalSigns', []);
 
@@ -889,7 +1006,6 @@
             grid.appendChild(card);
         });
 
-        // Event delegation
         grid.querySelectorAll('[data-action="edit"]').forEach(btn => {
             btn.addEventListener('click', () => editVital(parseInt(btn.dataset.index, 10)));
         });
@@ -899,7 +1015,7 @@
     }
 
     /* ============================================================
-       12. Form Type Change Handler
+       11. Form Type Change Handler
     ============================================================ */
     const vitalTypeSelect = document.getElementById('vitalType');
     const value1Label = document.getElementById('value1Label');
@@ -938,7 +1054,7 @@
     }
 
     /* ============================================================
-       13. Form Submit
+       12. Form Submit
     ============================================================ */
     const vitalForm = document.getElementById('vitalForm');
     if (vitalForm) {
@@ -988,7 +1104,7 @@
     }
 
     /* ============================================================
-       14. Edit / Delete / Reset
+       13. Edit / Delete / Reset
     ============================================================ */
     function editVital(index) {
         const item = vitalsList[index];
@@ -1010,6 +1126,9 @@
 
         const card = document.querySelector('.add-vital-card');
         if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        const config = vitalTypesConfig[item.type];
+        toast('info', 'وضع التعديل', `يمكنك الآن تعديل: ${config ? config.label : item.type}`);
     }
 
     function deleteVital(index) {
@@ -1053,7 +1172,6 @@
             el.innerHTML = '';
         });
 
-        // Set default datetime to now
         const now = new Date();
         now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
         const dtInput = document.getElementById('vitalDate');
@@ -1061,7 +1179,7 @@
     }
 
     /* ============================================================
-       15. Bind Buttons
+       14. Bind Buttons
     ============================================================ */
     const cancelBtnEl = document.getElementById('cancelBtn');
     if (cancelBtnEl) {
@@ -1069,7 +1187,7 @@
     }
 
     /* ============================================================
-       16. Filters
+       15. Filters
     ============================================================ */
     const filterTypeEl = document.getElementById('filterType');
     const filterStatusEl = document.getElementById('filterStatus');
@@ -1077,27 +1195,20 @@
     if (filterStatusEl) filterStatusEl.addEventListener('change', render);
 
     /* ============================================================
-       17. Init
+       16. Init
     ============================================================ */
     function doInit() {
         console.log('🎯 تهيئة تبويب المؤشرات الحيوية...');
 
-        // Init auto-save
         bnAutoSave.init();
-
-        // Init validation
         bnValidation.attachToForm(vitalForm);
-
-        // Render
         render();
 
-        // Set default datetime
         const now = new Date();
         now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
         const dtInput = document.getElementById('vitalDate');
         if (dtInput) dtInput.value = now.toISOString().slice(0, 16);
 
-        // Welcome toast
         setTimeout(() => {
             toast('info', 'المؤشرات الحيوية', 'سجّل ضغط الدم، الوزن، السكر، وغيرها من العلامات الحيوية.', 5000);
         }, 800);

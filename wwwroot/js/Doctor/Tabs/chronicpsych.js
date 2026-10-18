@@ -40,16 +40,131 @@
     };
 
     /* ============================================================
-       2. Toast (fallback)
+       2. Utilities — escapeHtml (مبكّر)
     ============================================================ */
-    const showToast = (window.bnApp && window.bnApp.showToast)
-        ? window.bnApp.showToast
-        : function (type, title, message, duration = 3500) {
-            console.log(`[Toast ${type}] ${title}: ${message}`);
-        };
+    function escapeHtml(value) {
+        const div = document.createElement('div');
+        div.textContent = value ?? '';
+        return div.innerHTML;
+    }
 
     /* ============================================================
-       3. Confirm Modal
+       3. Toast — يدعم bnApp أو يعرض Toast مدمج على الشاشة
+    ============================================================ */
+    function ensureToastStyles() {
+        if (document.getElementById('bn-cp-toast-styles')) return;
+        const style = document.createElement('style');
+        style.id = 'bn-cp-toast-styles';
+        style.textContent = `
+            .bn-cp-toast-overlay {
+                position: fixed;
+                inset: 0;
+                display: none;
+                align-items: center;
+                justify-content: center;
+                z-index: 100000;
+                pointer-events: none;
+                padding: 1rem;
+            }
+            .bn-cp-toast-overlay.show { display: flex; }
+            .bn-cp-toast {
+                min-width: 300px;
+                max-width: 92vw;
+                padding: 1.1rem 1.4rem;
+                border-radius: 16px;
+                display: flex;
+                align-items: center;
+                gap: 0.85rem;
+                font-family: 'Tajawal', sans-serif;
+                font-weight: 800;
+                font-size: 0.95rem;
+                color: #fff;
+                box-shadow: 0 20px 50px -12px rgba(15, 23, 42, 0.55);
+                animation: bnCpToastIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+                pointer-events: auto;
+                direction: rtl;
+                line-height: 1.5;
+            }
+            .bn-cp-toast.hide { animation: bnCpToastOut 0.3s ease forwards; }
+            .bn-cp-toast-icon {
+                width: 38px;
+                height: 38px;
+                min-width: 38px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: rgba(255, 255, 255, 0.22);
+                font-size: 1.05rem;
+            }
+            .bn-cp-toast-body {
+                display: flex;
+                flex-direction: column;
+                gap: 0.15rem;
+                text-align: right;
+            }
+            .bn-cp-toast-title { font-size: 0.95rem; font-weight: 900; }
+            .bn-cp-toast-message { font-size: 0.8rem; font-weight: 600; opacity: 0.95; }
+            .bn-cp-toast.error { background: linear-gradient(135deg, #ef4444, #b91c1c); }
+            .bn-cp-toast.success { background: linear-gradient(135deg, #10b981, #047857); }
+            .bn-cp-toast.warning { background: linear-gradient(135deg, #f59e0b, #b45309); }
+            .bn-cp-toast.info { background: linear-gradient(135deg, #0891b2, #0e7490); }
+            @keyframes bnCpToastIn {
+                from { opacity: 0; transform: translateY(20px) scale(0.92); }
+                to { opacity: 1; transform: translateY(0) scale(1); }
+            }
+            @keyframes bnCpToastOut {
+                from { opacity: 1; transform: translateY(0) scale(1); }
+                to { opacity: 0; transform: translateY(-20px) scale(0.92); }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    function showBuiltInToast(type, title, message, duration = 3200) {
+        ensureToastStyles();
+        let overlay = document.getElementById('bnCpToastOverlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'bnCpToastOverlay';
+            overlay.className = 'bn-cp-toast-overlay';
+            document.body.appendChild(overlay);
+        }
+        overlay.innerHTML = '';
+        const iconMap = {
+            error: 'fa-circle-exclamation',
+            success: 'fa-circle-check',
+            warning: 'fa-triangle-exclamation',
+            info: 'fa-circle-info'
+        };
+        const toast = document.createElement('div');
+        toast.className = `bn-cp-toast ${type}`;
+        toast.innerHTML = `
+            <div class="bn-cp-toast-icon"><i class="fa-solid ${iconMap[type] || 'fa-circle-info'}"></i></div>
+            <div class="bn-cp-toast-body">
+                <div class="bn-cp-toast-title">${escapeHtml(title || '')}</div>
+                <div class="bn-cp-toast-message">${escapeHtml(message || '')}</div>
+            </div>
+        `;
+        overlay.appendChild(toast);
+        overlay.classList.add('show');
+        clearTimeout(overlay._hideTimer);
+        clearTimeout(overlay._removeTimer);
+        overlay._hideTimer = setTimeout(() => {
+            toast.classList.add('hide');
+            overlay._removeTimer = setTimeout(() => {
+                overlay.classList.remove('show');
+                overlay.innerHTML = '';
+            }, 320);
+        }, duration);
+    }
+
+    const showToast = (window.bnApp && typeof window.bnApp.showToast === 'function')
+        ? window.bnApp.showToast
+        : showBuiltInToast;
+
+    /* ============================================================
+       4. Confirm Modal
     ============================================================ */
     function showConfirmModal({ title, subtitle, message, confirmText, onConfirm }) {
         const modal = document.getElementById('bnConfirmModal');
@@ -88,7 +203,7 @@
     }
 
     /* ============================================================
-       4. Validation Engine
+       5. Validation Engine
     ============================================================ */
     const bnValidation = {
         rules: {
@@ -233,9 +348,6 @@
             setTimeout(() => firstInvalid.focus({ preventScroll: true }), 400);
         },
 
-        /* ============================================================
-           ✅ showSummary — جديد
-        ============================================================ */
         showSummary(form, errors) {
             const existing = form.querySelector('.bn-validation-summary');
             if (existing) existing.remove();
@@ -326,15 +438,6 @@
             form.querySelectorAll('input, select, textarea').forEach(field => this.attachToField(field));
         }
     };
-
-    /* ============================================================
-       5. Escape HTML
-    ============================================================ */
-    function escapeHtml(value) {
-        const div = document.createElement('div');
-        div.textContent = value ?? '';
-        return div.innerHTML;
-    }
 
     /* ============================================================
        6. Badge Helpers
@@ -430,7 +533,6 @@
 
             const { isValid, errors } = bnValidation.validateForm(this);
             if (!isValid) {
-                // ✅ عرض لوح الأخطاء (جديد)
                 bnValidation.showSummary(this, errors);
                 bnValidation.scrollToFirstError(this);
                 showToast('error', 'فشل التحقق', `يوجد ${errors.length} ${errors.length === 1 ? 'خطأ' : 'أخطاء'} في النموذج.`);
@@ -514,7 +616,6 @@
             el.className = 'bn-field-message';
             el.innerHTML = '';
         });
-        // ✅ إزالة لوح الأخطاء عند إعادة التعيين
         const summary = form.querySelector('.bn-validation-summary');
         if (summary) summary.remove();
     };
@@ -526,7 +627,6 @@
         renderChronicPsychTable();
         bnValidation.attachToForm(document.getElementById('chronicPsychForm'));
 
-        // ✅ إشعار ترحيبي عند فتح التبويب (مثل باقي الصفحات)
         setTimeout(() => {
             showToast('info', 'الأمراض النفسية المزمنة', 'يمكنك إضافة وتعديل وحذف الأمراض النفسية المزمنة للمريض هنا، مع تتبع الاستجابة للعلاج.', 5000);
         }, 1000);

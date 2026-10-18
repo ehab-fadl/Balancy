@@ -40,13 +40,119 @@
     };
 
     /* ============================================================
-       2. Toast (fallback)
+       2. Toast — يدعم bnApp أو يعرض Toast مدمج على الشاشة
     ============================================================ */
-    const showToast = (window.bnApp && window.bnApp.showToast)
-        ? window.bnApp.showToast
-        : function (type, title, message, duration = 3500) {
-            console.log(`[Toast ${type}] ${title}: ${message}`);
+    function ensureToastStyles() {
+        if (document.getElementById('bn-dx-toast-styles')) return;
+        const style = document.createElement('style');
+        style.id = 'bn-dx-toast-styles';
+        style.textContent = `
+            .bn-dx-toast-overlay {
+                position: fixed;
+                inset: 0;
+                display: none;
+                align-items: center;
+                justify-content: center;
+                z-index: 100000;
+                pointer-events: none;
+                padding: 1rem;
+            }
+            .bn-dx-toast-overlay.show { display: flex; }
+            .bn-dx-toast {
+                min-width: 300px;
+                max-width: 92vw;
+                padding: 1.1rem 1.4rem;
+                border-radius: 16px;
+                display: flex;
+                align-items: center;
+                gap: 0.85rem;
+                font-family: 'Tajawal', sans-serif;
+                font-weight: 800;
+                font-size: 0.95rem;
+                color: #fff;
+                box-shadow: 0 20px 50px -12px rgba(15, 23, 42, 0.55);
+                animation: bnDxToastIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+                pointer-events: auto;
+                direction: rtl;
+                line-height: 1.5;
+            }
+            .bn-dx-toast.hide { animation: bnDxToastOut 0.3s ease forwards; }
+            .bn-dx-toast-icon {
+                width: 38px;
+                height: 38px;
+                min-width: 38px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: rgba(255, 255, 255, 0.22);
+                font-size: 1.05rem;
+            }
+            .bn-dx-toast-body {
+                display: flex;
+                flex-direction: column;
+                gap: 0.15rem;
+                text-align: right;
+            }
+            .bn-dx-toast-title { font-size: 0.95rem; font-weight: 900; }
+            .bn-dx-toast-message { font-size: 0.8rem; font-weight: 600; opacity: 0.95; }
+            .bn-dx-toast.error { background: linear-gradient(135deg, #ef4444, #b91c1c); }
+            .bn-dx-toast.success { background: linear-gradient(135deg, #10b981, #047857); }
+            .bn-dx-toast.warning { background: linear-gradient(135deg, #f59e0b, #b45309); }
+            .bn-dx-toast.info { background: linear-gradient(135deg, #0891b2, #0e7490); }
+            @keyframes bnDxToastIn {
+                from { opacity: 0; transform: translateY(20px) scale(0.92); }
+                to { opacity: 1; transform: translateY(0) scale(1); }
+            }
+            @keyframes bnDxToastOut {
+                from { opacity: 1; transform: translateY(0) scale(1); }
+                to { opacity: 0; transform: translateY(-20px) scale(0.92); }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    function showBuiltInToast(type, title, message, duration = 3200) {
+        ensureToastStyles();
+        let overlay = document.getElementById('bnDxToastOverlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'bnDxToastOverlay';
+            overlay.className = 'bn-dx-toast-overlay';
+            document.body.appendChild(overlay);
+        }
+        overlay.innerHTML = '';
+        const iconMap = {
+            error: 'fa-circle-exclamation',
+            success: 'fa-circle-check',
+            warning: 'fa-triangle-exclamation',
+            info: 'fa-circle-info'
         };
+        const toast = document.createElement('div');
+        toast.className = `bn-dx-toast ${type}`;
+        toast.innerHTML = `
+            <div class="bn-dx-toast-icon"><i class="fa-solid ${iconMap[type] || 'fa-circle-info'}"></i></div>
+            <div class="bn-dx-toast-body">
+                <div class="bn-dx-toast-title">${escapeHtml(title || '')}</div>
+                <div class="bn-dx-toast-message">${escapeHtml(message || '')}</div>
+            </div>
+        `;
+        overlay.appendChild(toast);
+        overlay.classList.add('show');
+        clearTimeout(overlay._hideTimer);
+        clearTimeout(overlay._removeTimer);
+        overlay._hideTimer = setTimeout(() => {
+            toast.classList.add('hide');
+            overlay._removeTimer = setTimeout(() => {
+                overlay.classList.remove('show');
+                overlay.innerHTML = '';
+            }, 320);
+        }, duration);
+    }
+
+    const showToast = (window.bnApp && typeof window.bnApp.showToast === 'function')
+        ? window.bnApp.showToast
+        : showBuiltInToast;
 
     /* ============================================================
        3. Confetti
@@ -57,7 +163,6 @@
 
         fire(duration = 2000) {
             if (!this.el) {
-                // أنشئه إن لم يكن موجوداً
                 const confettiEl = document.createElement('div');
                 confettiEl.className = 'bn-confetti';
                 confettiEl.id = 'bnConfetti';

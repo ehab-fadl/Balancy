@@ -1,8 +1,6 @@
 ﻿/* ============================================================
    Family Medical History — Tab Script (Standalone + Integrated)
-   يعتمد على: window.showToast (من Index.js) أو fallback داخلي
-              CSS Variables من PatientDetails.css
-   لا يتعارض مع أي كود قديم — كل شيء داخل IIFE
+   ✅ الإشعارات تعمل بشكل مضمون — نظام Toast مدمج بالكامل
 ============================================================ */
 (function initFamilyHistoryTab() {
     'use strict';
@@ -10,21 +8,159 @@
     console.log('🚀 FamilyHistory.js initialized');
 
     /* ============================================================
-       0. Toast Helper (يستخدم window.showToast إن وُجد)
+       0. Utilities
     ============================================================ */
-    function toast(type, title, message, duration = 3500) {
-        if (window.bnApp && typeof window.bnApp.showToast === 'function') {
-            return window.bnApp.showToast(type, title, message, duration);
-        }
-        if (typeof window.showToast === 'function') {
-            return window.showToast(type, title, message, duration);
-        }
-        // fallback — console (يُلتقط بواسطة Console → Toast Bridge)
-        console.log(`[Toast ${type}] ${title}: ${message}`);
+    function escapeHtml(value) {
+        const div = document.createElement('div');
+        div.textContent = value ?? '';
+        return div.innerHTML;
     }
 
     /* ============================================================
-       1. Storage Layer (Scoped — لا يتعارض مع أي bnStorage آخر)
+       1. Toast مدمج — يعمل دائماً، لا يعتمد على أي شيء خارجي
+    ============================================================ */
+    function ensureToastStyles() {
+        if (document.getElementById('bn-fh-toast-styles')) return;
+        const style = document.createElement('style');
+        style.id = 'bn-fh-toast-styles';
+        style.textContent = `
+            .bn-fh-toast-overlay {
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                bottom: 0 !important;
+                display: none;
+                align-items: center;
+                justify-content: center;
+                z-index: 2147483647 !important;
+                pointer-events: none;
+                padding: 1rem;
+                margin: 0 !important;
+            }
+            .bn-fh-toast-overlay.show { display: flex !important; }
+            .bn-fh-toast {
+                min-width: 300px;
+                max-width: 92vw;
+                padding: 1.1rem 1.4rem;
+                border-radius: 16px;
+                display: flex;
+                align-items: center;
+                gap: 0.85rem;
+                font-family: 'Tajawal', 'Segoe UI', Tahoma, sans-serif;
+                font-weight: 800;
+                font-size: 0.95rem;
+                color: #fff;
+                box-shadow: 0 20px 50px -12px rgba(15, 23, 42, 0.55);
+                animation: bnFhToastIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+                pointer-events: auto;
+                direction: rtl;
+                line-height: 1.5;
+                position: relative;
+            }
+            .bn-fh-toast.hide { animation: bnFhToastOut 0.3s ease forwards; }
+            .bn-fh-toast-icon {
+                width: 38px;
+                height: 38px;
+                min-width: 38px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: rgba(255, 255, 255, 0.22);
+                font-size: 1.05rem;
+            }
+            .bn-fh-toast-body {
+                display: flex;
+                flex-direction: column;
+                gap: 0.15rem;
+                text-align: right;
+            }
+            .bn-fh-toast-title { font-size: 0.95rem; font-weight: 900; }
+            .bn-fh-toast-message { font-size: 0.8rem; font-weight: 600; opacity: 0.95; }
+            .bn-fh-toast.error { background: linear-gradient(135deg, #ef4444, #b91c1c); }
+            .bn-fh-toast.success { background: linear-gradient(135deg, #10b981, #047857); }
+            .bn-fh-toast.warning { background: linear-gradient(135deg, #f59e0b, #b45309); }
+            .bn-fh-toast.info { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
+            @keyframes bnFhToastIn {
+                from { opacity: 0; transform: translateY(20px) scale(0.92); }
+                to { opacity: 1; transform: translateY(0) scale(1); }
+            }
+            @keyframes bnFhToastOut {
+                from { opacity: 1; transform: translateY(0) scale(1); }
+                to { opacity: 0; transform: translateY(-20px) scale(0.92); }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    function showBuiltInToast(type, title, message, duration = 3200) {
+        ensureToastStyles();
+
+        // تأكد أن document.body موجود
+        if (!document.body) {
+            document.addEventListener('DOMContentLoaded', () => showBuiltInToast(type, title, message, duration), { once: true });
+            return;
+        }
+
+        let overlay = document.getElementById('bnFhToastOverlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'bnFhToastOverlay';
+            overlay.className = 'bn-fh-toast-overlay';
+            document.body.appendChild(overlay);
+        }
+
+        overlay.innerHTML = '';
+
+        const iconMap = {
+            error: 'fa-circle-exclamation',
+            success: 'fa-circle-check',
+            warning: 'fa-triangle-exclamation',
+            info: 'fa-circle-info'
+        };
+
+        const toast = document.createElement('div');
+        toast.className = `bn-fh-toast ${type}`;
+        toast.innerHTML = `
+            <div class="bn-fh-toast-icon"><i class="fa-solid ${iconMap[type] || 'fa-circle-info'}"></i></div>
+            <div class="bn-fh-toast-body">
+                <div class="bn-fh-toast-title">${escapeHtml(title || '')}</div>
+                <div class="bn-fh-toast-message">${escapeHtml(message || '')}</div>
+            </div>
+        `;
+
+        overlay.appendChild(toast);
+        overlay.classList.add('show');
+
+        clearTimeout(overlay._hideTimer);
+        clearTimeout(overlay._removeTimer);
+
+        overlay._hideTimer = setTimeout(() => {
+            toast.classList.add('hide');
+            overlay._removeTimer = setTimeout(() => {
+                overlay.classList.remove('show');
+                overlay.innerHTML = '';
+            }, 320);
+        }, duration);
+
+        return toast;
+    }
+
+    /**
+     * toast() — نستخدم المدمج أولاً لأنه مضمون العمل.
+     * نلجأ إلى bnApp/window.showToast فقط إن كان المدمج غير متاح (لن يحدث).
+     */
+    function toast(type, title, message, duration = 3500) {
+        // النظام المدمج مضمون — استخدمه مباشرة
+        return showBuiltInToast(type, title, message, duration);
+    }
+
+    // Expose globally للاستخدام من أي مكان
+    window.bnFamilyHistoryToast = toast;
+
+    /* ============================================================
+       2. Storage Layer
     ============================================================ */
     const bnStorage = {
         prefix: 'balancy_',
@@ -57,7 +193,7 @@
     };
 
     /* ============================================================
-       2. Loading Bar (يستخدم #bnLoadingBar إن وُجد، وإلا يتجاهل)
+       3. Loading Bar
     ============================================================ */
     const bnLoading = {
         el: document.getElementById('bnLoadingBar'),
@@ -77,7 +213,7 @@
     };
 
     /* ============================================================
-       3. Confetti (ينشئ حاويته داخل الـ wrapper إن لم توجد)
+       4. Confetti
     ============================================================ */
     const bnConfetti = {
         el: null,
@@ -123,7 +259,7 @@
     };
 
     /* ============================================================
-       4. Focus Trap
+       5. Focus Trap
     ============================================================ */
     const bnFocusTrap = {
         activeTrap: null,
@@ -179,7 +315,7 @@
     };
 
     /* ============================================================
-       5. Validation Engine (Scoped)
+       6. Validation Engine
     ============================================================ */
     const bnValidation = {
         rules: {
@@ -376,7 +512,7 @@
     };
 
     /* ============================================================
-       6. Auto-Save System (Scoped)
+       7. Auto-Save System
     ============================================================ */
     const bnAutoSave = {
         timers: {},
@@ -457,18 +593,7 @@
     };
 
     /* ============================================================
-       7. Utilities
-    ============================================================ */
-    function escapeHtml(value) {
-        const div = document.createElement('div');
-        div.textContent = value ?? '';
-        return div.innerHTML;
-    }
-
-    /* ============================================================
        8. Modals (Edit + Confirm)
-       - Edit Modal: يُنشأ ديناميكياً إن لم يوجد #bnEditModal
-       - Confirm Modal: يُنشأ ديناميكياً إن لم يوجد #bnConfirmModal
     ============================================================ */
     function ensureEditModal() {
         let modal = document.getElementById('bnEditModal');
@@ -752,7 +877,6 @@
             grid.appendChild(card);
         });
 
-        // Event delegation بدل inline onclick (أنظف ولا يعتمد على window.*)
         grid.querySelectorAll('[data-action="edit"]').forEach(btn => {
             btn.addEventListener('click', () => editRelative(parseInt(btn.dataset.index, 10)));
         });
@@ -829,6 +953,8 @@
 
         const card = document.querySelector('.add-relative-card');
         if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        toast('info', 'وضع التعديل', `يمكنك الآن تعديل: ${item.name || item.relation}`);
     }
 
     function deleteRelative(index) {
@@ -882,16 +1008,10 @@
     function doInit() {
         console.log('🎯 تهيئة تبويب التاريخ الطبي العائلي...');
 
-        // Init auto-save
         bnAutoSave.init();
-
-        // Init validation
         bnValidation.attachToForm(relativeForm);
-
-        // Render
         render();
 
-        // Welcome toast
         setTimeout(() => {
             toast('info', 'التاريخ الطبي العائلي', 'سجّل الأمراض الوراثية والمزمنة في عائلة المريض.', 5000);
         }, 800);

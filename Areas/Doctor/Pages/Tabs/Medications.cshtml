@@ -6,6 +6,8 @@
 
 <link rel="stylesheet" href="~/css/doctor/tabs/medications.css" />
 
+
+
 <div class="medications-container">
 
     <section class="medications-card">
@@ -20,9 +22,15 @@
                     <p>إدارة كاملة للأدوية الموصوفة للمريض</p>
                 </div>
             </div>
-            <div class="edit-status">
-                <i class="fa-solid fa-clipboard-check"></i>
-                <span id="medicationsCountBadge">0 دواء</span>
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <button type="button" id="printPlanBtn" class="btn-print-plan">
+                    <i class="fa-solid fa-file-pdf"></i>
+                    طباعة خطة دوائية
+                </button>
+                <div class="edit-status">
+                    <i class="fa-solid fa-clipboard-check"></i>
+                    <span id="medicationsCountBadge">0 دواء</span>
+                </div>
             </div>
         </div>
 
@@ -69,6 +77,20 @@
                                 <option value="عند الحاجة">عند الحاجة</option>
                                 <option value="أسبوعياً">أسبوعياً</option>
                                 <option value="شهرياً">شهرياً</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="medicationIntakePeriod" class="form-label-custom">
+                                <i class="fa-solid fa-sun"></i>
+                                فترة تناول الدواء
+                            </label>
+                            <select class="form-select form-control-custom" id="medicationIntakePeriod" name="medicationIntakePeriod" required>
+                                <option value="">اختر فترة التناول</option>
+                                <option value="صباحاً">صباحاً</option>
+                                <option value="ظهراً">ظهراً</option>
+                                <option value="مساءً">مساءً</option>
+                                <option value="ليلاً">ليلاً</option>
                             </select>
                         </div>
 
@@ -159,6 +181,7 @@
                             <th>اسم الدواء</th>
                             <th>الجرعة</th>
                             <th>التكرار</th>
+                            <th>فترة التناول</th>
                             <th>طريقة الإعطاء</th>
                             <th>تاريخ البدء</th>
                             <th>تاريخ الانتهاء</th>
@@ -248,3 +271,8 @@
 </div>
 
 <script src="~/js/doctor/tabs/medications.js"></script>
+<!-- استبدل هذا السطر -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+<!-- بهذا السطر -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>

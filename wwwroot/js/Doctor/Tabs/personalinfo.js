@@ -40,16 +40,131 @@
     };
 
     /* ============================================================
-       2. Toast
+       2. Utilities — escapeHtml (مبكّر، لاستخدامه في Toast)
     ============================================================ */
-    const showToast = (window.bnApp && window.bnApp.showToast)
-        ? window.bnApp.showToast
-        : function (type, title, message, duration = 3500) {
-            console.log(`[Toast ${type}] ${title}: ${message}`);
-        };
+    function escapeHtml(value) {
+        const div = document.createElement('div');
+        div.textContent = value ?? '';
+        return div.innerHTML;
+    }
 
     /* ============================================================
-       3. Confetti
+       3. Toast — يدعم bnApp أو يعرض Toast مدمج على الشاشة
+    ============================================================ */
+    function ensureToastStyles() {
+        if (document.getElementById('bn-pi-toast-styles')) return;
+        const style = document.createElement('style');
+        style.id = 'bn-pi-toast-styles';
+        style.textContent = `
+            .bn-pi-toast-overlay {
+                position: fixed;
+                inset: 0;
+                display: none;
+                align-items: center;
+                justify-content: center;
+                z-index: 100000;
+                pointer-events: none;
+                padding: 1rem;
+            }
+            .bn-pi-toast-overlay.show { display: flex; }
+            .bn-pi-toast {
+                min-width: 300px;
+                max-width: 92vw;
+                padding: 1.1rem 1.4rem;
+                border-radius: 16px;
+                display: flex;
+                align-items: center;
+                gap: 0.85rem;
+                font-family: 'Tajawal', sans-serif;
+                font-weight: 800;
+                font-size: 0.95rem;
+                color: #fff;
+                box-shadow: 0 20px 50px -12px rgba(15, 23, 42, 0.55);
+                animation: bnPiToastIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+                pointer-events: auto;
+                direction: rtl;
+                line-height: 1.5;
+            }
+            .bn-pi-toast.hide { animation: bnPiToastOut 0.3s ease forwards; }
+            .bn-pi-toast-icon {
+                width: 38px;
+                height: 38px;
+                min-width: 38px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: rgba(255, 255, 255, 0.22);
+                font-size: 1.05rem;
+            }
+            .bn-pi-toast-body {
+                display: flex;
+                flex-direction: column;
+                gap: 0.15rem;
+                text-align: right;
+            }
+            .bn-pi-toast-title { font-size: 0.95rem; font-weight: 900; }
+            .bn-pi-toast-message { font-size: 0.8rem; font-weight: 600; opacity: 0.95; }
+            .bn-pi-toast.error { background: linear-gradient(135deg, #ef4444, #b91c1c); }
+            .bn-pi-toast.success { background: linear-gradient(135deg, #10b981, #047857); }
+            .bn-pi-toast.warning { background: linear-gradient(135deg, #f59e0b, #b45309); }
+            .bn-pi-toast.info { background: linear-gradient(135deg, #0891b2, #0e7490); }
+            @keyframes bnPiToastIn {
+                from { opacity: 0; transform: translateY(20px) scale(0.92); }
+                to { opacity: 1; transform: translateY(0) scale(1); }
+            }
+            @keyframes bnPiToastOut {
+                from { opacity: 1; transform: translateY(0) scale(1); }
+                to { opacity: 0; transform: translateY(-20px) scale(0.92); }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    function showBuiltInToast(type, title, message, duration = 3200) {
+        ensureToastStyles();
+        let overlay = document.getElementById('bnPiToastOverlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'bnPiToastOverlay';
+            overlay.className = 'bn-pi-toast-overlay';
+            document.body.appendChild(overlay);
+        }
+        overlay.innerHTML = '';
+        const iconMap = {
+            error: 'fa-circle-exclamation',
+            success: 'fa-circle-check',
+            warning: 'fa-triangle-exclamation',
+            info: 'fa-circle-info'
+        };
+        const toast = document.createElement('div');
+        toast.className = `bn-pi-toast ${type}`;
+        toast.innerHTML = `
+            <div class="bn-pi-toast-icon"><i class="fa-solid ${iconMap[type] || 'fa-circle-info'}"></i></div>
+            <div class="bn-pi-toast-body">
+                <div class="bn-pi-toast-title">${escapeHtml(title || '')}</div>
+                <div class="bn-pi-toast-message">${escapeHtml(message || '')}</div>
+            </div>
+        `;
+        overlay.appendChild(toast);
+        overlay.classList.add('show');
+        clearTimeout(overlay._hideTimer);
+        clearTimeout(overlay._removeTimer);
+        overlay._hideTimer = setTimeout(() => {
+            toast.classList.add('hide');
+            overlay._removeTimer = setTimeout(() => {
+                overlay.classList.remove('show');
+                overlay.innerHTML = '';
+            }, 320);
+        }, duration);
+    }
+
+    const showToast = (window.bnApp && typeof window.bnApp.showToast === 'function')
+        ? window.bnApp.showToast
+        : showBuiltInToast;
+
+    /* ============================================================
+       4. Confetti
     ============================================================ */
     const bnConfetti = {
         el: null,
@@ -94,7 +209,7 @@
     };
 
     /* ============================================================
-       4. Validation Engine (موحّد)
+       5. Validation Engine (موحّد)
     ============================================================ */
     const bnValidation = {
 
@@ -347,7 +462,7 @@
     };
 
     /* ============================================================
-       5. Auto-Save System
+       6. Auto-Save System
     ============================================================ */
     const bnAutoSave = {
         timers: {},
@@ -421,7 +536,7 @@
     };
 
     /* ============================================================
-       6. Unsaved Changes Tracker
+       7. Unsaved Changes Tracker
     ============================================================ */
     const bnUnsaved = {
         isDirty: false,
@@ -438,7 +553,7 @@
     });
 
     /* ============================================================
-       7. Mock Patient Data & Load
+       8. Mock Patient Data & Load
     ============================================================ */
     const mockPatientData = {
         id: 1,
@@ -480,7 +595,7 @@
     }
 
     /* ============================================================
-       8. ✅ Wait for form + Bind (الإصلاح الأساسي)
+       9. ✅ Wait for form + Bind (الإصلاح الأساسي)
     ============================================================ */
     function waitForFormThenInit(attempt = 0) {
         const form = document.getElementById('personalInfoForm');
@@ -578,7 +693,7 @@
     }
 
     /* ============================================================
-       9. Start
+       10. Start
     ============================================================ */
     function doInit() {
         waitForFormThenInit();

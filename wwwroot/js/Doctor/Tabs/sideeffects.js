@@ -40,31 +40,169 @@
     };
 
     /* ============================================================
-       2. Toast (fallback)
+       2. Utilities — escapeHtml (مبكّر)
     ============================================================ */
-    const showToast = (window.bnApp && window.bnApp.showToast)
-        ? window.bnApp.showToast
-        : function (type, title, message, duration = 3500) {
-            console.log(`[Toast ${type}] ${title}: ${message}`);
-        };
+    function escapeHtml(value) {
+        const div = document.createElement('div');
+        div.textContent = value ?? '';
+        return div.innerHTML;
+    }
 
     /* ============================================================
-       3. Confetti
+       3. Toast — نظام مدمج مضمون العمل
+    ============================================================ */
+    function ensureToastStyles() {
+        if (document.getElementById('bn-se-toast-styles')) return;
+        const style = document.createElement('style');
+        style.id = 'bn-se-toast-styles';
+        style.textContent = `
+            .bn-se-toast-overlay {
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                bottom: 0 !important;
+                display: none;
+                align-items: center;
+                justify-content: center;
+                z-index: 2147483647 !important;
+                pointer-events: none;
+                padding: 1rem;
+                margin: 0 !important;
+            }
+            .bn-se-toast-overlay.show { display: flex !important; }
+            .bn-se-toast {
+                min-width: 300px;
+                max-width: 92vw;
+                padding: 1.1rem 1.4rem;
+                border-radius: 16px;
+                display: flex;
+                align-items: center;
+                gap: 0.85rem;
+                font-family: 'Tajawal', 'Segoe UI', Tahoma, sans-serif;
+                font-weight: 800;
+                font-size: 0.95rem;
+                color: #fff;
+                box-shadow: 0 20px 50px -12px rgba(15, 23, 42, 0.55);
+                animation: bnSeToastIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+                pointer-events: auto;
+                direction: rtl;
+                line-height: 1.5;
+                position: relative;
+            }
+            .bn-se-toast.hide { animation: bnSeToastOut 0.3s ease forwards; }
+            .bn-se-toast-icon {
+                width: 38px;
+                height: 38px;
+                min-width: 38px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: rgba(255, 255, 255, 0.22);
+                font-size: 1.05rem;
+            }
+            .bn-se-toast-body {
+                display: flex;
+                flex-direction: column;
+                gap: 0.15rem;
+                text-align: right;
+            }
+            .bn-se-toast-title { font-size: 0.95rem; font-weight: 900; }
+            .bn-se-toast-message { font-size: 0.8rem; font-weight: 600; opacity: 0.95; }
+            .bn-se-toast.error { background: linear-gradient(135deg, #ef4444, #b91c1c); }
+            .bn-se-toast.success { background: linear-gradient(135deg, #10b981, #047857); }
+            .bn-se-toast.warning { background: linear-gradient(135deg, #f59e0b, #b45309); }
+            .bn-se-toast.info { background: linear-gradient(135deg, #ef4444, #b91c1c); }
+            @keyframes bnSeToastIn {
+                from { opacity: 0; transform: translateY(20px) scale(0.92); }
+                to { opacity: 1; transform: translateY(0) scale(1); }
+            }
+            @keyframes bnSeToastOut {
+                from { opacity: 1; transform: translateY(0) scale(1); }
+                to { opacity: 0; transform: translateY(-20px) scale(0.92); }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    function showBuiltInToast(type, title, message, duration = 3200) {
+        ensureToastStyles();
+
+        if (!document.body) {
+            document.addEventListener('DOMContentLoaded',
+                () => showBuiltInToast(type, title, message, duration),
+                { once: true });
+            return;
+        }
+
+        let overlay = document.getElementById('bnSeToastOverlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'bnSeToastOverlay';
+            overlay.className = 'bn-se-toast-overlay';
+            document.body.appendChild(overlay);
+        }
+        overlay.innerHTML = '';
+
+        const iconMap = {
+            error: 'fa-circle-exclamation',
+            success: 'fa-circle-check',
+            warning: 'fa-triangle-exclamation',
+            info: 'fa-circle-info'
+        };
+        const toast = document.createElement('div');
+        toast.className = `bn-se-toast ${type}`;
+        toast.innerHTML = `
+            <div class="bn-se-toast-icon"><i class="fa-solid ${iconMap[type] || 'fa-circle-info'}"></i></div>
+            <div class="bn-se-toast-body">
+                <div class="bn-se-toast-title">${escapeHtml(title || '')}</div>
+                <div class="bn-se-toast-message">${escapeHtml(message || '')}</div>
+            </div>
+        `;
+        overlay.appendChild(toast);
+        overlay.classList.add('show');
+        clearTimeout(overlay._hideTimer);
+        clearTimeout(overlay._removeTimer);
+        overlay._hideTimer = setTimeout(() => {
+            toast.classList.add('hide');
+            overlay._removeTimer = setTimeout(() => {
+                overlay.classList.remove('show');
+                overlay.innerHTML = '';
+            }, 320);
+        }, duration);
+    }
+
+    /**
+     * showToast — يستخدم النظام المدمج مباشرة (مضمون)
+     */
+    const showToast = showBuiltInToast;
+
+    /* ============================================================
+       4. Confetti
     ============================================================ */
     const bnConfetti = {
-        el: document.getElementById('bnConfetti'),
+        el: null,
         colors: ['#ef4444', '#6366f1', '#f59e0b', '#10b981', '#0891b2', '#ec4899', '#8b5cf6'],
 
-        fire(duration = 2000) {
-            if (!this.el) {
-                const confettiEl = document.createElement('div');
-                confettiEl.className = 'bn-confetti';
-                confettiEl.id = 'bnConfetti';
-                document.body.appendChild(confettiEl);
-                this.el = confettiEl;
+        ensureEl() {
+            if (this.el && document.body.contains(this.el)) return this.el;
+            let existing = document.getElementById('bnConfetti');
+            if (!existing) {
+                existing = document.createElement('div');
+                existing.className = 'bn-confetti';
+                existing.id = 'bnConfetti';
+                document.body.appendChild(existing);
             }
-            this.el.innerHTML = '';
-            this.el.classList.add('active');
+            this.el = existing;
+            return existing;
+        },
+
+        fire(duration = 2000) {
+            const el = this.ensureEl();
+            if (!el) return;
+            el.innerHTML = '';
+            el.classList.add('active');
 
             const pieceCount = 60;
             for (let i = 0; i < pieceCount; i++) {
@@ -75,18 +213,18 @@
                 piece.style.animationDuration = (1.5 + Math.random() * 1.5) + 's';
                 piece.style.background = this.colors[Math.floor(Math.random() * this.colors.length)];
                 piece.style.transform = `rotate(${Math.random() * 360}deg)`;
-                this.el.appendChild(piece);
+                el.appendChild(piece);
             }
 
             setTimeout(() => {
-                this.el.classList.remove('active');
-                this.el.innerHTML = '';
+                el.classList.remove('active');
+                el.innerHTML = '';
             }, duration);
         }
     };
 
     /* ============================================================
-       4. Focus Trap Utility
+       5. Focus Trap Utility
     ============================================================ */
     const bnFocusTrap = {
         activeTrap: null,
@@ -142,7 +280,7 @@
     };
 
     /* ============================================================
-       5. Validation Engine
+       6. Validation Engine
     ============================================================ */
     const bnValidation = {
 
@@ -316,15 +454,6 @@
     };
 
     /* ============================================================
-       6. Utilities
-    ============================================================ */
-    function escapeHtml(value) {
-        const div = document.createElement('div');
-        div.textContent = value ?? '';
-        return div.innerHTML;
-    }
-
-    /* ============================================================
        7. Modals (Edit + Confirm)
     ============================================================ */
     function showEditModal({ title, subtitle, label, value, onSave, placeholder }) {
@@ -427,8 +556,8 @@
         const count = sideEffectsList.length;
         badge.textContent = count === 0 ? '0 عرض جانبي' :
             count === 1 ? 'عرض جانبي واحد' :
-            count === 2 ? 'عرضان جانبيان' :
-            count <= 10 ? `${count} أعراض جانبية` : `${count} عرض جانبي`;
+                count === 2 ? 'عرضان جانبيان' :
+                    count <= 10 ? `${count} أعراض جانبية` : `${count} عرض جانبي`;
     }
 
     function renderSideEffectsTable() {
@@ -508,6 +637,7 @@
         document.getElementById('sideEffectSubmitBtn').innerHTML = '<i class="fa-solid fa-floppy-disk ms-1"></i> حفظ التعديلات';
         document.getElementById('sideEffectCancelBtn').classList.remove('d-none');
         document.getElementById('sideEffectForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        showToast('info', 'وضع التعديل', `يمكنك الآن تعديل: ${item.symptom}`);
     };
 
     window.deleteSideEffectItem = function (index) {

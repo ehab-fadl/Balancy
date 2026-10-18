@@ -40,25 +40,169 @@
     };
 
     /* ============================================================
-       2. Toast (fallback)
+       2. Utilities — escapeHtml (مبكّر)
     ============================================================ */
-    const showToast = (window.bnApp && window.bnApp.showToast)
-        ? window.bnApp.showToast
-        : function (type, title, message, duration = 3500) {
-            console.log(`[Toast ${type}] ${title}: ${message}`);
-        };
+    function escapeHtml(value) {
+        const div = document.createElement('div');
+        div.textContent = value ?? '';
+        return div.innerHTML;
+    }
 
     /* ============================================================
-       3. Confetti
+       3. Toast — نظام مدمج مضمون العمل
+    ============================================================ */
+    function ensureToastStyles() {
+        if (document.getElementById('bn-phq-toast-styles')) return;
+        const style = document.createElement('style');
+        style.id = 'bn-phq-toast-styles';
+        style.textContent = `
+            .bn-phq-toast-overlay {
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                bottom: 0 !important;
+                display: none;
+                align-items: center;
+                justify-content: center;
+                z-index: 2147483647 !important;
+                pointer-events: none;
+                padding: 1rem;
+                margin: 0 !important;
+            }
+            .bn-phq-toast-overlay.show { display: flex !important; }
+            .bn-phq-toast {
+                min-width: 300px;
+                max-width: 92vw;
+                padding: 1.1rem 1.4rem;
+                border-radius: 16px;
+                display: flex;
+                align-items: center;
+                gap: 0.85rem;
+                font-family: 'Tajawal', 'Segoe UI', Tahoma, sans-serif;
+                font-weight: 800;
+                font-size: 0.95rem;
+                color: #fff;
+                box-shadow: 0 20px 50px -12px rgba(15, 23, 42, 0.55);
+                animation: bnPhqToastIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+                pointer-events: auto;
+                direction: rtl;
+                line-height: 1.5;
+                position: relative;
+            }
+            .bn-phq-toast.hide { animation: bnPhqToastOut 0.3s ease forwards; }
+            .bn-phq-toast-icon {
+                width: 38px;
+                height: 38px;
+                min-width: 38px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: rgba(255, 255, 255, 0.22);
+                font-size: 1.05rem;
+            }
+            .bn-phq-toast-body {
+                display: flex;
+                flex-direction: column;
+                gap: 0.15rem;
+                text-align: right;
+            }
+            .bn-phq-toast-title { font-size: 0.95rem; font-weight: 900; }
+            .bn-phq-toast-message { font-size: 0.8rem; font-weight: 600; opacity: 0.95; }
+            .bn-phq-toast.error { background: linear-gradient(135deg, #ef4444, #b91c1c); }
+            .bn-phq-toast.success { background: linear-gradient(135deg, #10b981, #047857); }
+            .bn-phq-toast.warning { background: linear-gradient(135deg, #f59e0b, #b45309); }
+            .bn-phq-toast.info { background: linear-gradient(135deg, #4338ca, #3730a3); }
+            @keyframes bnPhqToastIn {
+                from { opacity: 0; transform: translateY(20px) scale(0.92); }
+                to { opacity: 1; transform: translateY(0) scale(1); }
+            }
+            @keyframes bnPhqToastOut {
+                from { opacity: 1; transform: translateY(0) scale(1); }
+                to { opacity: 0; transform: translateY(-20px) scale(0.92); }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    function showBuiltInToast(type, title, message, duration = 3200) {
+        ensureToastStyles();
+
+        if (!document.body) {
+            document.addEventListener('DOMContentLoaded',
+                () => showBuiltInToast(type, title, message, duration),
+                { once: true });
+            return;
+        }
+
+        let overlay = document.getElementById('bnPhqToastOverlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'bnPhqToastOverlay';
+            overlay.className = 'bn-phq-toast-overlay';
+            document.body.appendChild(overlay);
+        }
+        overlay.innerHTML = '';
+
+        const iconMap = {
+            error: 'fa-circle-exclamation',
+            success: 'fa-circle-check',
+            warning: 'fa-triangle-exclamation',
+            info: 'fa-circle-info'
+        };
+        const toast = document.createElement('div');
+        toast.className = `bn-phq-toast ${type}`;
+        toast.innerHTML = `
+            <div class="bn-phq-toast-icon"><i class="fa-solid ${iconMap[type] || 'fa-circle-info'}"></i></div>
+            <div class="bn-phq-toast-body">
+                <div class="bn-phq-toast-title">${escapeHtml(title || '')}</div>
+                <div class="bn-phq-toast-message">${escapeHtml(message || '')}</div>
+            </div>
+        `;
+        overlay.appendChild(toast);
+        overlay.classList.add('show');
+        clearTimeout(overlay._hideTimer);
+        clearTimeout(overlay._removeTimer);
+        overlay._hideTimer = setTimeout(() => {
+            toast.classList.add('hide');
+            overlay._removeTimer = setTimeout(() => {
+                overlay.classList.remove('show');
+                overlay.innerHTML = '';
+            }, 320);
+        }, duration);
+    }
+
+    /**
+     * showToast — يستخدم النظام المدمج مباشرة (مضمون)
+     */
+    const showToast = showBuiltInToast;
+
+    /* ============================================================
+       4. Confetti
     ============================================================ */
     const bnConfetti = {
-        el: document.getElementById('bnConfetti'),
+        el: null,
         colors: ['#4338ca', '#6366f1', '#818cf8', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6'],
 
+        ensureEl() {
+            if (this.el && document.body.contains(this.el)) return this.el;
+            let existing = document.getElementById('bnConfetti');
+            if (!existing) {
+                existing = document.createElement('div');
+                existing.className = 'bn-confetti';
+                existing.id = 'bnConfetti';
+                document.body.appendChild(existing);
+            }
+            this.el = existing;
+            return existing;
+        },
+
         fire(duration = 2000) {
-            if (!this.el) return;
-            this.el.innerHTML = '';
-            this.el.classList.add('active');
+            const el = this.ensureEl();
+            if (!el) return;
+            el.innerHTML = '';
+            el.classList.add('active');
 
             const pieceCount = 60;
 
@@ -70,18 +214,18 @@
                 piece.style.animationDuration = (1.5 + Math.random() * 1.5) + 's';
                 piece.style.background = this.colors[Math.floor(Math.random() * this.colors.length)];
                 piece.style.transform = `rotate(${Math.random() * 360}deg)`;
-                this.el.appendChild(piece);
+                el.appendChild(piece);
             }
 
             setTimeout(() => {
-                this.el.classList.remove('active');
-                this.el.innerHTML = '';
+                el.classList.remove('active');
+                el.innerHTML = '';
             }, duration);
         }
     };
 
     /* ============================================================
-       4. PHQ-9 Data
+       5. PHQ-9 Data
     ============================================================ */
     const phqQuestions = [
         'قليلة هي الاهتمامات أو المتعة في القيام بالأشياء.',
@@ -105,7 +249,7 @@
     let currentPhqResult = null;
 
     /* ============================================================
-       5. Render Questions
+       6. Render Questions
     ============================================================ */
     function renderPhqQuestions() {
         const container = document.getElementById('phqQuestionsContainer');
@@ -156,7 +300,7 @@
     }
 
     /* ============================================================
-       6. Score Calculation
+       7. Score Calculation
     ============================================================ */
     function calculatePhqScore(forceDisplay = true) {
         let totalScore = 0, answeredQuestions = 0;
@@ -259,7 +403,7 @@
     }
 
     /* ============================================================
-       7. Draft Auto-Save
+       8. Draft Auto-Save
     ============================================================ */
     function savePhqDraft() {
         const draft = {};
@@ -290,7 +434,7 @@
     }
 
     /* ============================================================
-       8. Init + Submit Handler
+       9. Init + Submit Handler
     ============================================================ */
     function doInit() {
         renderPhqQuestions();
@@ -351,6 +495,11 @@
                 }
             });
         }
+
+        // ✅ إشعار ترحيبي
+        setTimeout(() => {
+            showToast('info', 'اختبار PHQ-9', 'أجب على الأسئلة التسعة لتقييم مستوى الاكتئاب. يتم الحفظ التلقائي لكل إجابة.', 5000);
+        }, 1000);
 
         console.log('%c✅ PHQ-9 Tab Loaded',
             'background:#4338ca;color:#fff;padding:6px 16px;border-radius:6px;font-weight:bold;font-size:12px;');

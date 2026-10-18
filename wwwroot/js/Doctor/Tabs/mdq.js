@@ -40,25 +40,169 @@
     };
 
     /* ============================================================
-       2. Toast (fallback)
+       2. Utilities — escapeHtml (مبكّر)
     ============================================================ */
-    const showToast = (window.bnApp && window.bnApp.showToast)
-        ? window.bnApp.showToast
-        : function (type, title, message, duration = 3500) {
-            console.log(`[Toast ${type}] ${title}: ${message}`);
-        };
+    function escapeHtml(value) {
+        const div = document.createElement('div');
+        div.textContent = value ?? '';
+        return div.innerHTML;
+    }
 
     /* ============================================================
-       3. Confetti
+       3. Toast — نظام مدمج مضمون العمل
+    ============================================================ */
+    function ensureToastStyles() {
+        if (document.getElementById('bn-mdq-toast-styles')) return;
+        const style = document.createElement('style');
+        style.id = 'bn-mdq-toast-styles';
+        style.textContent = `
+            .bn-mdq-toast-overlay {
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                bottom: 0 !important;
+                display: none;
+                align-items: center;
+                justify-content: center;
+                z-index: 2147483647 !important;
+                pointer-events: none;
+                padding: 1rem;
+                margin: 0 !important;
+            }
+            .bn-mdq-toast-overlay.show { display: flex !important; }
+            .bn-mdq-toast {
+                min-width: 300px;
+                max-width: 92vw;
+                padding: 1.1rem 1.4rem;
+                border-radius: 16px;
+                display: flex;
+                align-items: center;
+                gap: 0.85rem;
+                font-family: 'Tajawal', 'Segoe UI', Tahoma, sans-serif;
+                font-weight: 800;
+                font-size: 0.95rem;
+                color: #fff;
+                box-shadow: 0 20px 50px -12px rgba(15, 23, 42, 0.55);
+                animation: bnMdqToastIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+                pointer-events: auto;
+                direction: rtl;
+                line-height: 1.5;
+                position: relative;
+            }
+            .bn-mdq-toast.hide { animation: bnMdqToastOut 0.3s ease forwards; }
+            .bn-mdq-toast-icon {
+                width: 38px;
+                height: 38px;
+                min-width: 38px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: rgba(255, 255, 255, 0.22);
+                font-size: 1.05rem;
+            }
+            .bn-mdq-toast-body {
+                display: flex;
+                flex-direction: column;
+                gap: 0.15rem;
+                text-align: right;
+            }
+            .bn-mdq-toast-title { font-size: 0.95rem; font-weight: 900; }
+            .bn-mdq-toast-message { font-size: 0.8rem; font-weight: 600; opacity: 0.95; }
+            .bn-mdq-toast.error { background: linear-gradient(135deg, #ef4444, #b91c1c); }
+            .bn-mdq-toast.success { background: linear-gradient(135deg, #10b981, #047857); }
+            .bn-mdq-toast.warning { background: linear-gradient(135deg, #f59e0b, #b45309); }
+            .bn-mdq-toast.info { background: linear-gradient(135deg, #d97706, #b45309); }
+            @keyframes bnMdqToastIn {
+                from { opacity: 0; transform: translateY(20px) scale(0.92); }
+                to { opacity: 1; transform: translateY(0) scale(1); }
+            }
+            @keyframes bnMdqToastOut {
+                from { opacity: 1; transform: translateY(0) scale(1); }
+                to { opacity: 0; transform: translateY(-20px) scale(0.92); }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    function showBuiltInToast(type, title, message, duration = 3200) {
+        ensureToastStyles();
+
+        if (!document.body) {
+            document.addEventListener('DOMContentLoaded',
+                () => showBuiltInToast(type, title, message, duration),
+                { once: true });
+            return;
+        }
+
+        let overlay = document.getElementById('bnMdqToastOverlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'bnMdqToastOverlay';
+            overlay.className = 'bn-mdq-toast-overlay';
+            document.body.appendChild(overlay);
+        }
+        overlay.innerHTML = '';
+
+        const iconMap = {
+            error: 'fa-circle-exclamation',
+            success: 'fa-circle-check',
+            warning: 'fa-triangle-exclamation',
+            info: 'fa-circle-info'
+        };
+        const toast = document.createElement('div');
+        toast.className = `bn-mdq-toast ${type}`;
+        toast.innerHTML = `
+            <div class="bn-mdq-toast-icon"><i class="fa-solid ${iconMap[type] || 'fa-circle-info'}"></i></div>
+            <div class="bn-mdq-toast-body">
+                <div class="bn-mdq-toast-title">${escapeHtml(title || '')}</div>
+                <div class="bn-mdq-toast-message">${escapeHtml(message || '')}</div>
+            </div>
+        `;
+        overlay.appendChild(toast);
+        overlay.classList.add('show');
+        clearTimeout(overlay._hideTimer);
+        clearTimeout(overlay._removeTimer);
+        overlay._hideTimer = setTimeout(() => {
+            toast.classList.add('hide');
+            overlay._removeTimer = setTimeout(() => {
+                overlay.classList.remove('show');
+                overlay.innerHTML = '';
+            }, 320);
+        }, duration);
+    }
+
+    /**
+     * showToast — يستخدم النظام المدمج مباشرة (مضمون)
+     */
+    const showToast = showBuiltInToast;
+
+    /* ============================================================
+       4. Confetti
     ============================================================ */
     const bnConfetti = {
-        el: document.getElementById('bnConfetti'),
+        el: null,
         colors: ['#d97706', '#f59e0b', '#fbbf24', '#10b981', '#6366f1', '#ec4899', '#8b5cf6'],
 
+        ensureEl() {
+            if (this.el && document.body.contains(this.el)) return this.el;
+            let existing = document.getElementById('bnConfetti');
+            if (!existing) {
+                existing = document.createElement('div');
+                existing.className = 'bn-confetti';
+                existing.id = 'bnConfetti';
+                document.body.appendChild(existing);
+            }
+            this.el = existing;
+            return existing;
+        },
+
         fire(duration = 2000) {
-            if (!this.el) return;
-            this.el.innerHTML = '';
-            this.el.classList.add('active');
+            const el = this.ensureEl();
+            if (!el) return;
+            el.innerHTML = '';
+            el.classList.add('active');
 
             const pieceCount = 60;
 
@@ -70,18 +214,18 @@
                 piece.style.animationDuration = (1.5 + Math.random() * 1.5) + 's';
                 piece.style.background = this.colors[Math.floor(Math.random() * this.colors.length)];
                 piece.style.transform = `rotate(${Math.random() * 360}deg)`;
-                this.el.appendChild(piece);
+                el.appendChild(piece);
             }
 
             setTimeout(() => {
-                this.el.classList.remove('active');
-                this.el.innerHTML = '';
+                el.classList.remove('active');
+                el.innerHTML = '';
             }, duration);
         }
     };
 
     /* ============================================================
-       4. MDQ Data
+       5. MDQ Data
     ============================================================ */
     const mdqQuestions = [
         'شعرت بحالة من المرح أو النشاط الزائد لدرجة أن الآخرين لاحظوا؟',
@@ -107,7 +251,7 @@
     let currentMdqResult = null;
 
     /* ============================================================
-       5. Render Questions
+       6. Render Questions
     ============================================================ */
     function renderMdqQuestions() {
         const container = document.getElementById('mdqQuestionsContainer');
@@ -158,7 +302,7 @@
     }
 
     /* ============================================================
-       6. Score Calculation
+       7. Score Calculation
     ============================================================ */
     function calculateMdqScore(forceDisplay = true) {
         let totalScore = 0, answeredQuestions = 0;
@@ -244,7 +388,7 @@
     }
 
     /* ============================================================
-       7. Draft Auto-Save
+       8. Draft Auto-Save
     ============================================================ */
     function saveMdqDraft() {
         const draft = {};
@@ -275,7 +419,15 @@
     }
 
     /* ============================================================
-       8. Init + Submit Handler
+       9. Mock Save
+    ============================================================ */
+    async function mockSaveResult(result) {
+        console.log('Saving MDQ Result:', result);
+        return new Promise(resolve => setTimeout(() => resolve({ success: true }), 800));
+    }
+
+    /* ============================================================
+       10. Init + Submit Handler
     ============================================================ */
     function doInit() {
         renderMdqQuestions();
@@ -337,13 +489,13 @@
             });
         }
 
+        // ✅ إشعار ترحيبي
+        setTimeout(() => {
+            showToast('info', 'اختبار MDQ', 'أجب على الأسئلة الـ 13 لتقييم احتمالية اضطراب ثنائي القطب. يتم الحفظ التلقائي لكل إجابة.', 5000);
+        }, 1000);
+
         console.log('%c✅ MDQ Tab Loaded',
             'background:#d97706;color:#fff;padding:6px 16px;border-radius:6px;font-weight:bold;font-size:12px;');
-    }
-
-    async function saveMdqResult(result) {
-        console.log('Saving MDQ Result:', result);
-        return new Promise(resolve => setTimeout(() => resolve({ success: true }), 800));
     }
 
     if (document.readyState === 'loading') {

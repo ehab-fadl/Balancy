@@ -47,10 +47,134 @@ const bnTheme = {
     }
 };
 
-document.getElementById('themeToggle').addEventListener('click', () => {
-    const newTheme = bnTheme.toggle();
-    const msg = newTheme === 'dark' ? 'تم تفعيل الوضع الليلي' : 'تم تفعيل الوضع النهاري';
-    showToast('success', 'تغيير المظهر', msg);
+/* ============================================================
+   2.b Emergency Toast
+============================================================ */
+function bnEmergencyToast(type, title, message, duration = 3500) {
+    let container = document.getElementById('bnEmergencyToastContainer');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'bnEmergencyToastContainer';
+        container.style.cssText = `
+            position: fixed !important;
+            top: 20px !important;
+            left: 20px !important;
+            z-index: 2147483647 !important;
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 10px !important;
+            pointer-events: none !important;
+        `;
+        document.body.appendChild(container);
+    }
+
+    const colors = { success: '#16a34a', error: '#dc2626', warning: '#f59e0b', info: '#0ea5e9' };
+    const icons = { success: '✓', error: '✕', warning: '⚠', info: 'ℹ' };
+
+    const el = document.createElement('div');
+    el.style.cssText = `
+        background: ${colors[type] || colors.info} !important;
+        color: white !important;
+        padding: 14px 20px !important;
+        border-radius: 12px !important;
+        font-family: system-ui, -apple-system, sans-serif !important;
+        font-size: 14px !important;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.25) !important;
+        pointer-events: auto !important;
+        min-width: 280px !important;
+        max-width: 420px !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 12px !important;
+        opacity: 0 !important;
+        transform: translateX(-30px) !important;
+        transition: all 0.3s ease !important;
+        direction: rtl !important;
+    `;
+    el.innerHTML = `
+        <span style="font-size:22px;font-weight:bold;flex-shrink:0;">${icons[type] || 'ℹ'}</span>
+        <div style="flex:1;min-width:0;">
+            <div style="font-weight:700;margin-bottom:3px;font-size:14px;">${title}</div>
+            <div style="font-size:12px;opacity:0.95;line-height:1.4;">${message}</div>
+        </div>
+    `;
+
+    container.appendChild(el);
+
+    requestAnimationFrame(() => {
+        el.style.opacity = '1';
+        el.style.transform = 'translateX(0)';
+    });
+
+    setTimeout(() => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateX(-30px)';
+        setTimeout(() => el.remove(), 300);
+    }, duration);
+}
+
+/* ============================================================
+   2.c Toast Container Guard
+============================================================ */
+function ensureToastContainer() {
+    let container = document.getElementById('toastContainer');
+
+    if (!container) {
+        container = document.createElement('div');
+        container.className = 'toast-container';
+        container.id = 'toastContainer';
+        document.body.appendChild(container);
+    } else if (container.parentElement !== document.body) {
+        document.body.appendChild(container);
+    }
+
+    let toastEl = document.getElementById('notificationToast');
+    if (!toastEl) {
+        toastEl = document.createElement('div');
+        toastEl.id = 'notificationToast';
+        toastEl.className = 'toast toast-custom';
+        toastEl.setAttribute('role', 'alert');
+        toastEl.setAttribute('aria-live', 'assertive');
+        toastEl.setAttribute('aria-atomic', 'true');
+        toastEl.setAttribute('data-bs-autohide', 'false');
+        toastEl.innerHTML = `
+            <div class="toast-body">
+                <div class="toast-icon-wrap" id="toastIcon"></div>
+                <div class="toast-content">
+                    <strong id="toastTitle"></strong>
+                    <div id="toastMessage" class="small"></div>
+                </div>
+                <button type="button" class="btn-close" id="toastCloseBtn" aria-label="إغلاق"></button>
+            </div>
+            <div class="toast-progress">
+                <div class="toast-progress-bar" id="toastProgressBar"></div>
+            </div>
+        `;
+        container.appendChild(toastEl);
+    }
+
+    const closeBtn = toastEl.querySelector('#toastCloseBtn');
+    if (closeBtn && !closeBtn.dataset.bound) {
+        closeBtn.dataset.bound = '1';
+        closeBtn.addEventListener('click', hideToast);
+    }
+
+    return { container, toastEl };
+}
+
+/* ============================================================
+   2.d Theme Toggle
+============================================================ */
+document.addEventListener('DOMContentLoaded', () => {
+    const themeToggle = document.getElementById('themeToggle');
+    if (themeToggle && !themeToggle.dataset.bound) {
+        themeToggle.dataset.bound = '1';
+        themeToggle.addEventListener('click', () => {
+            const newTheme = bnTheme.toggle();
+            const msg = newTheme === 'dark' ? 'تم تفعيل الوضع الليلي' : 'تم تفعيل الوضع النهاري';
+            showToast('success', 'تغيير المظهر', msg);
+        });
+    }
 });
 
 /* ============================================================
@@ -60,54 +184,63 @@ let toastTimeoutId = null;
 let toastHideTimeoutId = null;
 
 function showToast(type, title, message, duration = 3500) {
-    const toastEl = document.getElementById('notificationToast');
-    const toastIcon = document.getElementById('toastIcon');
-    const toastTitle = document.getElementById('toastTitle');
-    const toastMessage = document.getElementById('toastMessage');
-    const progressBar = document.getElementById('toastProgressBar');
+    try {
+        ensureToastContainer();
 
-    if (toastTimeoutId) clearTimeout(toastTimeoutId);
-    if (toastHideTimeoutId) clearTimeout(toastHideTimeoutId);
+        const toastEl = document.getElementById('notificationToast');
+        const toastIcon = document.getElementById('toastIcon');
+        const toastTitle = document.getElementById('toastTitle');
+        const toastMessage = document.getElementById('toastMessage');
+        const progressBar = document.getElementById('toastProgressBar');
 
-    toastEl.className = 'toast toast-custom';
-    toastEl.classList.remove('show', 'hiding');
+        if (!toastEl || !toastIcon || !toastTitle || !toastMessage || !progressBar) {
+            return bnEmergencyToast(type, title, message, duration);
+        }
 
-    if (type === 'success') {
-        toastEl.classList.add('toast-success');
-        toastIcon.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
-    } else if (type === 'error') {
-        toastEl.classList.add('toast-error');
-        toastIcon.innerHTML = '<i class="fa-solid fa-circle-xmark"></i>';
-    } else if (type === 'warning') {
-        toastEl.classList.add('toast-warning');
-        toastIcon.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
-    } else {
-        toastEl.classList.add('toast-info');
-        toastIcon.innerHTML = '<i class="fa-solid fa-circle-info"></i>';
+        if (toastTimeoutId) clearTimeout(toastTimeoutId);
+        if (toastHideTimeoutId) clearTimeout(toastHideTimeoutId);
+
+        toastEl.className = 'toast toast-custom';
+        toastEl.classList.remove('show', 'hiding');
+
+        if (type === 'success') {
+            toastEl.classList.add('toast-success');
+            toastIcon.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+        } else if (type === 'error') {
+            toastEl.classList.add('toast-error');
+            toastIcon.innerHTML = '<i class="fa-solid fa-circle-xmark"></i>';
+        } else if (type === 'warning') {
+            toastEl.classList.add('toast-warning');
+            toastIcon.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+        } else {
+            toastEl.classList.add('toast-info');
+            toastIcon.innerHTML = '<i class="fa-solid fa-circle-info"></i>';
+        }
+
+        toastTitle.textContent = title;
+        toastMessage.textContent = message;
+
+        progressBar.style.transition = 'none';
+        progressBar.style.width = '100%';
+
+        void toastEl.offsetWidth;
+        toastEl.classList.add('show');
+
+        setTimeout(() => {
+            progressBar.style.transition = `width ${duration}ms linear`;
+            progressBar.style.width = '0%';
+        }, 50);
+
+        toastTimeoutId = setTimeout(() => hideToast(), duration);
+    } catch (e) {
+        console.warn('⚠️ showToast فشلت:', e);
+        bnEmergencyToast(type, title, message, duration);
     }
-
-    toastTitle.textContent = title;
-    toastMessage.textContent = message;
-
-    progressBar.style.transition = 'none';
-    progressBar.style.width = '100%';
-
-    void toastEl.offsetWidth;
-    toastEl.classList.add('show');
-
-    setTimeout(() => {
-        progressBar.style.transition = `width ${duration}ms linear`;
-        progressBar.style.width = '0%';
-    }, 50);
-
-    toastTimeoutId = setTimeout(() => hideToast(), duration);
 }
-
-// اجعلها متاحة عالمياً لـ PatientDetails.js
-window.showToast = showToast;
 
 function hideToast() {
     const toastEl = document.getElementById('notificationToast');
+    if (!toastEl) return;
     if (!toastEl.classList.contains('show')) return;
     toastEl.classList.add('hiding');
     toastHideTimeoutId = setTimeout(() => {
@@ -115,13 +248,23 @@ function hideToast() {
     }, 280);
 }
 
-document.getElementById('toastCloseBtn').addEventListener('click', hideToast);
+window.showToast = showToast;
+window.hideToast = hideToast;
+window.bnEmergencyToast = bnEmergencyToast;
+window.ensureToastContainer = ensureToastContainer;
 
 /* ============================================================
    4. Confirm Modal
 ============================================================ */
 function showConfirmModal({ title, subtitle, message, confirmText, onConfirm }) {
     const modal = document.getElementById('bnConfirmModal');
+    if (!modal) {
+        if (window.confirm(message?.replace(/<[^>]*>/g, '') || 'هل أنت متأكد؟')) {
+            if (typeof onConfirm === 'function') onConfirm();
+        }
+        return;
+    }
+
     const titleEl = document.getElementById('bnConfirmModalTitle');
     const subtitleEl = document.getElementById('bnConfirmModalSubtitle');
     const messageEl = document.getElementById('bnConfirmModalMessage');
@@ -180,6 +323,8 @@ function renderPatientsList(filterText = '') {
     const countEl = document.getElementById('patientsCount');
     const footerCountEl = document.getElementById('footerCount');
 
+    if (!listEl) return;
+
     const query = filterText.trim().toLowerCase();
 
     const filtered = mockPatients.filter(p => {
@@ -190,9 +335,9 @@ function renderPatientsList(filterText = '') {
     });
 
     listEl.innerHTML = '';
-    emptyState.classList.toggle('show', filtered.length === 0);
-    countEl.textContent = filtered.length;
-    footerCountEl.textContent = mockPatients.length;
+    if (emptyState) emptyState.classList.toggle('show', filtered.length === 0);
+    if (countEl) countEl.textContent = filtered.length;
+    if (footerCountEl) footerCountEl.textContent = mockPatients.length;
 
     if (filtered.length === 0) return;
 
@@ -205,7 +350,6 @@ function renderPatientsList(filterText = '') {
         li.setAttribute('aria-selected', patient.id === selectedPatientId ? 'true' : 'false');
         li.style.animation = `slideUpFade 0.35s ease ${index * 0.04}s both`;
 
-        // ← ← ← تمّت إضافة زر الإحصائيات هنا (بين patient-info و patient-arrow) ← ← ←
         li.innerHTML = `
             <div class="patient-avatar">${patient.initial}</div>
             <div class="patient-info">
@@ -222,12 +366,11 @@ function renderPatientsList(filterText = '') {
             <i class="fa-solid fa-chevron-left patient-arrow"></i>
         `;
 
-        // ← ← ← ربط زر الإحصائيات مع منع انتشار النقر ← ← ←
         const statsBtn = li.querySelector('.patient-stats-btn');
         if (statsBtn) {
             statsBtn.addEventListener('click', (e) => {
                 e.preventDefault();
-                e.stopPropagation(); // مهم: يمنع اختيار المريض عند الضغط على الزر
+                e.stopPropagation();
                 openPatientStatistics(patient.id, patient.name);
             });
             statsBtn.addEventListener('keydown', (e) => {
@@ -252,7 +395,7 @@ function renderPatientsList(filterText = '') {
 }
 
 /* ============================================================
-   6. Load Patient Details into Main Content Area
+   6. Load Patient Details
 ============================================================ */
 async function loadPatientDetailsIntoMain(patientId) {
     if (isLoadingPatient) return;
@@ -264,7 +407,6 @@ async function loadPatientDetailsIntoMain(patientId) {
         return;
     }
 
-    // Skeleton / Loading
     mainArea.innerHTML = `
         <div class="pd-inline-loading">
             <div class="pd-inline-spinner"></div>
@@ -273,7 +415,6 @@ async function loadPatientDetailsIntoMain(patientId) {
     `;
 
     try {
-        // اجلب صفحة تفاصيل المريض كاملة
         const url = `/Doctor/PatientDetails?id=${patientId}&t=${Date.now()}`;
         const res = await fetch(url, { headers: { 'X-Requested-With': 'fetch' } });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -282,34 +423,28 @@ async function loadPatientDetailsIntoMain(patientId) {
         const parser = new DOMParser();
         const doc = parser.parseFromString(html, 'text/html');
 
-        // ضع PatientId في متغير عام ليستخدمه PatientDetails.js
         window.bnCurrentPatientId = patientId;
+        sessionStorage.setItem('bnCurrentPatientId', patientId);
 
-        // خذ محتوى <main class="patient-main-content"> فقط
         const patientMain = doc.querySelector('.patient-main-content');
 
         mainArea.innerHTML = '';
         if (patientMain) {
             mainArea.appendChild(document.importNode(patientMain, true));
         } else {
-            // fallback: كل الـ body بدون scripts
             const bodyClone = doc.body.cloneNode(true);
             bodyClone.querySelectorAll('script').forEach(s => s.remove());
             mainArea.innerHTML = bodyClone.innerHTML;
         }
 
-        // أضف styles الخاصة بـ PatientDetails إن لم تكن موجودة
         ensureStylesheet('/css/doctor/patientdetails.css');
 
-        // شغّل PatientDetails.js مرة واحدة فقط
         await ensurePatientDetailsScript();
 
-        // اربط التبويبات وأعد التهيئة
         if (typeof window.bnRebindTabs === 'function') {
             window.bnRebindTabs();
         }
 
-        // افتح تبويب البيانات الشخصية تلقائياً
         const personalBtn = mainArea.querySelector('.patient-tab-btn[data-tab="personal"]');
         if (personalBtn) {
             personalBtn.click();
@@ -330,7 +465,7 @@ async function loadPatientDetailsIntoMain(patientId) {
 }
 
 /* ============================================================
-   6.b  Helpers: inject CSS / JS مرة واحدة
+   6.b  Helpers
 ============================================================ */
 function ensureStylesheet(href) {
     if (!href) return;
@@ -346,10 +481,8 @@ function ensureStylesheet(href) {
 
 function ensurePatientDetailsScript() {
     return new Promise((resolve) => {
-        // إذا كان السكربت محمّلاً والـ API متاح
         if (typeof window.bnRebindTabs === 'function') return resolve();
 
-        // إذا كان الوسم موجوداً لكن لم يُنفّذ بعد
         const existing = document.querySelector('script[data-patientdetails="1"]');
         if (existing) {
             existing.addEventListener('load', () => resolve());
@@ -367,25 +500,22 @@ function ensurePatientDetailsScript() {
 }
 
 /* ============================================================
-   7. Select Patient (SPA — بدون انتقال)
+   7. Select Patient
 ============================================================ */
 function selectPatient(patientId) {
     const patient = mockPatients.find(p => p.id === patientId);
     if (!patient) return;
 
-    // إذا نفس المريض → أعد التحميل فقط
     if (selectedPatientId === patientId) {
         loadPatientDetailsIntoMain(patientId);
         return;
     }
 
-    // عند أول اختيار → بدون Modal
     if (selectedPatientId === null) {
         applyPatientSelection(patient);
         return;
     }
 
-    // تبديل مريض → Modal تأكيد
     showConfirmModal({
         title: 'تبديل المريض',
         subtitle: 'سيتم تحميل ملف المريض المحدد',
@@ -398,60 +528,141 @@ function selectPatient(patientId) {
 function applyPatientSelection(patient) {
     selectedPatientId = patient.id;
     bnStorage.set('selectedPatientId', patient.id);
-    renderPatientsList(document.getElementById('patientSearch').value);
+
+    // ✅ حفظ في sessionStorage + علامة الرجوع
+    sessionStorage.setItem('bnCurrentPatientId', patient.id);
+    sessionStorage.setItem('bnLastPatientName', patient.name);
+    // ✅ علامة: "المستخدم كان في Doctor ويجب استعادة المريض عند الرجوع"
+    sessionStorage.setItem('bnReturnToDoctor', 'true');
+
+    renderPatientsList(document.getElementById('patientSearch')?.value || '');
+
+    // ✅ تحديث الرابط
+    const newUrl = `/Doctor?patientId=${patient.id}`;
+    window.history.pushState(
+        { patientId: patient.id },
+        `ملف المريض: ${patient.name}`,
+        newUrl
+    );
+
     showToast('success', 'تم اختيار المريض', `جارٍ تحميل ملف: ${patient.name}`);
     loadPatientDetailsIntoMain(patient.id);
 }
 
 /* ============================================================
-   7.b فتح صفحة إحصائيات الاكتئاب للمريض (جديد)
+   7.b فتح صفحة إحصائيات الاكتئاب
 ============================================================ */
 function openPatientStatistics(patientId, patientName) {
     if (!patientId) return;
 
+    sessionStorage.setItem('bnCurrentPatientId', patientId);
+    sessionStorage.setItem('bnLastPatientName', patientName || '');
+    sessionStorage.setItem('bnReturnToDoctor', 'true');   // ✅ علامة الرجوع
+
     showToast('info', 'إحصائيات الاكتئاب',
         patientName ? `جارٍ فتح إحصائيات: ${patientName}` : 'جارٍ فتح الإحصائيات...');
 
-    // الانتقال لصفحة Statistic كاملة
     window.location.href = `/Doctor/Statistic?id=${patientId}`;
 }
 
-// اجعلها متاحة عالمياً (اختياري، مفيد للاختبار من الـ Console)
 window.openPatientStatistics = openPatientStatistics;
 
 /* ============================================================
    8. Search
 ============================================================ */
-document.getElementById('patientSearch').addEventListener('input', function () {
-    renderPatientsList(this.value);
+document.addEventListener('DOMContentLoaded', () => {
+    const searchInput = document.getElementById('patientSearch');
+    if (searchInput && !searchInput.dataset.bound) {
+        searchInput.dataset.bound = '1';
+        searchInput.addEventListener('input', function () {
+            renderPatientsList(this.value);
+        });
+    }
 });
 
 /* ============================================================
-   9. Init
+   9. Init — استعادة ذكية
 ============================================================ */
 window.addEventListener('DOMContentLoaded', () => {
     bnTheme.init();
+    ensureToastContainer();
 
-    const savedId = bnStorage.get('selectedPatientId', null);
-    if (savedId && mockPatients.some(p => p.id === savedId)) {
-        selectedPatientId = savedId;
-    } else {
-        selectedPatientId = null;
-    }
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlPatientId = urlParams.get('patientId');
+    const sessionPatientId = sessionStorage.getItem('bnCurrentPatientId');
+
+    // ✅ العلامة: هل يجب استعادة المريض؟
+    const shouldRestore = sessionStorage.getItem('bnReturnToDoctor') === 'true';
 
     renderPatientsList();
 
-    // حمّل أول مريض تلقائياً
-    const firstId = selectedPatientId || mockPatients[0]?.id;
-    if (firstId) {
-        selectedPatientId = null; // حتى نتجاوز Modal
-        selectPatient(firstId);
+    // ✅ أولوية 1: URL (?patientId=X) — دائماً يعمل
+    // ✅ أولوية 2: sessionStorage — فقط إذا كانت علامة الرجوع موجودة
+    let targetId = null;
+
+    if (urlPatientId) {
+        targetId = Number(urlPatientId);
+    } else if (shouldRestore && sessionPatientId) {
+        targetId = Number(sessionPatientId);
     }
+    // وإلا → لا شيء (شاشة الترحيب)
+
+    // ✅ احذف العلامة بعد الاستخدام
+    sessionStorage.removeItem('bnReturnToDoctor');
+
+    if (targetId && mockPatients.some(p => p.id === targetId)) {
+        selectedPatientId = null;
+        selectPatient(targetId);
+    }
+    // وإلا → شاشة الترحيب تلقائياً
 
     setTimeout(() => {
-        showToast('info', 'مرحباً بك', 'اختر مريضاً من القائمة لعرض ملفه الطبي.', 5000);
+        if (selectedPatientId === null) {
+            showToast('info', 'مرحباً بك', 'اختر مريضاً من القائمة لعرض ملفه الطبي.', 5000);
+        }
     }, 800);
 
-    console.log('%c✅ Index SPA Ready (Sidebar Right + Details Left)',
+    console.log('%c✅ Index SPA Ready',
         'background:#0891b2;color:#fff;padding:8px 20px;border-radius:8px;font-weight:bold;font-size:14px;');
+});
+
+/* ============================================================
+   10. Popstate — دعم زر الرجوع/التقدم
+============================================================ */
+window.addEventListener('popstate', (event) => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const patientId = urlParams.get('patientId');
+
+    if (patientId) {
+        const id = Number(patientId);
+        if (mockPatients.some(p => p.id === id)) {
+            selectedPatientId = null;
+            selectPatient(id);
+        }
+    } else {
+        // رجوع لشاشة الترحيب
+        selectedPatientId = null;
+        sessionStorage.removeItem('bnCurrentPatientId');
+        sessionStorage.removeItem('bnReturnToDoctor');
+        bnStorage.set('selectedPatientId', null);
+
+        renderPatientsList();
+
+        const mainArea = document.querySelector('.main-content-area');
+        if (mainArea) {
+            mainArea.innerHTML = `
+                <div class="content-placeholder" id="mainContentPlaceholder">
+                    <div class="content-placeholder-icon">
+                        <i class="fa-solid fa-folder-open"></i>
+                    </div>
+                    <h3>مرحباً بك في لوحة إدارة المرضى</h3>
+                    <p>اختر مريضاً من القائمة على اليمين لعرض ملفه الطبي الكامل هنا.</p>
+                    <span class="hint">
+                        <i class="fa-solid fa-lightbulb"></i>
+                        يمكنك البحث بالاسم أو الكود أو العمر
+                    </span>
+                </div>
+            `;
+        }
+    }
 });
