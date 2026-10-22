@@ -28,6 +28,38 @@
 
         <div class="personal-form">
 
+            <!-- ====================== Stats Summary ====================== -->
+            <div class="tp-stats-row">
+                <div class="tp-stat-card">
+                    <div class="tp-stat-icon tp-stat-icon-primary"><i class="fa-solid fa-clipboard-list"></i></div>
+                    <div class="tp-stat-body">
+                        <div class="tp-stat-value" id="tpStatTotal">0</div>
+                        <div class="tp-stat-label">إجمالي الخطط</div>
+                    </div>
+                </div>
+                <div class="tp-stat-card">
+                    <div class="tp-stat-icon tp-stat-icon-success"><i class="fa-solid fa-circle-play"></i></div>
+                    <div class="tp-stat-body">
+                        <div class="tp-stat-value" id="tpStatActive">0</div>
+                        <div class="tp-stat-label">خطط نشطة</div>
+                    </div>
+                </div>
+                <div class="tp-stat-card">
+                    <div class="tp-stat-icon tp-stat-icon-info"><i class="fa-solid fa-circle-check"></i></div>
+                    <div class="tp-stat-body">
+                        <div class="tp-stat-value" id="tpStatCompleted">0</div>
+                        <div class="tp-stat-label">خطط مكتملة</div>
+                    </div>
+                </div>
+                <div class="tp-stat-card">
+                    <div class="tp-stat-icon tp-stat-icon-warning"><i class="fa-solid fa-chart-line"></i></div>
+                    <div class="tp-stat-body">
+                        <div class="tp-stat-value" id="tpStatProgress">0%</div>
+                        <div class="tp-stat-label">متوسط التقدم</div>
+                    </div>
+                </div>
+            </div>
+
             <!-- ====================== Form ====================== -->
             <div class="tp-form-card">
                 <h3 id="tpFormTitle" class="form-section-title">
@@ -48,14 +80,6 @@
                         </div>
 
                         <div class="col-md-6">
-                            <label for="tpPlanDuration" class="form-label-custom">
-                                <i class="fa-solid fa-hourglass-half"></i>
-                                مدة الخطة (بالأيام)
-                            </label>
-                            <input type="number" class="form-control form-control-custom" id="tpPlanDuration" name="tpPlanDuration" min="1" required placeholder="مثال: 30">
-                        </div>
-
-                        <div class="col-md-6">
                             <label for="tpPlanStatus" class="form-label-custom">
                                 <i class="fa-solid fa-circle-check"></i>
                                 حالة الخطة
@@ -66,6 +90,33 @@
                                 <option value="مكتملة">مكتملة</option>
                                 <option value="ملغاة">ملغاة</option>
                             </select>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="tpPlanStartDate" class="form-label-custom">
+                                <i class="fa-solid fa-calendar-plus"></i>
+                                تاريخ البدء
+                            </label>
+                            <input type="date" class="form-control form-control-custom" id="tpPlanStartDate" name="tpPlanStartDate" required>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="tpPlanEndDate" class="form-label-custom">
+                                <i class="fa-solid fa-calendar-minus"></i>
+                                تاريخ الانتهاء
+                            </label>
+                            <input type="date" class="form-control form-control-custom" id="tpPlanEndDate" name="tpPlanEndDate" required>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label-custom">
+                                <i class="fa-solid fa-hourglass-half"></i>
+                                المدة (تُحسب تلقائياً)
+                            </label>
+                            <div class="tp-duration-display" id="tpDurationDisplay">
+                                <i class="fa-solid fa-clock"></i>
+                                <span id="tpDurationText">— يوم</span>
+                            </div>
                         </div>
 
                         <div class="col-md-6">
@@ -101,9 +152,19 @@
             <hr class="form-divider">
 
             <!-- ====================== Plans Container ====================== -->
-            <div class="form-section-title mb-3">
-                <i class="fa-solid fa-list-check"></i>
-                قائمة الخطط العلاجية المسجلة
+            <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                <div class="form-section-title mb-0">
+                    <i class="fa-solid fa-list-check"></i>
+                    قائمة الخطط العلاجية المسجلة
+                </div>
+                <div class="tp-filter-wrap">
+                    <select id="tpFilterStatus" class="form-select form-control-custom" style="min-height: 42px; padding: 0.4rem 0.9rem; font-size: 0.82rem;">
+                        <option value="">كل الحالات</option>
+                        <option value="نشطة">نشطة</option>
+                        <option value="مكتملة">مكتملة</option>
+                        <option value="ملغاة">ملغاة</option>
+                    </select>
+                </div>
             </div>
 
             <div id="treatmentPlansContainer"></div>
@@ -119,37 +180,25 @@
 
 </div>
 
-
 <!-- ============================================================
      Edit Modal
 ============================================================ -->
 <div class="bn-modal-overlay" id="bnEditModal" role="dialog" aria-modal="true" aria-labelledby="bnEditModalTitle">
     <div class="bn-modal">
         <div class="bn-modal-header">
-            <div class="bn-modal-header-icon">
-                <i class="fa-solid fa-pen-to-square"></i>
-            </div>
+            <div class="bn-modal-header-icon"><i class="fa-solid fa-pen-to-square"></i></div>
             <div class="bn-modal-header-text">
                 <h3 id="bnEditModalTitle">تعديل</h3>
                 <p id="bnEditModalSubtitle">قم بتعديل النص ثم اضغط حفظ</p>
             </div>
         </div>
         <div class="bn-modal-body">
-            <label for="bnEditModalInput">
-                <i class="fa-solid fa-keyboard"></i>
-                <span id="bnEditModalLabel">النص</span>
-            </label>
+            <label for="bnEditModalInput"><i class="fa-solid fa-keyboard"></i><span id="bnEditModalLabel">النص</span></label>
             <input type="text" id="bnEditModalInput" class="bn-modal-input" autocomplete="off">
         </div>
         <div class="bn-modal-footer">
-            <button type="button" class="bn-btn bn-btn-ghost" id="bnEditModalCancel">
-                <i class="fa-solid fa-xmark"></i>
-                إلغاء
-            </button>
-            <button type="button" class="bn-btn bn-btn-primary" id="bnEditModalSave">
-                <i class="fa-solid fa-floppy-disk"></i>
-                حفظ التعديل
-            </button>
+            <button type="button" class="bn-btn bn-btn-ghost" id="bnEditModalCancel"><i class="fa-solid fa-xmark"></i> إلغاء</button>
+            <button type="button" class="bn-btn bn-btn-primary" id="bnEditModalSave"><i class="fa-solid fa-floppy-disk"></i> حفظ التعديل</button>
         </div>
     </div>
 </div>
@@ -160,9 +209,7 @@
 <div class="bn-modal-overlay" id="bnConfirmModal" role="dialog" aria-modal="true" aria-labelledby="bnConfirmModalTitle">
     <div class="bn-modal bn-modal-danger">
         <div class="bn-modal-header">
-            <div class="bn-modal-header-icon">
-                <i class="fa-solid fa-triangle-exclamation"></i>
-            </div>
+            <div class="bn-modal-header-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
             <div class="bn-modal-header-text">
                 <h3 id="bnConfirmModalTitle">تأكيد الحذف</h3>
                 <p id="bnConfirmModalSubtitle">لا يمكن التراجع عن هذه العملية</p>
@@ -172,14 +219,118 @@
             <p class="bn-modal-message" id="bnConfirmModalMessage">هل أنت متأكد؟</p>
         </div>
         <div class="bn-modal-footer">
-            <button type="button" class="bn-btn bn-btn-ghost" id="bnConfirmModalCancel">
-                <i class="fa-solid fa-xmark"></i>
-                إلغاء
-            </button>
-            <button type="button" class="bn-btn bn-btn-danger" id="bnConfirmModalConfirm">
-                <i class="fa-solid fa-trash"></i>
-                نعم، احذف
-            </button>
+            <button type="button" class="bn-btn bn-btn-ghost" id="bnConfirmModalCancel"><i class="fa-solid fa-xmark"></i> إلغاء</button>
+            <button type="button" class="bn-btn bn-btn-danger" id="bnConfirmModalConfirm"><i class="fa-solid fa-trash"></i> نعم، احذف</button>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================
+     Goal Config Modal (Target Value / Unit / Progress)
+============================================================ -->
+<div class="bn-modal-overlay" id="tpGoalConfigModal" role="dialog" aria-modal="true">
+    <div class="bn-modal">
+        <div class="bn-modal-header">
+            <div class="bn-modal-header-icon"><i class="fa-solid fa-bullseye"></i></div>
+            <div class="bn-modal-header-text">
+                <h3 id="tpGoalConfigTitle">إعداد الهدف</h3>
+                <p id="tpGoalConfigSubtitle">حدد المقياس والقيمة المستهدفة</p>
+            </div>
+        </div>
+        <div class="bn-modal-body">
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+                <div>
+                    <label for="tpGoalTextInput" style="display:flex; align-items:center; gap:0.4rem; font-size:0.82rem; font-weight:800; color:var(--bn-text-soft); margin-bottom:0.55rem;">
+                        <i class="fa-solid fa-bullseye"></i> نص الهدف
+                    </label>
+                    <input type="text" id="tpGoalTextInput" class="bn-modal-input" placeholder="مثال: تقليل نوبات القلق الأسبوعية">
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                    <div>
+                        <label for="tpGoalUnitInput" style="display:flex; align-items:center; gap:0.4rem; font-size:0.82rem; font-weight:800; color:var(--bn-text-soft); margin-bottom:0.55rem;">
+                            <i class="fa-solid fa-ruler"></i> الوحدة (اختياري)
+                        </label>
+                        <input type="text" id="tpGoalUnitInput" class="bn-modal-input" placeholder="مثال: نوبة/أسبوع">
+                    </div>
+                    <div>
+                        <label for="tpGoalTargetInput" style="display:flex; align-items:center; gap:0.4rem; font-size:0.82rem; font-weight:800; color:var(--bn-text-soft); margin-bottom:0.55rem;">
+                            <i class="fa-solid fa-flag-checkered"></i> القيمة المستهدفة
+                        </label>
+                        <input type="number" id="tpGoalTargetInput" class="bn-modal-input" placeholder="مثال: 2" step="any">
+                    </div>
+                </div>
+                <div>
+                    <label for="tpGoalBaselineInput" style="display:flex; align-items:center; gap:0.4rem; font-size:0.82rem; font-weight:800; color:var(--bn-text-soft); margin-bottom:0.55rem;">
+                        <i class="fa-solid fa-flag"></i> القيمة الأولية (Baseline)
+                    </label>
+                    <input type="number" id="tpGoalBaselineInput" class="bn-modal-input" placeholder="مثال: 7" step="any">
+                </div>
+            </div>
+        </div>
+        <div class="bn-modal-footer">
+            <button type="button" class="bn-btn bn-btn-ghost" id="tpGoalConfigCancel"><i class="fa-solid fa-xmark"></i> إلغاء</button>
+            <button type="button" class="bn-btn bn-btn-primary" id="tpGoalConfigSave"><i class="fa-solid fa-floppy-disk"></i> حفظ</button>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================
+     Progress Update Modal
+============================================================ -->
+<div class="bn-modal-overlay" id="tpProgressModal" role="dialog" aria-modal="true">
+    <div class="bn-modal">
+        <div class="bn-modal-header">
+            <div class="bn-modal-header-icon"><i class="fa-solid fa-chart-line"></i></div>
+            <div class="bn-modal-header-text">
+                <h3 id="tpProgressTitle">تحديث التقدم</h3>
+                <p id="tpProgressSubtitle">أدخل القيمة الحالية</p>
+            </div>
+        </div>
+        <div class="bn-modal-body">
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+                <div id="tpProgressInfoBox" style="background: var(--bn-surface-soft); border-radius: 12px; padding: 0.8rem 1rem; font-size: 0.82rem; font-weight: 700; color: var(--bn-text-soft);"></div>
+                <div>
+                    <label for="tpProgressValueInput" style="display:flex; align-items:center; gap:0.4rem; font-size:0.82rem; font-weight:800; color:var(--bn-text-soft); margin-bottom:0.55rem;">
+                        <i class="fa-solid fa-chart-simple"></i> القيمة الحالية
+                    </label>
+                    <input type="number" id="tpProgressValueInput" class="bn-modal-input" placeholder="مثال: 4" step="any">
+                </div>
+                <div>
+                    <label for="tpProgressNoteInput" style="display:flex; align-items:center; gap:0.4rem; font-size:0.82rem; font-weight:800; color:var(--bn-text-soft); margin-bottom:0.55rem;">
+                        <i class="fa-solid fa-note-sticky"></i> ملاحظة (اختياري)
+                    </label>
+                    <textarea id="tpProgressNoteInput" class="bn-modal-input" rows="3" placeholder="مثال: تحسن بعد الجلسة الثالثة..." style="min-height: 80px; resize: vertical;"></textarea>
+                </div>
+            </div>
+        </div>
+        <div class="bn-modal-footer">
+            <button type="button" class="bn-btn bn-btn-ghost" id="tpProgressCancel"><i class="fa-solid fa-xmark"></i> إلغاء</button>
+            <button type="button" class="bn-btn bn-btn-primary" id="tpProgressSave"><i class="fa-solid fa-floppy-disk"></i> حفظ التحديث</button>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================
+     Achievement Note Modal
+============================================================ -->
+<div class="bn-modal-overlay" id="tpAchieveModal" role="dialog" aria-modal="true">
+    <div class="bn-modal">
+        <div class="bn-modal-header">
+            <div class="bn-modal-header-icon" style="background: var(--bn-success-light); color: var(--bn-success);"><i class="fa-solid fa-circle-check"></i></div>
+            <div class="bn-modal-header-text">
+                <h3 id="tpAchieveTitle">تحقق الهدف</h3>
+                <p id="tpAchieveSubtitle">كيف تحقق هذا الهدف؟ (اختياري)</p>
+            </div>
+        </div>
+        <div class="bn-modal-body">
+            <label for="tpAchieveNoteInput" style="display:flex; align-items:center; gap:0.4rem; font-size:0.82rem; font-weight:800; color:var(--bn-text-soft); margin-bottom:0.55rem;">
+                <i class="fa-solid fa-note-sticky"></i> ملاحظة التحقق
+            </label>
+            <textarea id="tpAchieveNoteInput" class="bn-modal-input" rows="3" placeholder="مثال: بعد 3 جلسات CBT، انخفضت النوبات من 7 إلى 2..." style="min-height: 90px; resize: vertical;"></textarea>
+        </div>
+        <div class="bn-modal-footer">
+            <button type="button" class="bn-btn bn-btn-ghost" id="tpAchieveCancel"><i class="fa-solid fa-xmark"></i> إلغاء</button>
+            <button type="button" class="bn-btn bn-btn-primary" id="tpAchieveSave" style="background: var(--bn-gradient-success);"><i class="fa-solid fa-circle-check"></i> نعم، تحقق</button>
         </div>
     </div>
 </div>

@@ -64,7 +64,6 @@ D:\Projects\Asp.Net_Core_Projects\MicroservivesDepressionProject\Frondend\Balanc
 D:\Projects\Asp.Net_Core_Projects\MicroservivesDepressionProject\Frondend\Balancy\Balancy\obj\Debug\net10.0\compressed\6dd1emx0pa-{0}-lb6hvgg3k0-lb6hvgg3k0.gz
 D:\Projects\Asp.Net_Core_Projects\MicroservivesDepressionProject\Frondend\Balancy\Balancy\obj\Debug\net10.0\compressed\n3rkhxsp29-{0}-d556qfldgc-d556qfldgc.gz
 D:\Projects\Asp.Net_Core_Projects\MicroservivesDepressionProject\Frondend\Balancy\Balancy\obj\Debug\net10.0\compressed\ousyzkaipl-{0}-5x6x32etm3-5x6x32etm3.gz
-D:\Projects\Asp.Net_Core_Projects\MicroservivesDepressionProject\Frondend\Balancy\Balancy\obj\Debug\net10.0\compressed\j0fke137ao-{0}-o10bsvwwko-o10bsvwwko.gz
 D:\Projects\Asp.Net_Core_Projects\MicroservivesDepressionProject\Frondend\Balancy\Balancy\obj\Debug\net10.0\compressed\pd7v26vxym-{0}-4agr644522-4agr644522.gz
 D:\Projects\Asp.Net_Core_Projects\MicroservivesDepressionProject\Frondend\Balancy\Balancy\obj\Debug\net10.0\compressed\yu7ax3bp8b-{0}-gwoieph9ow-gwoieph9ow.gz
 D:\Projects\Asp.Net_Core_Projects\MicroservivesDepressionProject\Frondend\Balancy\Balancy\obj\Debug\net10.0\compressed\4wa4rrs9mo-{0}-h6os9msahd-h6os9msahd.gz
@@ -189,6 +188,7 @@ D:\Projects\Asp.Net_Core_Projects\MicroservivesDepressionProject\Frondend\Balanc
 D:\Projects\Asp.Net_Core_Projects\MicroservivesDepressionProject\Frondend\Balancy\Balancy\obj\Debug\net10.0\compressed\in8irm71lv-{0}-3434kos1dl-3434kos1dl.gz
 D:\Projects\Asp.Net_Core_Projects\MicroservivesDepressionProject\Frondend\Balancy\Balancy\obj\Debug\net10.0\compressed\ukh4yzs0oa-{0}-2iqsu5s4o6-2iqsu5s4o6.gz
 D:\Projects\Asp.Net_Core_Projects\MicroservivesDepressionProject\Frondend\Balancy\Balancy\obj\Debug\net10.0\compressed\1yz5utgmnx-{0}-c87e81y2u8-c87e81y2u8.gz
-D:\Projects\Asp.Net_Core_Projects\MicroservivesDepressionProject\Frondend\Balancy\Balancy\obj\Debug\net10.0\compressed\rs89zwin1p-{0}-99gds87irz-99gds87irz.gz
 D:\Projects\Asp.Net_Core_Projects\MicroservivesDepressionProject\Frondend\Balancy\Balancy\obj\Debug\net10.0\compressed\7unm67p261-{0}-p90uhvyqbn-p90uhvyqbn.gz
 D:\Projects\Asp.Net_Core_Projects\MicroservivesDepressionProject\Frondend\Balancy\Balancy\obj\Debug\net10.0\compressed\84a49xp29u-{0}-f3pnta292t-f3pnta292t.gz
+D:\Projects\Asp.Net_Core_Projects\MicroservivesDepressionProject\Frondend\Balancy\Balancy\obj\Debug\net10.0\compressed\j0fke137ao-{0}-083kperic2-083kperic2.gz
+D:\Projects\Asp.Net_Core_Projects\MicroservivesDepressionProject\Frondend\Balancy\Balancy\obj\Debug\net10.0\compressed\rs89zwin1p-{0}-s9k4fhczoc-s9k4fhczoc.gz

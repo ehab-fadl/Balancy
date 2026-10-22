@@ -36,7 +36,6 @@ wwwroot\css\Doctor\Tabs\phq9.css
 wwwroot\css\Doctor\Tabs\sds.css
 wwwroot\css\Doctor\Tabs\sideeffects.css
 wwwroot\css\Doctor\Tabs\substanceuse.css
-wwwroot\css\Doctor\Tabs\treatmentplans.css
 wwwroot\css\Doctor\Tabs\visits.css
 wwwroot\css\Doctor\Tabs\vitalsigns.css
 wwwroot\css\EditProfile.css
@@ -80,8 +79,8 @@ wwwroot\js\Doctor\Tabs\phq9.js
 wwwroot\js\Doctor\Tabs\sds.js
 wwwroot\js\Doctor\Tabs\sideeffects.js
 wwwroot\js\Doctor\Tabs\substanceuse.js
-wwwroot\js\Doctor\Tabs\treatmentplans.js
 wwwroot\js\Doctor\Tabs\visits.js
+wwwroot\js\Doctor\Tabs\vitalsigns.js
 wwwroot\js\EditProfile.js
 wwwroot\js\Internet.js
 wwwroot\js\Login.js
@@ -147,7 +146,8 @@ wwwroot\lib\jquery\dist\jquery.slim.js
 wwwroot\lib\jquery\dist\jquery.slim.min.js
 wwwroot\lib\jquery\dist\jquery.slim.min.map
 wwwroot\lib\jquery\LICENSE.txt
-wwwroot\js\Doctor\Tabs\vitalsigns.js
+wwwroot\css\Doctor\Tabs\treatmentplans.css
+wwwroot\js\Doctor\Tabs\treatmentplans.js
 D:\Projects\Asp.Net_Core_Projects\MicroservivesDepressionProject\Frondend\Balancy\Balancy\wwwroot\css\AccountDeactivated.css
 D:\Projects\Asp.Net_Core_Projects\MicroservivesDepressionProject\Frondend\Balancy\Balancy\wwwroot\css\Admin\AssignRole.css
 D:\Projects\Asp.Net_Core_Projects\MicroservivesDepressionProject\Frondend\Balancy\Balancy\wwwroot\css\Admin\Auditlog.css
@@ -186,7 +186,6 @@ D:\Projects\Asp.Net_Core_Projects\MicroservivesDepressionProject\Frondend\Balanc
 D:\Projects\Asp.Net_Core_Projects\MicroservivesDepressionProject\Frondend\Balancy\Balancy\wwwroot\css\Doctor\Tabs\sds.css
 D:\Projects\Asp.Net_Core_Projects\MicroservivesDepressionProject\Frondend\Balancy\Balancy\wwwroot\css\Doctor\Tabs\sideeffects.css
 D:\Projects\Asp.Net_Core_Projects\MicroservivesDepressionProject\Frondend\Balancy\Balancy\wwwroot\css\Doctor\Tabs\substanceuse.css
-D:\Projects\Asp.Net_Core_Projects\MicroservivesDepressionProject\Frondend\Balancy\Balancy\wwwroot\css\Doctor\Tabs\treatmentplans.css
 D:\Projects\Asp.Net_Core_Projects\MicroservivesDepressionProject\Frondend\Balancy\Balancy\wwwroot\css\Doctor\Tabs\visits.css
 D:\Projects\Asp.Net_Core_Projects\MicroservivesDepressionProject\Frondend\Balancy\Balancy\wwwroot\css\Doctor\Tabs\vitalsigns.css
 D:\Projects\Asp.Net_Core_Projects\MicroservivesDepressionProject\Frondend\Balancy\Balancy\wwwroot\css\EditProfile.css
@@ -230,8 +229,8 @@ D:\Projects\Asp.Net_Core_Projects\MicroservivesDepressionProject\Frondend\Balanc
 D:\Projects\Asp.Net_Core_Projects\MicroservivesDepressionProject\Frondend\Balancy\Balancy\wwwroot\js\Doctor\Tabs\sds.js
 D:\Projects\Asp.Net_Core_Projects\MicroservivesDepressionProject\Frondend\Balancy\Balancy\wwwroot\js\Doctor\Tabs\sideeffects.js
 D:\Projects\Asp.Net_Core_Projects\MicroservivesDepressionProject\Frondend\Balancy\Balancy\wwwroot\js\Doctor\Tabs\substanceuse.js
-D:\Projects\Asp.Net_Core_Projects\MicroservivesDepressionProject\Frondend\Balancy\Balancy\wwwroot\js\Doctor\Tabs\treatmentplans.js
 D:\Projects\Asp.Net_Core_Projects\MicroservivesDepressionProject\Frondend\Balancy\Balancy\wwwroot\js\Doctor\Tabs\visits.js
+D:\Projects\Asp.Net_Core_Projects\MicroservivesDepressionProject\Frondend\Balancy\Balancy\wwwroot\js\Doctor\Tabs\vitalsigns.js
 D:\Projects\Asp.Net_Core_Projects\MicroservivesDepressionProject\Frondend\Balancy\Balancy\wwwroot\js\EditProfile.js
 D:\Projects\Asp.Net_Core_Projects\MicroservivesDepressionProject\Frondend\Balancy\Balancy\wwwroot\js\Internet.js
 D:\Projects\Asp.Net_Core_Projects\MicroservivesDepressionProject\Frondend\Balancy\Balancy\wwwroot\js\Login.js
@@ -296,4 +295,5 @@ D:\Projects\Asp.Net_Core_Projects\MicroservivesDepressionProject\Frondend\Balanc
 D:\Projects\Asp.Net_Core_Projects\MicroservivesDepressionProject\Frondend\Balancy\Balancy\wwwroot\lib\jquery\dist\jquery.slim.min.js
 D:\Projects\Asp.Net_Core_Projects\MicroservivesDepressionProject\Frondend\Balancy\Balancy\wwwroot\lib\jquery\dist\jquery.slim.min.map
 D:\Projects\Asp.Net_Core_Projects\MicroservivesDepressionProject\Frondend\Balancy\Balancy\wwwroot\lib\jquery\LICENSE.txt
-D:\Projects\Asp.Net_Core_Projects\MicroservivesDepressionProject\Frondend\Balancy\Balancy\wwwroot\js\Doctor\Tabs\vitalsigns.js
+D:\Projects\Asp.Net_Core_Projects\MicroservivesDepressionProject\Frondend\Balancy\Balancy\wwwroot\css\Doctor\Tabs\treatmentplans.css
+D:\Projects\Asp.Net_Core_Projects\MicroservivesDepressionProject\Frondend\Balancy\Balancy\wwwroot\js\Doctor\Tabs\treatmentplans.js

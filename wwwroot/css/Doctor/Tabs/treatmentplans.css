@@ -2,7 +2,6 @@
    Treatment Plans Tab — Styles
 ============================================================ */
 
-/* -------- Theme Variables -------- */
 .treatmentplans-container {
     --bn-primary: #0891b2;
     --bn-primary-dark: #0e7490;
@@ -170,10 +169,22 @@
     }
 }
 
+@keyframes tp-goalAchievedPulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.6);
+    }
+
+    70% {
+        box-shadow: 0 0 0 12px rgba(16, 185, 129, 0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
-    .treatmentplans-container *,
-    .treatmentplans-container *::before,
-    .treatmentplans-container *::after {
+    .treatmentplans-container *, .treatmentplans-container *::before, .treatmentplans-container *::after {
         animation-duration: 0.01ms !important;
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
@@ -181,9 +192,7 @@
     }
 }
 
-/* ============================================================
-   Card (Base)
-============================================================ */
+/* Card (Base) */
 .treatmentplans-container .treatmentplans-card {
     background: var(--bn-glass);
     backdrop-filter: blur(30px);
@@ -312,13 +321,15 @@
 
 .treatmentplans-container .col-md-6:focus-within .form-label-custom,
 .treatmentplans-container .col-md-12:focus-within .form-label-custom,
-.treatmentplans-container .col-12:focus-within .form-label-custom {
+.treatmentplans-container .col-12:focus-within .form-label-custom,
+.treatmentplans-container .col-md-4:focus-within .form-label-custom {
     color: var(--bn-primary);
 }
 
     .treatmentplans-container .col-md-6:focus-within .form-label-custom i,
     .treatmentplans-container .col-md-12:focus-within .form-label-custom i,
-    .treatmentplans-container .col-12:focus-within .form-label-custom i {
+    .treatmentplans-container .col-12:focus-within .form-label-custom i,
+    .treatmentplans-container .col-md-4:focus-within .form-label-custom i {
         transform: scale(1.2);
     }
 
@@ -410,9 +421,7 @@
         transform: none;
     }
 
-/* ============================================================
-   Treatment Plan Form Card
-============================================================ */
+/* Form Card */
 .treatmentplans-container .tp-form-card {
     background: linear-gradient(135deg, var(--bn-surface-soft), var(--bn-surface));
     border: 1px solid var(--bn-border);
@@ -445,9 +454,107 @@
         transform: translateY(-2px);
     }
 
-/* ============================================================
-   Treatment Plans (Enhanced Tree)
-============================================================ */
+/* Stats Row */
+.treatmentplans-container .tp-stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 0.85rem;
+    margin-bottom: 1.5rem;
+}
+
+.treatmentplans-container .tp-stat-card {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: var(--bn-surface);
+    border: 1px solid var(--bn-border);
+    border-radius: 16px;
+    padding: 0.9rem 1rem;
+    transition: all var(--bn-transition);
+}
+
+    .treatmentplans-container .tp-stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--bn-shadow-md);
+    }
+
+.treatmentplans-container .tp-stat-icon {
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+}
+
+.treatmentplans-container .tp-stat-icon-primary {
+    background: rgba(8, 145, 178, 0.1);
+    color: #0891b2;
+}
+
+.treatmentplans-container .tp-stat-icon-success {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+}
+
+.treatmentplans-container .tp-stat-icon-info {
+    background: rgba(99, 102, 241, 0.1);
+    color: #6366f1;
+}
+
+.treatmentplans-container .tp-stat-icon-warning {
+    background: rgba(245, 158, 11, 0.1);
+    color: #f59e0b;
+}
+
+.treatmentplans-container .tp-stat-value {
+    font-size: 1.15rem;
+    font-weight: 900;
+    color: var(--bn-text);
+    line-height: 1.2;
+}
+
+.treatmentplans-container .tp-stat-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--bn-text-muted);
+    margin-top: 0.15rem;
+}
+
+/* Duration Display */
+.treatmentplans-container .tp-duration-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+    min-height: 50px;
+    border: 2px dashed var(--bn-border);
+    border-radius: 14px;
+    padding: 0.7rem 1rem;
+    background: var(--bn-surface-soft);
+    font-weight: 900;
+    font-size: 0.95rem;
+    color: var(--bn-primary);
+    transition: all var(--bn-transition);
+}
+
+    .treatmentplans-container .tp-duration-display i {
+        font-size: 1rem;
+    }
+
+    .treatmentplans-container .tp-duration-display.has-value {
+        border-style: solid;
+        border-color: var(--bn-primary);
+        background: var(--bn-primary-light);
+    }
+
+.treatmentplans-container .tp-filter-wrap {
+    min-width: 160px;
+}
+
+/* Plan Card */
 .treatmentplans-container .tp-plan-card {
     background: var(--bn-surface);
     border: 1px solid var(--bn-border);
@@ -523,6 +630,90 @@
     white-space: pre-wrap;
 }
 
+/* Plan Progress Bar */
+.treatmentplans-container .tp-progress-wrap {
+    margin-bottom: 1rem;
+}
+
+.treatmentplans-container .tp-progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.4rem;
+    font-size: 0.78rem;
+    font-weight: 800;
+    color: var(--bn-text-soft);
+}
+
+.treatmentplans-container .tp-progress-bar {
+    height: 10px;
+    border-radius: 50px;
+    background: var(--bn-border);
+    overflow: hidden;
+    position: relative;
+}
+
+.treatmentplans-container .tp-progress-fill {
+    height: 100%;
+    border-radius: 50px;
+    background: linear-gradient(90deg, #0891b2, #10b981);
+    transition: width 0.6s ease;
+    box-shadow: 0 0 12px -2px rgba(8, 145, 178, 0.5);
+}
+
+    .treatmentplans-container .tp-progress-fill.completed {
+        background: linear-gradient(90deg, #10b981, #059669);
+    }
+
+    .treatmentplans-container .tp-progress-fill.low {
+        background: linear-gradient(90deg, #ef4444, #f59e0b);
+    }
+
+/* Countdown Badge */
+.treatmentplans-container .tp-countdown-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.3rem 0.7rem;
+    border-radius: 50px;
+    font-size: 0.72rem;
+    font-weight: 800;
+    background: rgba(8, 145, 178, 0.1);
+    color: #0891b2;
+}
+
+    .treatmentplans-container .tp-countdown-badge.warning {
+        background: rgba(245, 158, 11, 0.1);
+        color: #b45309;
+    }
+
+    .treatmentplans-container .tp-countdown-badge.danger {
+        background: rgba(239, 68, 68, 0.1);
+        color: #b91c1c;
+    }
+
+    .treatmentplans-container .tp-countdown-badge.overdue {
+        background: rgba(239, 68, 68, 0.15);
+        color: #991b1b;
+    }
+
+[data-theme="dark"] .treatmentplans-container .tp-countdown-badge {
+    background: rgba(34, 211, 238, 0.12);
+    color: #67e8f9;
+}
+
+    [data-theme="dark"] .treatmentplans-container .tp-countdown-badge.warning {
+        background: rgba(251, 191, 36, 0.12);
+        color: #fcd34d;
+    }
+
+    [data-theme="dark"] .treatmentplans-container .tp-countdown-badge.danger,
+    [data-theme="dark"] .treatmentplans-container .tp-countdown-badge.overdue {
+        background: rgba(248, 113, 113, 0.12);
+        color: #fca5a5;
+    }
+
+/* Tree */
 .treatmentplans-container .tp-tree {
     display: flex;
     flex-direction: column;
@@ -587,12 +778,28 @@
     border-radius: 12px;
     padding: 0.6rem 0.8rem;
     transition: all var(--bn-transition);
+    position: relative;
 }
 
     .treatmentplans-container .tp-goal:hover {
         border-color: var(--bn-primary);
         box-shadow: 0 6px 18px -8px rgba(8, 145, 178, 0.25);
     }
+
+    .treatmentplans-container .tp-goal.achieved {
+        border-color: #10b981;
+        background: rgba(16, 185, 129, 0.04);
+        animation: tp-goalAchievedPulse 0.8s ease;
+    }
+
+        .treatmentplans-container .tp-goal.achieved .tp-goal-title > i {
+            color: #10b981;
+        }
+
+[data-theme="dark"] .treatmentplans-container .tp-goal.achieved {
+    background: rgba(16, 185, 129, 0.08);
+    border-color: #065f46;
+}
 
 .treatmentplans-container .tp-goal-head {
     display: flex;
@@ -610,12 +817,307 @@
     display: flex;
     align-items: center;
     gap: 0.4rem;
+    flex: 1;
 }
 
 [data-theme="dark"] .treatmentplans-container .tp-goal-title {
     color: #a5b4fc;
 }
 
+.treatmentplans-container .tp-goal-actions {
+    display: flex;
+    gap: 0.3rem;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+}
+
+    .treatmentplans-container .tp-goal-actions .btn {
+        border-radius: 8px;
+        padding: 0.25rem 0.6rem;
+        font-size: 0.72rem;
+        font-weight: 800;
+        transition: all var(--bn-transition);
+    }
+
+        .treatmentplans-container .tp-goal-actions .btn:hover {
+            transform: scale(1.05);
+        }
+
+.treatmentplans-container .tp-btn-achieve {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: #fff;
+    border: none;
+    box-shadow: 0 4px 12px -4px rgba(16, 185, 129, 0.5);
+}
+
+    .treatmentplans-container .tp-btn-achieve:hover {
+        box-shadow: 0 6px 16px -4px rgba(16, 185, 129, 0.7);
+    }
+
+.treatmentplans-container .tp-btn-unachieve {
+    background: var(--bn-surface-soft);
+    color: var(--bn-text-soft);
+    border: 1px solid var(--bn-border);
+}
+
+    .treatmentplans-container .tp-btn-unachieve:hover {
+        background: var(--bn-border);
+    }
+
+.treatmentplans-container .tp-btn-progress {
+    background: linear-gradient(135deg, #6366f1, #4338ca);
+    color: #fff;
+    border: none;
+    box-shadow: 0 4px 12px -4px rgba(99, 102, 241, 0.5);
+}
+
+    .treatmentplans-container .tp-btn-progress:hover {
+        box-shadow: 0 6px 16px -4px rgba(99, 102, 241, 0.7);
+    }
+
+.treatmentplans-container .tp-btn-config {
+    background: var(--bn-surface-soft);
+    color: var(--bn-text-soft);
+    border: 1px solid var(--bn-border);
+}
+
+    .treatmentplans-container .tp-btn-config:hover {
+        background: var(--bn-border);
+    }
+
+/* Goal Progress Info */
+.treatmentplans-container .tp-goal-progress {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    background: var(--bn-surface-soft);
+    border-radius: 8px;
+    padding: 0.35rem 0.6rem;
+    margin-bottom: 0.4rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--bn-text-soft);
+    flex-wrap: wrap;
+}
+
+.treatmentplans-container .tp-goal-progress-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+    .treatmentplans-container .tp-goal-progress-item strong {
+        color: var(--bn-text);
+        font-weight: 900;
+    }
+
+    .treatmentplans-container .tp-goal-progress-item.accent {
+        color: #0891b2;
+    }
+
+.treatmentplans-container .tp-goal-history-link {
+    margin-right: auto;
+    background: transparent;
+    border: 1px dashed var(--bn-border);
+    border-radius: 6px;
+    padding: 0.15rem 0.5rem;
+    font-size: 0.7rem;
+    font-weight: 800;
+    color: var(--bn-primary);
+    cursor: pointer;
+    transition: all var(--bn-transition);
+}
+
+    .treatmentplans-container .tp-goal-history-link:hover {
+        background: var(--bn-primary-light);
+        border-style: solid;
+    }
+
+/* Goal Status Badge */
+.treatmentplans-container .tp-goal-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.15rem 0.55rem;
+    border-radius: 50px;
+    font-size: 0.65rem;
+    font-weight: 800;
+}
+
+    .treatmentplans-container .tp-goal-status.pending {
+        background: rgba(245, 158, 11, 0.12);
+        color: #b45309;
+    }
+
+    .treatmentplans-container .tp-goal-status.achieved {
+        background: rgba(16, 185, 129, 0.15);
+        color: #047857;
+    }
+
+    .treatmentplans-container .tp-goal-status.partial {
+        background: rgba(8, 145, 178, 0.12);
+        color: #0e7490;
+    }
+
+    .treatmentplans-container .tp-goal-status.rejected {
+        background: rgba(239, 68, 68, 0.12);
+        color: #b91c1c;
+    }
+
+[data-theme="dark"] .treatmentplans-container .tp-goal-status.pending {
+    background: rgba(251, 191, 36, 0.15);
+    color: #fcd34d;
+}
+
+[data-theme="dark"] .treatmentplans-container .tp-goal-status.achieved {
+    background: rgba(52, 211, 153, 0.15);
+    color: #6ee7b7;
+}
+
+[data-theme="dark"] .treatmentplans-container .tp-goal-status.partial {
+    background: rgba(34, 211, 238, 0.15);
+    color: #67e8f9;
+}
+
+[data-theme="dark"] .treatmentplans-container .tp-goal-status.rejected {
+    background: rgba(248, 113, 113, 0.15);
+    color: #fca5a5;
+}
+
+/* ⚡ NEW: Value Progress Bar inside goal */
+.treatmentplans-container .tp-value-progress {
+    margin: 0.5rem 0 0.6rem;
+}
+
+.treatmentplans-container .tp-value-progress-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: var(--bn-text-soft);
+    margin-bottom: 0.3rem;
+}
+
+    .treatmentplans-container .tp-value-progress-header strong {
+        color: var(--bn-text);
+        font-weight: 900;
+    }
+
+    .treatmentplans-container .tp-value-progress-header .accent {
+        color: var(--bn-primary);
+    }
+
+.treatmentplans-container .tp-value-bar {
+    height: 8px;
+    border-radius: 50px;
+    background: var(--bn-border);
+    overflow: hidden;
+}
+
+.treatmentplans-container .tp-value-fill {
+    height: 100%;
+    border-radius: 50px;
+    background: linear-gradient(90deg, #6366f1, #0891b2);
+    transition: width 0.5s ease;
+}
+
+    .treatmentplans-container .tp-value-fill.complete {
+        background: linear-gradient(90deg, #10b981, #059669);
+    }
+
+    .treatmentplans-container .tp-value-fill.low {
+        background: linear-gradient(90deg, #ef4444, #f59e0b);
+    }
+
+/* ⚡ NEW: Mini chart */
+.treatmentplans-container .tp-mini-chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    height: 40px;
+    margin-top: 0.5rem;
+    padding: 0.3rem 0.4rem;
+    background: var(--bn-surface-soft);
+    border-radius: 8px;
+    border: 1px solid var(--bn-border);
+}
+
+.treatmentplans-container .tp-mini-chart-bar {
+    flex: 1;
+    min-width: 4px;
+    background: linear-gradient(180deg, #0891b2, #6366f1);
+    border-radius: 3px 3px 0 0;
+    transition: height 0.4s ease;
+    position: relative;
+}
+
+    .treatmentplans-container .tp-mini-chart-bar:hover {
+        background: linear-gradient(180deg, #10b981, #059669);
+    }
+
+/* ⚡ NEW: Verifier Badges (Doctor / Patient) */
+.treatmentplans-container .tp-verifier-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 50px;
+    font-size: 0.68rem;
+    font-weight: 900;
+}
+
+    .treatmentplans-container .tp-verifier-badge.doctor {
+        background: rgba(8, 145, 178, 0.12);
+        color: #0e7490;
+    }
+
+    .treatmentplans-container .tp-verifier-badge.patient {
+        background: rgba(139, 92, 246, 0.12);
+        color: #6d28d9;
+    }
+
+    .treatmentplans-container .tp-verifier-badge.pending-confirm {
+        background: rgba(245, 158, 11, 0.15);
+        color: #b45309;
+    }
+
+[data-theme="dark"] .treatmentplans-container .tp-verifier-badge.doctor {
+    background: rgba(34, 211, 238, 0.15);
+    color: #67e8f9;
+}
+
+[data-theme="dark"] .treatmentplans-container .tp-verifier-badge.patient {
+    background: rgba(167, 139, 250, 0.15);
+    color: #c4b5fd;
+}
+
+[data-theme="dark"] .treatmentplans-container .tp-verifier-badge.pending-confirm {
+    background: rgba(251, 191, 36, 0.15);
+    color: #fcd34d;
+}
+
+.treatmentplans-container .tp-btn-confirm-patient {
+    background: linear-gradient(135deg, #f59e0b, #b45309);
+    color: #fff;
+    border: none;
+    box-shadow: 0 4px 12px -4px rgba(245, 158, 11, 0.5);
+}
+
+    .treatmentplans-container .tp-btn-confirm-patient:hover {
+        box-shadow: 0 6px 16px -4px rgba(245, 158, 11, 0.7);
+    }
+
+.treatmentplans-container .tp-btn-reject-patient {
+    background: var(--bn-surface-soft);
+    color: #b91c1c;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+    .treatmentplans-container .tp-btn-reject-patient:hover {
+        background: rgba(239, 68, 68, 0.1);
+    }
+
+/* Means */
 .treatmentplans-container .tp-means {
     display: flex;
     flex-direction: column;
@@ -732,7 +1234,7 @@
     border-top: 1px dashed var(--bn-border);
 }
 
-/* TP Badges */
+/* Plan Badges */
 .treatmentplans-container .tp-badge {
     display: inline-block;
     padding: 0.3rem 0.7rem;
@@ -771,9 +1273,7 @@
     color: #fca5a5;
 }
 
-/* ============================================================
-   Validation System
-============================================================ */
+/* Validation */
 .treatmentplans-container .form-control-custom,
 .treatmentplans-container .bn-modal-input,
 .treatmentplans-container .tp-inline-form input {
@@ -912,9 +1412,7 @@
     color: #fca5a5;
 }
 
-/* ============================================================
-   Confetti
-============================================================ */
+/* Confetti */
 .bn-confetti {
     position: fixed;
     top: 0;
@@ -954,9 +1452,7 @@
         height: 14px;
     }
 
-/* ============================================================
-   Custom Modals
-============================================================ */
+/* Modals */
 .treatmentplans-container ~ .bn-modal-overlay,
 .bn-modal-overlay {
     position: fixed;
@@ -1032,21 +1528,6 @@
 .bn-modal-body {
     padding: 1.5rem;
 }
-
-    .bn-modal-body label {
-        display: flex;
-        align-items: center;
-        gap: 0.4rem;
-        font-size: 0.82rem;
-        font-weight: 800;
-        color: var(--bn-text-soft, #475569);
-        margin-bottom: 0.55rem;
-    }
-
-        .bn-modal-body label i {
-            color: var(--bn-primary, #0891b2);
-            font-size: 0.78rem;
-        }
 
 .bn-modal-input {
     width: 100%;
@@ -1133,18 +1614,15 @@
         box-shadow: 0 12px 25px -8px rgba(239, 68, 68, 0.65);
     }
 
-/* ============================================================
-   Toast — يُدار بالكامل من index.css
-   ⚠️ لا نضع قواعد .toast-container هنا لتجنب التعارض
-============================================================ */
-
-/* ============================================================
-   Responsive
-============================================================ */
+/* Responsive */
 @media (max-width: 767px) {
     .treatmentplans-container .form-card-header {
         align-items: flex-start;
         flex-direction: column;
+    }
+
+    .treatmentplans-container .tp-stats-row {
+        grid-template-columns: repeat(2, 1fr);
     }
 }
 
@@ -1180,24 +1658,22 @@
     .treatmentplans-container .bn-validation-summary {
         padding: 0.85rem 1rem;
     }
+
+    .treatmentplans-container .tp-stats-row {
+        grid-template-columns: 1fr;
+    }
 }
 
 @media print {
-    .treatmentplans-container .tp-mini-actions,
-    .treatmentplans-container .tp-inline-form,
-    .treatmentplans-container .tp-add-problem-wrap,
-    .treatmentplans-container .btn-save,
-    .treatmentplans-container .edit-status,
-    .treatmentplans-container .tp-form-card,
-    .treatmentplans-container .bn-field-message,
-    .treatmentplans-container .bn-validation-summary,
-    .bn-modal-overlay,
-    .bn-confetti {
+    .treatmentplans-container .tp-mini-actions, .treatmentplans-container .tp-inline-form, .treatmentplans-container .tp-add-problem-wrap,
+    .treatmentplans-container .tp-goal-actions, .treatmentplans-container .tp-goal-history-link, .treatmentplans-container .btn-save,
+    .treatmentplans-container .edit-status, .treatmentplans-container .tp-form-card, .treatmentplans-container .tp-stats-row,
+    .treatmentplans-container .tp-filter-wrap, .treatmentplans-container .bn-field-message, .treatmentplans-container .bn-validation-summary,
+    .bn-modal-overlay, .bn-confetti {
         display: none !important;
     }
 
-    .treatmentplans-container .treatmentplans-card,
-    .treatmentplans-container .tp-plan-card {
+    .treatmentplans-container .treatmentplans-card, .treatmentplans-container .tp-plan-card {
         box-shadow: none !important;
         border: 1px solid #ccc !important;
     }

@@ -1,1 +1,0 @@
-D:\Projects\Asp.Net_Core_Projects\MicroservivesDepressionProject\Frondend\Balancy\Balancy\wwwroot\js\Doctor\Report.js
