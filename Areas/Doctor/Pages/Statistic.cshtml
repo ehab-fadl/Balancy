@@ -5,351 +5,639 @@
     ViewData["Title"] = "إحصائيات الاكتئاب | بالنسي";
 }
 
-  <!-- Animated Aurora Background -->
-    <div class="bg-aurora">
-        <div class="aurora-blob aurora-1"></div>
-        <div class="aurora-blob aurora-2"></div>
-        <div class="aurora-blob aurora-3"></div>
-        <div class="aurora-blob aurora-4"></div>
-    </div>
-    <div class="bg-grid"></div>
+<!-- Animated Aurora Background -->
+<div class="bg-aurora">
+    <div class="aurora-blob aurora-1"></div>
+    <div class="aurora-blob aurora-2"></div>
+    <div class="aurora-blob aurora-3"></div>
+    <div class="aurora-blob aurora-4"></div>
+</div>
+<div class="bg-grid"></div>
 
-    <!-- Scroll to Top -->
-    <button type="button" class="scroll-top-btn" id="scrollTopBtn" aria-label="العودة للأعلى">
-        <i class="fa-solid fa-arrow-up"></i>
-    </button>
+<!-- Scroll to Top -->
+<button type="button" class="scroll-top-btn" id="scrollTopBtn" aria-label="العودة للأعلى">
+    <i class="fa-solid fa-arrow-up"></i>
+</button>
 
-    <!-- Toast Stack -->
-    <div class="toast-stack">
-        <div class="toast-stack-inner" id="toastStack"></div>
-    </div>
+<!-- Toast Stack -->
+<div class="toast-stack">
+    <div class="toast-stack-inner" id="toastStack"></div>
+</div>
 
-    <!-- ============================================================
-         Main Container
-    ============================================================ -->
-    <div class="stats-container">
+<!-- ============================================================
+     Main Container
+============================================================ -->
+<div class="stats-container">
 
-        <!-- Hero Header -->
-        <section class="hero-header">
-            <div class="hero-blob hero-blob-1"></div>
-            <div class="hero-blob hero-blob-2"></div>
-            <div class="hero-content">
-                <div class="hero-title-block">
-                    <div class="hero-icon-3d">
-                        <i class="fa-solid fa-chart-line"></i>
-                    </div>
-                    <div>
-                        <h1>إحصائيات الاكتئاب</h1>
-                        <p>متابعة شاملة لمؤشرات الحالة الصحية والنفسية</p>
-                    </div>
+    <!-- Hero Header -->
+    <section class="hero-header">
+        <div class="hero-blob hero-blob-1"></div>
+        <div class="hero-blob hero-blob-2"></div>
+        <div class="hero-content">
+            <div class="hero-title-block">
+                <div class="hero-icon-3d">
+                    <i class="fa-solid fa-chart-line"></i>
+                </div>
+                <div>
+                    <h1>إحصائيات الاكتئاب</h1>
+                    <p>متابعة شاملة لمؤشرات الحالة الصحية والنفسية</p>
                 </div>
             </div>
-        </section>
+        </div>
+    </section>
 
-        <!-- Filter Bar -->
-        <section class="filter-bar" id="filterBar">
-            <div class="filter-label">
-                <i class="fa-solid fa-sliders"></i>
-                <span>النطاق الزمني</span>
-            </div>
-
-            <div class="filter-chips">
-                <button type="button" class="chip-btn active" data-range="week">
-                    <i class="fa-solid fa-calendar-week"></i>
-                    آخر أسبوع
-                </button>
-                <button type="button" class="chip-btn" data-range="month">
-                    <i class="fa-solid fa-calendar-days"></i>
-                    آخر شهر
-                </button>
-                <button type="button" class="chip-btn" data-range="threeMonths">
-                    <i class="fa-solid fa-calendar"></i>
-                    3 أشهر
-                </button>
-                <button type="button" class="chip-btn" data-range="sixMonths">
-                    <i class="fa-solid fa-calendar-plus"></i>
-                    6 أشهر
-                </button>
-                <button type="button" class="chip-btn" data-range="custom">
-                    <i class="fa-solid fa-calendar-check"></i>
-                    تاريخ مخصص
-                </button>
-            </div>
-
-            <div class="custom-dates-panel" id="customDatesPanel">
-                <div class="date-field">
-                    <label for="filterStartDate">من</label>
-                    <input type="date" id="filterStartDate">
-                </div>
-                <div class="date-field">
-                    <label for="filterEndDate">إلى</label>
-                    <input type="date" id="filterEndDate">
-                </div>
-                <button type="button" class="apply-btn" id="applyCustomFilter">
-                    <i class="fa-solid fa-check"></i>
-                    تطبيق الفلتر
-                </button>
-            </div>
-        </section>
-
-        <!-- KPI Grid -->
-        <section class="kpi-grid">
-            <div class="kpi-card">
-                <div class="kpi-icon-wrap kpi-icon-food"><i class="fa-solid fa-utensils"></i></div>
-                <div class="kpi-info">
-                    <span class="kpi-label">الغذاء</span>
-                    <span class="kpi-value" data-kpi="food">0%</span>
-                    <span class="kpi-trend stable" data-kpi-trend="food">
-                        <i class="fa-solid fa-minus"></i>
-                        مستقر
-                    </span>
-                </div>
-            </div>
-            <div class="kpi-card">
-                <div class="kpi-icon-wrap kpi-icon-sleep"><i class="fa-solid fa-moon"></i></div>
-                <div class="kpi-info">
-                    <span class="kpi-label">النوم</span>
-                    <span class="kpi-value" data-kpi="sleep">0 س</span>
-                    <span class="kpi-trend stable" data-kpi-trend="sleep">
-                        <i class="fa-solid fa-minus"></i>
-                        مستقر
-                    </span>
-                </div>
-            </div>
-            <div class="kpi-card">
-                <div class="kpi-icon-wrap kpi-icon-med"><i class="fa-solid fa-pills"></i></div>
-                <div class="kpi-info">
-                    <span class="kpi-label">الالتزام بالأدوية</span>
-                    <span class="kpi-value" data-kpi="medication">0%</span>
-                    <span class="kpi-trend stable" data-kpi-trend="medication">
-                        <i class="fa-solid fa-minus"></i>
-                        مستقر
-                    </span>
-                </div>
-            </div>
-            <div class="kpi-card">
-                <div class="kpi-icon-wrap kpi-icon-mood"><i class="fa-solid fa-face-smile"></i></div>
-                <div class="kpi-info">
-                    <span class="kpi-label">المزاج</span>
-                    <span class="kpi-value" data-kpi="mood">0/10</span>
-                    <span class="kpi-trend stable" data-kpi-trend="mood">
-                        <i class="fa-solid fa-minus"></i>
-                        مستقر
-                    </span>
-                </div>
-            </div>
-            <div class="kpi-card">
-                <div class="kpi-icon-wrap kpi-icon-neg"><i class="fa-solid fa-brain"></i></div>
-                <div class="kpi-info">
-                    <span class="kpi-label">الأفكار السلبية</span>
-                    <span class="kpi-value" data-kpi="negative">0</span>
-                    <span class="kpi-trend stable" data-kpi-trend="negative">
-                        <i class="fa-solid fa-minus"></i>
-                        مستقر
-                    </span>
-                </div>
-            </div>
-            <div class="kpi-card">
-                <div class="kpi-icon-wrap kpi-icon-health"><i class="fa-solid fa-heart-pulse"></i></div>
-                <div class="kpi-info">
-                    <span class="kpi-label">الاهتمام الجسدي</span>
-                    <span class="kpi-value" data-kpi="health">0%</span>
-                    <span class="kpi-trend stable" data-kpi-trend="health">
-                        <i class="fa-solid fa-minus"></i>
-                        مستقر
-                    </span>
-                </div>
-            </div>
-        </section>
-
-        <!-- Charts Grid -->
-        <section class="charts-grid">
-
-            <!-- 1. الغذاء -->
-            <div class="chart-card" data-metric="food">
-                <div class="chart-header">
-                    <div class="chart-icon-wrap chart-icon-food"><i class="fa-solid fa-utensils"></i></div>
-                    <div class="chart-title">
-                        <h3>الغذاء</h3>
-                        <p>تقييم جودة التغذية اليومية</p>
-                    </div>
-                    <div class="chart-avg-badge">
-                        <span class="avg-value" data-avg="food">0%</span>
-                        <span class="avg-label">المتوسط</span>
-                    </div>
-                </div>
-                <div class="chart-body">
-                    <div class="skeleton-overlay" data-skeleton="food">
-                        <div class="skeleton-spinner"></div>
-                    </div>
-                    <canvas id="foodChart"></canvas>
-                </div>
-                <div class="chart-footer">
-                    <span class="trend-pill trend-stable" data-trend="food">
-                        <i class="fa-solid fa-minus"></i> مستقر
-                    </span>
-                    <span class="chart-mini-stat">
-                        <span>الأدنى: <strong data-min="food">-</strong></span>
-                        <span>الأعلى: <strong data-max="food">-</strong></span>
-                    </span>
-                </div>
-            </div>
-
-            <!-- 2. النوم -->
-            <div class="chart-card" data-metric="sleep">
-                <div class="chart-header">
-                    <div class="chart-icon-wrap chart-icon-sleep"><i class="fa-solid fa-moon"></i></div>
-                    <div class="chart-title">
-                        <h3>النوم</h3>
-                        <p>عدد ساعات النوم اليومية</p>
-                    </div>
-                    <div class="chart-avg-badge">
-                        <span class="avg-value" data-avg="sleep">0 س</span>
-                        <span class="avg-label">المتوسط</span>
-                    </div>
-                </div>
-                <div class="chart-body">
-                    <div class="skeleton-overlay" data-skeleton="sleep">
-                        <div class="skeleton-spinner"></div>
-                    </div>
-                    <canvas id="sleepChart"></canvas>
-                </div>
-                <div class="chart-footer">
-                    <span class="trend-pill trend-stable" data-trend="sleep">
-                        <i class="fa-solid fa-minus"></i> مستقر
-                    </span>
-                    <span class="chart-mini-stat">
-                        <span>الأدنى: <strong data-min="sleep">-</strong></span>
-                        <span>الأعلى: <strong data-max="sleep">-</strong></span>
-                    </span>
-                </div>
-            </div>
-
-            <!-- 3. الالتزام بالأدوية -->
-            <div class="chart-card" data-metric="medication">
-                <div class="chart-header">
-                    <div class="chart-icon-wrap chart-icon-med"><i class="fa-solid fa-pills"></i></div>
-                    <div class="chart-title">
-                        <h3>الالتزام بالأدوية</h3>
-                        <p>نسبة الالتزام بالجرعات الموصوفة</p>
-                    </div>
-                    <div class="chart-avg-badge">
-                        <span class="avg-value" data-avg="medication">0%</span>
-                        <span class="avg-label">المتوسط</span>
-                    </div>
-                </div>
-                <div class="chart-body">
-                    <div class="skeleton-overlay" data-skeleton="medication">
-                        <div class="skeleton-spinner"></div>
-                    </div>
-                    <canvas id="medicationChart"></canvas>
-                </div>
-                <div class="chart-footer">
-                    <span class="trend-pill trend-stable" data-trend="medication">
-                        <i class="fa-solid fa-minus"></i> مستقر
-                    </span>
-                    <span class="chart-mini-stat">
-                        <span>الأدنى: <strong data-min="medication">-</strong></span>
-                        <span>الأعلى: <strong data-max="medication">-</strong></span>
-                    </span>
-                </div>
-            </div>
-
-            <!-- 4. المزاج -->
-            <div class="chart-card" data-metric="mood">
-                <div class="chart-header">
-                    <div class="chart-icon-wrap chart-icon-mood"><i class="fa-solid fa-face-smile"></i></div>
-                    <div class="chart-title">
-                        <h3>المزاج</h3>
-                        <p>تقييم الحالة المزاجية (0-10)</p>
-                    </div>
-                    <div class="chart-avg-badge">
-                        <span class="avg-value" data-avg="mood">0/10</span>
-                        <span class="avg-label">المتوسط</span>
-                    </div>
-                </div>
-                <div class="chart-body">
-                    <div class="skeleton-overlay" data-skeleton="mood">
-                        <div class="skeleton-spinner"></div>
-                    </div>
-                    <canvas id="moodChart"></canvas>
-                </div>
-                <div class="chart-footer">
-                    <span class="trend-pill trend-stable" data-trend="mood">
-                        <i class="fa-solid fa-minus"></i> مستقر
-                    </span>
-                    <span class="chart-mini-stat">
-                        <span>الأدنى: <strong data-min="mood">-</strong></span>
-                        <span>الأعلى: <strong data-max="mood">-</strong></span>
-                    </span>
-                </div>
-            </div>
-
-            <!-- 5. الأفكار السلبية -->
-            <div class="chart-card" data-metric="negative">
-                <div class="chart-header">
-                    <div class="chart-icon-wrap chart-icon-neg"><i class="fa-solid fa-brain"></i></div>
-                    <div class="chart-title">
-                        <h3>الأفكار السلبية</h3>
-                        <p>عدد الأفكار السلبية المسجلة يومياً</p>
-                    </div>
-                    <div class="chart-avg-badge">
-                        <span class="avg-value" data-avg="negative">0</span>
-                        <span class="avg-label">المتوسط</span>
-                    </div>
-                </div>
-                <div class="chart-body">
-                    <div class="skeleton-overlay" data-skeleton="negative">
-                        <div class="skeleton-spinner"></div>
-                    </div>
-                    <canvas id="negativeChart"></canvas>
-                </div>
-                <div class="chart-footer">
-                    <span class="trend-pill trend-stable" data-trend="negative">
-                        <i class="fa-solid fa-minus"></i> مستقر
-                    </span>
-                    <span class="chart-mini-stat">
-                        <span>الأدنى: <strong data-min="negative">-</strong></span>
-                        <span>الأعلى: <strong data-max="negative">-</strong></span>
-                    </span>
-                </div>
-            </div>
-
-            <!-- 6. الاهتمام بالحالة الجسدية -->
-            <div class="chart-card" data-metric="health">
-                <div class="chart-header">
-                    <div class="chart-icon-wrap chart-icon-health"><i class="fa-solid fa-heart-pulse"></i></div>
-                    <div class="chart-title">
-                        <h3>الاهتمام بالحالة الجسدية</h3>
-                        <p>نسبة الاهتمام بالصحة الجسدية</p>
-                    </div>
-                    <div class="chart-avg-badge">
-                        <span class="avg-value" data-avg="health">0%</span>
-                        <span class="avg-label">المتوسط</span>
-                    </div>
-                </div>
-                <div class="chart-body">
-                    <div class="skeleton-overlay" data-skeleton="health">
-                        <div class="skeleton-spinner"></div>
-                    </div>
-                    <canvas id="healthChart"></canvas>
-                </div>
-                <div class="chart-footer">
-                    <span class="trend-pill trend-stable" data-trend="health">
-                        <i class="fa-solid fa-minus"></i> مستقر
-                    </span>
-                    <span class="chart-mini-stat">
-                        <span>الأدنى: <strong data-min="health">-</strong></span>
-                        <span>الأعلى: <strong data-max="health">-</strong></span>
-                    </span>
-                </div>
-            </div>
-
-        </section>
-
+    <!-- ====================== Smart Alerts ====================== -->
+    <div class="smart-alert critical" id="smartAlertCritical" style="display: none;">
+        <div class="smart-alert-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+        <div class="smart-alert-body">
+            <div class="smart-alert-title">⚠️ تنبيه حرج</div>
+            <div class="smart-alert-message" id="smartAlertCriticalMessage">—</div>
+        </div>
+        <button type="button" class="smart-alert-close" id="smartAlertCriticalClose" aria-label="إغلاق">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
     </div>
 
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <div class="smart-alert warning" id="smartAlertWarning" style="display: none;">
+        <div class="smart-alert-icon"><i class="fa-solid fa-exclamation-circle"></i></div>
+        <div class="smart-alert-body">
+            <div class="smart-alert-title">⚠️ تنبيه</div>
+            <div class="smart-alert-message" id="smartAlertWarningMessage">—</div>
+        </div>
+        <button type="button" class="smart-alert-close" id="smartAlertWarningClose" aria-label="إغلاق">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+    </div>
 
-    <script src="~/js/doctor/Statistic.js"></script>
+    <!-- Filter Bar -->
+    <section class="filter-bar" id="filterBar">
+        <div class="filter-label">
+            <i class="fa-solid fa-sliders"></i>
+            <span>النطاق الزمني</span>
+        </div>
+
+        <div class="filter-chips">
+            <button type="button" class="chip-btn active" data-range="week">
+                <i class="fa-solid fa-calendar-week"></i>
+                آخر أسبوع
+            </button>
+            <button type="button" class="chip-btn" data-range="month">
+                <i class="fa-solid fa-calendar-days"></i>
+                آخر شهر
+            </button>
+            <button type="button" class="chip-btn" data-range="threeMonths">
+                <i class="fa-solid fa-calendar"></i>
+                3 أشهر
+            </button>
+            <button type="button" class="chip-btn" data-range="sixMonths">
+                <i class="fa-solid fa-calendar-plus"></i>
+                6 أشهر
+            </button>
+            <button type="button" class="chip-btn" data-range="custom">
+                <i class="fa-solid fa-calendar-check"></i>
+                تاريخ مخصص
+            </button>
+        </div>
+
+        <div class="custom-dates-panel" id="customDatesPanel">
+            <div class="date-field">
+                <label for="filterStartDate">من</label>
+                <input type="date" id="filterStartDate">
+            </div>
+            <div class="date-field">
+                <label for="filterEndDate">إلى</label>
+                <input type="date" id="filterEndDate">
+            </div>
+            <button type="button" class="apply-btn" id="applyCustomFilter">
+                <i class="fa-solid fa-check"></i>
+                تطبيق الفلتر
+            </button>
+        </div>
+    </section>
+
+    <!-- ====================== Trend Analysis Card ====================== -->
+    <section class="trend-analysis-card">
+        <div class="trend-analysis-header">
+            <div class="trend-analysis-icon"><i class="fa-solid fa-chart-pie"></i></div>
+            <div>
+                <h3>تحليل الاتجاهات</h3>
+                <p>ملخص أداء المؤشرات في النطاق المحدد</p>
+            </div>
+        </div>
+        <div class="trend-analysis-grid">
+            <div class="trend-analysis-item best">
+                <div class="ta-item-icon"><i class="fa-solid fa-arrow-trend-up"></i></div>
+                <div class="ta-item-body">
+                    <div class="ta-item-label">أفضل مؤشر تحسناً</div>
+                    <div class="ta-item-value" id="taBestMetric">—</div>
+                </div>
+            </div>
+            <div class="trend-analysis-item worst">
+                <div class="ta-item-icon"><i class="fa-solid fa-arrow-trend-down"></i></div>
+                <div class="ta-item-body">
+                    <div class="ta-item-label">أسوأ مؤشر</div>
+                    <div class="ta-item-value" id="taWorstMetric">—</div>
+                </div>
+            </div>
+            <div class="trend-analysis-item overall">
+                <div class="ta-item-icon"><i class="fa-solid fa-chart-line"></i></div>
+                <div class="ta-item-body">
+                    <div class="ta-item-label">الاتجاه العام</div>
+                    <div class="ta-item-value" id="taOverall">—</div>
+                </div>
+            </div>
+            <div class="trend-analysis-item risk">
+                <div class="ta-item-icon"><i class="fa-solid fa-shield-halved"></i></div>
+                <div class="ta-item-body">
+                    <div class="ta-item-label">مستوى الخطر الحالي</div>
+                    <div class="ta-item-value" id="taRiskLevel">—</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ====================== KPI Grid — Original 6 ====================== -->
+    <section class="kpi-grid">
+        <div class="kpi-card">
+            <div class="kpi-icon-wrap kpi-icon-food"><i class="fa-solid fa-utensils"></i></div>
+            <div class="kpi-info">
+                <span class="kpi-label">الغذاء</span>
+                <span class="kpi-value" data-kpi="food">0%</span>
+                <span class="kpi-trend stable" data-kpi-trend="food">
+                    <i class="fa-solid fa-minus"></i>
+                    مستقر
+                </span>
+            </div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon-wrap kpi-icon-sleep"><i class="fa-solid fa-moon"></i></div>
+            <div class="kpi-info">
+                <span class="kpi-label">النوم</span>
+                <span class="kpi-value" data-kpi="sleep">0 س</span>
+                <span class="kpi-trend stable" data-kpi-trend="sleep">
+                    <i class="fa-solid fa-minus"></i>
+                    مستقر
+                </span>
+            </div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon-wrap kpi-icon-med"><i class="fa-solid fa-pills"></i></div>
+            <div class="kpi-info">
+                <span class="kpi-label">الالتزام بالأدوية</span>
+                <span class="kpi-value" data-kpi="medication">0%</span>
+                <span class="kpi-trend stable" data-kpi-trend="medication">
+                    <i class="fa-solid fa-minus"></i>
+                    مستقر
+                </span>
+            </div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon-wrap kpi-icon-mood"><i class="fa-solid fa-face-smile"></i></div>
+            <div class="kpi-info">
+                <span class="kpi-label">المزاج</span>
+                <span class="kpi-value" data-kpi="mood">0/10</span>
+                <span class="kpi-trend stable" data-kpi-trend="mood">
+                    <i class="fa-solid fa-minus"></i>
+                    مستقر
+                </span>
+            </div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon-wrap kpi-icon-neg"><i class="fa-solid fa-brain"></i></div>
+            <div class="kpi-info">
+                <span class="kpi-label">الأفكار السلبية</span>
+                <span class="kpi-value" data-kpi="negative">0</span>
+                <span class="kpi-trend stable" data-kpi-trend="negative">
+                    <i class="fa-solid fa-minus"></i>
+                    مستقر
+                </span>
+            </div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon-wrap kpi-icon-health"><i class="fa-solid fa-heart-pulse"></i></div>
+            <div class="kpi-info">
+                <span class="kpi-label">الاهتمام الجسدي</span>
+                <span class="kpi-value" data-kpi="health">0%</span>
+                <span class="kpi-trend stable" data-kpi-trend="health">
+                    <i class="fa-solid fa-minus"></i>
+                    مستقر
+                </span>
+            </div>
+        </div>
+    </section>
+
+    <!-- ====================== KPI Grid — Depression Core ====================== -->
+    <div class="section-divider">
+        <span class="divider-title">
+            <i class="fa-solid fa-heart-crack"></i>
+            مؤشرات الاكتئاب الأساسية
+        </span>
+    </div>
+
+    <section class="kpi-grid kpi-grid-depression">
+        <div class="kpi-card kpi-card-depression">
+            <div class="kpi-icon-wrap kpi-icon-energy"><i class="fa-solid fa-bolt"></i></div>
+            <div class="kpi-info">
+                <span class="kpi-label">مستوى الطاقة</span>
+                <span class="kpi-value" data-kpi="energy">0/10</span>
+                <span class="kpi-trend stable" data-kpi-trend="energy">
+                    <i class="fa-solid fa-minus"></i>
+                    مستقر
+                </span>
+            </div>
+        </div>
+        <div class="kpi-card kpi-card-depression">
+            <div class="kpi-icon-wrap kpi-icon-motivation"><i class="fa-solid fa-fire"></i></div>
+            <div class="kpi-info">
+                <span class="kpi-label">الدافعية</span>
+                <span class="kpi-value" data-kpi="motivation">0/10</span>
+                <span class="kpi-trend stable" data-kpi-trend="motivation">
+                    <i class="fa-solid fa-minus"></i>
+                    مستقر
+                </span>
+            </div>
+        </div>
+        <div class="kpi-card kpi-card-depression">
+            <div class="kpi-icon-wrap kpi-icon-concentration"><i class="fa-solid fa-crosshairs"></i></div>
+            <div class="kpi-info">
+                <span class="kpi-label">التركيز</span>
+                <span class="kpi-value" data-kpi="concentration">0/10</span>
+                <span class="kpi-trend stable" data-kpi-trend="concentration">
+                    <i class="fa-solid fa-minus"></i>
+                    مستقر
+                </span>
+            </div>
+        </div>
+        <div class="kpi-card kpi-card-depression">
+            <div class="kpi-icon-wrap kpi-icon-guilt"><i class="fa-solid fa-face-frown"></i></div>
+            <div class="kpi-info">
+                <span class="kpi-label">الشعور بالذنب</span>
+                <span class="kpi-value" data-kpi="guilt">0/10</span>
+                <span class="kpi-trend stable" data-kpi-trend="guilt">
+                    <i class="fa-solid fa-minus"></i>
+                    مستقر
+                </span>
+            </div>
+        </div>
+        <div class="kpi-card kpi-card-depression">
+            <div class="kpi-icon-wrap kpi-icon-hope"><i class="fa-solid fa-sun"></i></div>
+            <div class="kpi-info">
+                <span class="kpi-label">الأمل</span>
+                <span class="kpi-value" data-kpi="hope">0/10</span>
+                <span class="kpi-trend stable" data-kpi-trend="hope">
+                    <i class="fa-solid fa-minus"></i>
+                    مستقر
+                </span>
+            </div>
+        </div>
+        <div class="kpi-card kpi-card-depression kpi-card-risk">
+            <div class="kpi-icon-wrap kpi-icon-suicidal"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <div class="kpi-info">
+                <span class="kpi-label">الأفكار الانتحارية</span>
+                <span class="kpi-value" data-kpi="suicidal">0/5</span>
+                <span class="kpi-trend stable" data-kpi-trend="suicidal">
+                    <i class="fa-solid fa-minus"></i>
+                    لا يوجد
+                </span>
+            </div>
+        </div>
+    </section>
+
+    <!-- ====================== Charts Grid — Original 6 ====================== -->
+    <div class="section-divider">
+        <span class="divider-title">
+            <i class="fa-solid fa-chart-simple"></i>
+            مؤشرات الصحة العامة
+        </span>
+    </div>
+
+    <section class="charts-grid">
+        <!-- 1. الغذاء -->
+        <div class="chart-card" data-metric="food">
+            <div class="chart-header">
+                <div class="chart-icon-wrap chart-icon-food"><i class="fa-solid fa-utensils"></i></div>
+                <div class="chart-title">
+                    <h3>الغذاء</h3>
+                    <p>تقييم جودة التغذية اليومية</p>
+                </div>
+                <div class="chart-avg-badge">
+                    <span class="avg-value" data-avg="food">0%</span>
+                    <span class="avg-label">المتوسط</span>
+                </div>
+            </div>
+            <div class="chart-body">
+                <div class="skeleton-overlay" data-skeleton="food"><div class="skeleton-spinner"></div></div>
+                <canvas id="foodChart"></canvas>
+            </div>
+            <div class="chart-footer">
+                <span class="trend-pill trend-stable" data-trend="food"><i class="fa-solid fa-minus"></i> مستقر</span>
+                <span class="chart-mini-stat">
+                    <span>الأدنى: <strong data-min="food">-</strong></span>
+                    <span>الأعلى: <strong data-max="food">-</strong></span>
+                </span>
+            </div>
+        </div>
+
+        <!-- 2. النوم -->
+        <div class="chart-card" data-metric="sleep">
+            <div class="chart-header">
+                <div class="chart-icon-wrap chart-icon-sleep"><i class="fa-solid fa-moon"></i></div>
+                <div class="chart-title">
+                    <h3>النوم</h3>
+                    <p>عدد ساعات النوم اليومية</p>
+                </div>
+                <div class="chart-avg-badge">
+                    <span class="avg-value" data-avg="sleep">0 س</span>
+                    <span class="avg-label">المتوسط</span>
+                </div>
+            </div>
+            <div class="chart-body">
+                <div class="skeleton-overlay" data-skeleton="sleep"><div class="skeleton-spinner"></div></div>
+                <canvas id="sleepChart"></canvas>
+            </div>
+            <div class="chart-footer">
+                <span class="trend-pill trend-stable" data-trend="sleep"><i class="fa-solid fa-minus"></i> مستقر</span>
+                <span class="chart-mini-stat">
+                    <span>الأدنى: <strong data-min="sleep">-</strong></span>
+                    <span>الأعلى: <strong data-max="sleep">-</strong></span>
+                </span>
+            </div>
+        </div>
+
+        <!-- 3. الالتزام بالأدوية -->
+        <div class="chart-card" data-metric="medication">
+            <div class="chart-header">
+                <div class="chart-icon-wrap chart-icon-med"><i class="fa-solid fa-pills"></i></div>
+                <div class="chart-title">
+                    <h3>الالتزام بالأدوية</h3>
+                    <p>نسبة الالتزام بالجرعات الموصوفة</p>
+                </div>
+                <div class="chart-avg-badge">
+                    <span class="avg-value" data-avg="medication">0%</span>
+                    <span class="avg-label">المتوسط</span>
+                </div>
+            </div>
+            <div class="chart-body">
+                <div class="skeleton-overlay" data-skeleton="medication"><div class="skeleton-spinner"></div></div>
+                <canvas id="medicationChart"></canvas>
+            </div>
+            <div class="chart-footer">
+                <span class="trend-pill trend-stable" data-trend="medication"><i class="fa-solid fa-minus"></i> مستقر</span>
+                <span class="chart-mini-stat">
+                    <span>الأدنى: <strong data-min="medication">-</strong></span>
+                    <span>الأعلى: <strong data-max="medication">-</strong></span>
+                </span>
+            </div>
+        </div>
+
+        <!-- 4. المزاج -->
+        <div class="chart-card" data-metric="mood">
+            <div class="chart-header">
+                <div class="chart-icon-wrap chart-icon-mood"><i class="fa-solid fa-face-smile"></i></div>
+                <div class="chart-title">
+                    <h3>المزاج</h3>
+                    <p>تقييم الحالة المزاجية (0-10)</p>
+                </div>
+                <div class="chart-avg-badge">
+                    <span class="avg-value" data-avg="mood">0/10</span>
+                    <span class="avg-label">المتوسط</span>
+                </div>
+            </div>
+            <div class="chart-body">
+                <div class="skeleton-overlay" data-skeleton="mood"><div class="skeleton-spinner"></div></div>
+                <canvas id="moodChart"></canvas>
+            </div>
+            <div class="chart-footer">
+                <span class="trend-pill trend-stable" data-trend="mood"><i class="fa-solid fa-minus"></i> مستقر</span>
+                <span class="chart-mini-stat">
+                    <span>الأدنى: <strong data-min="mood">-</strong></span>
+                    <span>الأعلى: <strong data-max="mood">-</strong></span>
+                </span>
+            </div>
+        </div>
+
+        <!-- 5. الأفكار السلبية -->
+        <div class="chart-card" data-metric="negative">
+            <div class="chart-header">
+                <div class="chart-icon-wrap chart-icon-neg"><i class="fa-solid fa-brain"></i></div>
+                <div class="chart-title">
+                    <h3>الأفكار السلبية</h3>
+                    <p>عدد الأفكار السلبية المسجلة يومياً</p>
+                </div>
+                <div class="chart-avg-badge">
+                    <span class="avg-value" data-avg="negative">0</span>
+                    <span class="avg-label">المتوسط</span>
+                </div>
+            </div>
+            <div class="chart-body">
+                <div class="skeleton-overlay" data-skeleton="negative"><div class="skeleton-spinner"></div></div>
+                <canvas id="negativeChart"></canvas>
+            </div>
+            <div class="chart-footer">
+                <span class="trend-pill trend-stable" data-trend="negative"><i class="fa-solid fa-minus"></i> مستقر</span>
+                <span class="chart-mini-stat">
+                    <span>الأدنى: <strong data-min="negative">-</strong></span>
+                    <span>الأعلى: <strong data-max="negative">-</strong></span>
+                </span>
+            </div>
+        </div>
+
+        <!-- 6. الاهتمام الجسدي -->
+        <div class="chart-card" data-metric="health">
+            <div class="chart-header">
+                <div class="chart-icon-wrap chart-icon-health"><i class="fa-solid fa-heart-pulse"></i></div>
+                <div class="chart-title">
+                    <h3>الاهتمام بالحالة الجسدية</h3>
+                    <p>نسبة الاهتمام بالصحة الجسدية</p>
+                </div>
+                <div class="chart-avg-badge">
+                    <span class="avg-value" data-avg="health">0%</span>
+                    <span class="avg-label">المتوسط</span>
+                </div>
+            </div>
+            <div class="chart-body">
+                <div class="skeleton-overlay" data-skeleton="health"><div class="skeleton-spinner"></div></div>
+                <canvas id="healthChart"></canvas>
+            </div>
+            <div class="chart-footer">
+                <span class="trend-pill trend-stable" data-trend="health"><i class="fa-solid fa-minus"></i> مستقر</span>
+                <span class="chart-mini-stat">
+                    <span>الأدنى: <strong data-min="health">-</strong></span>
+                    <span>الأعلى: <strong data-max="health">-</strong></span>
+                </span>
+            </div>
+        </div>
+    </section>
+
+    <!-- ====================== Charts Grid — Depression Core ====================== -->
+    <div class="section-divider">
+        <span class="divider-title">
+            <i class="fa-solid fa-heart-crack"></i>
+            رسوم مؤشرات الاكتئاب
+        </span>
+    </div>
+
+    <section class="charts-grid">
+        <!-- 7. مستوى الطاقة -->
+        <div class="chart-card" data-metric="energy">
+            <div class="chart-header">
+                <div class="chart-icon-wrap chart-icon-energy"><i class="fa-solid fa-bolt"></i></div>
+                <div class="chart-title">
+                    <h3>مستوى الطاقة</h3>
+                    <p>تقييم الطاقة اليومية (0-10)</p>
+                </div>
+                <div class="chart-avg-badge">
+                    <span class="avg-value" data-avg="energy">0/10</span>
+                    <span class="avg-label">المتوسط</span>
+                </div>
+            </div>
+            <div class="chart-body">
+                <div class="skeleton-overlay" data-skeleton="energy"><div class="skeleton-spinner"></div></div>
+                <canvas id="energyChart"></canvas>
+            </div>
+            <div class="chart-footer">
+                <span class="trend-pill trend-stable" data-trend="energy"><i class="fa-solid fa-minus"></i> مستقر</span>
+                <span class="chart-mini-stat">
+                    <span>الأدنى: <strong data-min="energy">-</strong></span>
+                    <span>الأعلى: <strong data-max="energy">-</strong></span>
+                </span>
+            </div>
+        </div>
+
+        <!-- 8. الدافعية -->
+        <div class="chart-card" data-metric="motivation">
+            <div class="chart-header">
+                <div class="chart-icon-wrap chart-icon-motivation"><i class="fa-solid fa-fire"></i></div>
+                <div class="chart-title">
+                    <h3>الدافعية</h3>
+                    <p>مستوى الدافعية للإنجاز (0-10)</p>
+                </div>
+                <div class="chart-avg-badge">
+                    <span class="avg-value" data-avg="motivation">0/10</span>
+                    <span class="avg-label">المتوسط</span>
+                </div>
+            </div>
+            <div class="chart-body">
+                <div class="skeleton-overlay" data-skeleton="motivation"><div class="skeleton-spinner"></div></div>
+                <canvas id="motivationChart"></canvas>
+            </div>
+            <div class="chart-footer">
+                <span class="trend-pill trend-stable" data-trend="motivation"><i class="fa-solid fa-minus"></i> مستقر</span>
+                <span class="chart-mini-stat">
+                    <span>الأدنى: <strong data-min="motivation">-</strong></span>
+                    <span>الأعلى: <strong data-max="motivation">-</strong></span>
+                </span>
+            </div>
+        </div>
+
+        <!-- 9. التركيز -->
+        <div class="chart-card" data-metric="concentration">
+            <div class="chart-header">
+                <div class="chart-icon-wrap chart-icon-concentration"><i class="fa-solid fa-crosshairs"></i></div>
+                <div class="chart-title">
+                    <h3>التركيز</h3>
+                    <p>قدرة التركيز اليومية (0-10)</p>
+                </div>
+                <div class="chart-avg-badge">
+                    <span class="avg-value" data-avg="concentration">0/10</span>
+                    <span class="avg-label">المتوسط</span>
+                </div>
+            </div>
+            <div class="chart-body">
+                <div class="skeleton-overlay" data-skeleton="concentration"><div class="skeleton-spinner"></div></div>
+                <canvas id="concentrationChart"></canvas>
+            </div>
+            <div class="chart-footer">
+                <span class="trend-pill trend-stable" data-trend="concentration"><i class="fa-solid fa-minus"></i> مستقر</span>
+                <span class="chart-mini-stat">
+                    <span>الأدنى: <strong data-min="concentration">-</strong></span>
+                    <span>الأعلى: <strong data-max="concentration">-</strong></span>
+                </span>
+            </div>
+        </div>
+
+        <!-- 10. الشعور بالذنب -->
+        <div class="chart-card" data-metric="guilt">
+            <div class="chart-header">
+                <div class="chart-icon-wrap chart-icon-guilt"><i class="fa-solid fa-face-frown"></i></div>
+                <div class="chart-title">
+                    <h3>الشعور بالذنب</h3>
+                    <p>شدة الشعور بالذنب (0-10)</p>
+                </div>
+                <div class="chart-avg-badge">
+                    <span class="avg-value" data-avg="guilt">0/10</span>
+                    <span class="avg-label">المتوسط</span>
+                </div>
+            </div>
+            <div class="chart-body">
+                <div class="skeleton-overlay" data-skeleton="guilt"><div class="skeleton-spinner"></div></div>
+                <canvas id="guiltChart"></canvas>
+            </div>
+            <div class="chart-footer">
+                <span class="trend-pill trend-stable" data-trend="guilt"><i class="fa-solid fa-minus"></i> مستقر</span>
+                <span class="chart-mini-stat">
+                    <span>الأدنى: <strong data-min="guilt">-</strong></span>
+                    <span>الأعلى: <strong data-max="guilt">-</strong></span>
+                </span>
+            </div>
+        </div>
+
+        <!-- 11. الأمل -->
+        <div class="chart-card" data-metric="hope">
+            <div class="chart-header">
+                <div class="chart-icon-wrap chart-icon-hope"><i class="fa-solid fa-sun"></i></div>
+                <div class="chart-title">
+                    <h3>الأمل</h3>
+                    <p>مستوى الأمل والتفاؤل (0-10)</p>
+                </div>
+                <div class="chart-avg-badge">
+                    <span class="avg-value" data-avg="hope">0/10</span>
+                    <span class="avg-label">المتوسط</span>
+                </div>
+            </div>
+            <div class="chart-body">
+                <div class="skeleton-overlay" data-skeleton="hope"><div class="skeleton-spinner"></div></div>
+                <canvas id="hopeChart"></canvas>
+            </div>
+            <div class="chart-footer">
+                <span class="trend-pill trend-stable" data-trend="hope"><i class="fa-solid fa-minus"></i> مستقر</span>
+                <span class="chart-mini-stat">
+                    <span>الأدنى: <strong data-min="hope">-</strong></span>
+                    <span>الأعلى: <strong data-max="hope">-</strong></span>
+                </span>
+            </div>
+        </div>
+
+        <!-- 12. الأفكار الانتحارية -->
+        <div class="chart-card chart-card-risk" data-metric="suicidal">
+            <div class="chart-header">
+                <div class="chart-icon-wrap chart-icon-suicidal"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                <div class="chart-title">
+                    <h3>الأفكار الانتحارية</h3>
+                    <p>شدة الأفكار الانتحارية (0-5)</p>
+                </div>
+                <div class="chart-avg-badge chart-avg-badge-risk">
+                    <span class="avg-value" data-avg="suicidal">0/5</span>
+                    <span class="avg-label">المتوسط</span>
+                </div>
+            </div>
+            <div class="chart-body">
+                <div class="skeleton-overlay" data-skeleton="suicidal"><div class="skeleton-spinner"></div></div>
+                <canvas id="suicidalChart"></canvas>
+            </div>
+            <div class="chart-footer">
+                <span class="trend-pill trend-stable" data-trend="suicidal"><i class="fa-solid fa-minus"></i> مستقر</span>
+                <span class="chart-mini-stat">
+                    <span>الأدنى: <strong data-min="suicidal">-</strong></span>
+                    <span>الأعلى: <strong data-max="suicidal">-</strong></span>
+                </span>
+            </div>
+        </div>
+    </section>
+
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+<script src="~/js/doctor/Statistic.js"></script>

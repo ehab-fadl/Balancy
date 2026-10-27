@@ -1,6 +1,8 @@
 ﻿/* ============================================================
-           Theme Variables
-        ============================================================ */
+   Depression Statistics — Complete Styles
+============================================================ */
+
+/* -------- Theme Variables -------- */
 :root {
     --bn-primary: #0891b2;
     --bn-primary-dark: #0e7490;
@@ -33,8 +35,8 @@
 }
 
 /* ============================================================
-           Base
-        ============================================================ */
+   Base
+============================================================ */
 * {
     margin: 0;
     padding: 0;
@@ -76,8 +78,8 @@ body {
 }
 
 /* ============================================================
-           Animated Background — Aurora effect
-        ============================================================ */
+   Animated Aurora Background
+============================================================ */
 .bg-aurora {
     position: fixed;
     inset: 0;
@@ -179,7 +181,6 @@ body {
     }
 }
 
-/* Grid pattern overlay */
 .bg-grid {
     position: fixed;
     inset: 0;
@@ -192,8 +193,8 @@ body {
 }
 
 /* ============================================================
-           Container
-        ============================================================ */
+   Container
+============================================================ */
 .stats-container {
     max-width: 1480px;
     margin: 0 auto;
@@ -213,8 +214,8 @@ body {
 }
 
 /* ============================================================
-           Hero Header
-        ============================================================ */
+   Hero Header
+============================================================ */
 .hero-header {
     position: relative;
     background: linear-gradient(135deg, #0e7490 0%, #0891b2 50%, #06b6d4 100%);
@@ -334,8 +335,8 @@ body {
 }
 
 /* ============================================================
-           Filter Bar — Sticky Glass
-        ============================================================ */
+   Filter Bar
+============================================================ */
 .filter-bar {
     background: var(--bn-glass);
     backdrop-filter: blur(24px) saturate(180%);
@@ -431,7 +432,6 @@ body {
             transform: scale(1.1);
         }
 
-/* Custom date range drawer */
 .custom-dates-panel {
     display: none;
     width: 100%;
@@ -520,8 +520,8 @@ body {
     }
 
 /* ============================================================
-           KPI Cards
-        ============================================================ */
+   KPI Cards
+============================================================ */
 .kpi-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -582,6 +582,7 @@ body {
     transform: scale(1.1) rotate(-6deg);
 }
 
+/* KPI Icon Colors — Original */
 .kpi-icon-food {
     background: linear-gradient(135deg, #ffedd5, #fed7aa);
     color: #c2410c;
@@ -610,6 +611,37 @@ body {
 .kpi-icon-health {
     background: linear-gradient(135deg, #cffafe, #a5f3fc);
     color: #0e7490;
+}
+
+/* KPI Icon Colors — Depression */
+.kpi-icon-energy {
+    background: linear-gradient(135deg, #fef9c3, #fde047);
+    color: #a16207;
+}
+
+.kpi-icon-motivation {
+    background: linear-gradient(135deg, #fed7aa, #fdba74);
+    color: #c2410c;
+}
+
+.kpi-icon-concentration {
+    background: linear-gradient(135deg, #bfdbfe, #93c5fd);
+    color: #1e40af;
+}
+
+.kpi-icon-guilt {
+    background: linear-gradient(135deg, #e5e7eb, #d1d5db);
+    color: #4b5563;
+}
+
+.kpi-icon-hope {
+    background: linear-gradient(135deg, #fef3c7, #fcd34d);
+    color: #b45309;
+}
+
+.kpi-icon-suicidal {
+    background: linear-gradient(135deg, #fecaca, #fca5a5);
+    color: #b91c1c;
 }
 
 .kpi-info {
@@ -662,9 +694,77 @@ body {
         color: var(--bn-text-muted);
     }
 
+/* Depression KPI Cards */
+.kpi-card-depression {
+    border-color: rgba(99, 102, 241, 0.15);
+}
+
+    .kpi-card-depression:hover {
+        border-color: rgba(99, 102, 241, 0.4);
+    }
+
+.kpi-card-risk {
+    border-color: rgba(239, 68, 68, 0.25) !important;
+}
+
+    .kpi-card-risk::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 8px;
+        height: 100%;
+        background: linear-gradient(180deg, #dc2626, #991b1b);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .kpi-card-risk:hover::after {
+        opacity: 1;
+    }
+
 /* ============================================================
-           Chart Cards
-        ============================================================ */
+   Section Divider
+============================================================ */
+.section-divider {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 2rem 0 1.25rem;
+    position: relative;
+}
+
+    .section-divider::before,
+    .section-divider::after {
+        content: "";
+        flex: 1;
+        height: 1.5px;
+        background: linear-gradient(90deg, transparent, var(--bn-border), transparent);
+    }
+
+.divider-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 1rem;
+    background: var(--bn-glass);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--bn-border);
+    border-radius: 50px;
+    font-size: 0.82rem;
+    font-weight: 900;
+    color: var(--bn-text);
+    white-space: nowrap;
+    box-shadow: var(--bn-shadow-sm);
+}
+
+    .divider-title i {
+        color: var(--bn-primary);
+    }
+
+/* ============================================================
+   Chart Cards
+============================================================ */
 .charts-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(440px, 1fr));
@@ -760,10 +860,42 @@ body {
     --card-accent: #0e7490;
 }
 
+.chart-card[data-metric="energy"] {
+    --card-accent: #ca8a04;
+}
+
+.chart-card[data-metric="motivation"] {
+    --card-accent: #ea580c;
+}
+
+.chart-card[data-metric="concentration"] {
+    --card-accent: #1d4ed8;
+}
+
+.chart-card[data-metric="guilt"] {
+    --card-accent: #4b5563;
+}
+
+.chart-card[data-metric="hope"] {
+    --card-accent: #d97706;
+}
+
+.chart-card[data-metric="suicidal"] {
+    --card-accent: #dc2626;
+}
+
 .chart-card:hover {
     transform: translateY(-8px);
     box-shadow: var(--bn-shadow-lg), 0 0 0 1px var(--card-accent, transparent);
 }
+
+.chart-card-risk {
+    border-color: rgba(239, 68, 68, 0.2) !important;
+}
+
+    .chart-card-risk:hover {
+        box-shadow: 0 25px 60px -20px rgba(239, 68, 68, 0.35), 0 0 0 1px rgba(239, 68, 68, 0.35) !important;
+    }
 
 .chart-header {
     display: flex;
@@ -790,6 +922,7 @@ body {
     transform: rotate(-8deg) scale(1.08);
 }
 
+/* Chart Icon Colors — Original */
 .chart-icon-food {
     background: linear-gradient(135deg, #ffedd5, #fed7aa);
     color: #c2410c;
@@ -818,6 +951,37 @@ body {
 .chart-icon-health {
     background: linear-gradient(135deg, #cffafe, #a5f3fc);
     color: #0e7490;
+}
+
+/* Chart Icon Colors — Depression */
+.chart-icon-energy {
+    background: linear-gradient(135deg, #fef9c3, #fde047);
+    color: #a16207;
+}
+
+.chart-icon-motivation {
+    background: linear-gradient(135deg, #fed7aa, #fdba74);
+    color: #c2410c;
+}
+
+.chart-icon-concentration {
+    background: linear-gradient(135deg, #bfdbfe, #93c5fd);
+    color: #1e40af;
+}
+
+.chart-icon-guilt {
+    background: linear-gradient(135deg, #e5e7eb, #d1d5db);
+    color: #4b5563;
+}
+
+.chart-icon-hope {
+    background: linear-gradient(135deg, #fef3c7, #fcd34d);
+    color: #b45309;
+}
+
+.chart-icon-suicidal {
+    background: linear-gradient(135deg, #fecaca, #fca5a5);
+    color: #b91c1c;
 }
 
 .chart-title {
@@ -866,6 +1030,15 @@ body {
         margin-top: 0.2rem;
         text-transform: uppercase;
         letter-spacing: 0.05em;
+    }
+
+.chart-avg-badge-risk {
+    background: rgba(239, 68, 68, 0.05);
+    border-color: rgba(239, 68, 68, 0.2);
+}
+
+    .chart-avg-badge-risk .avg-value {
+        color: #dc2626;
     }
 
 .chart-body {
@@ -943,8 +1116,8 @@ body {
     }
 
 /* ============================================================
-           Skeleton Loading
-        ============================================================ */
+   Skeleton Loading
+============================================================ */
 .skeleton-overlay {
     position: absolute;
     inset: 0;
@@ -979,8 +1152,8 @@ body {
 }
 
 /* ============================================================
-           Floating Action "Scroll to Top"
-        ============================================================ */
+   Scroll to Top
+============================================================ */
 .scroll-top-btn {
     position: fixed;
     bottom: 1.5rem;
@@ -1015,8 +1188,8 @@ body {
     }
 
 /* ============================================================
-           Toast — منتصف ويمين الشاشة
-        ============================================================ */
+   Toast
+============================================================ */
 .toast-stack {
     position: fixed;
     inset: 0;
@@ -1120,8 +1293,260 @@ body {
 }
 
 /* ============================================================
-           Responsive
-        ============================================================ */
+   Smart Alerts
+============================================================ */
+.smart-alert {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    border-radius: 18px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.25rem;
+    position: relative;
+    animation: alertSlideIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 8px 24px -8px rgba(0, 0, 0, 0.15);
+}
+
+    .smart-alert.critical {
+        background: linear-gradient(135deg, #dc2626, #991b1b);
+        color: white;
+        animation: alertSlideIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), alertPulse 2s ease-in-out infinite 0.5s;
+    }
+
+    .smart-alert.warning {
+        background: linear-gradient(135deg, #f59e0b, #b45309);
+        color: white;
+    }
+
+.smart-alert-icon {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.22);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+}
+
+.smart-alert-body {
+    flex: 1;
+}
+
+.smart-alert-title {
+    font-size: 0.95rem;
+    font-weight: 900;
+    margin-bottom: 0.2rem;
+}
+
+.smart-alert-message {
+    font-size: 0.82rem;
+    font-weight: 600;
+    opacity: 0.95;
+    line-height: 1.5;
+}
+
+.smart-alert-close {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    flex-shrink: 0;
+}
+
+    .smart-alert-close:hover {
+        background: rgba(255, 255, 255, 0.35);
+        transform: scale(1.1);
+    }
+
+@keyframes alertSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-15px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes alertPulse {
+    0%, 100% {
+        box-shadow: 0 8px 24px -8px rgba(220, 38, 38, 0.5);
+    }
+
+    50% {
+        box-shadow: 0 8px 30px -6px rgba(220, 38, 38, 0.85);
+    }
+}
+
+/* ============================================================
+   Trend Analysis Card
+============================================================ */
+.trend-analysis-card {
+    background: var(--bn-glass);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border: 1px solid var(--bn-border);
+    border-radius: 24px;
+    padding: 1.5rem 1.6rem;
+    margin-bottom: 1.75rem;
+    box-shadow: var(--bn-shadow-md);
+    animation: cardEnter 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.trend-analysis-header {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    margin-bottom: 1.25rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--bn-border);
+}
+
+.trend-analysis-icon {
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #cffafe, #a5f3fc);
+    color: #0e7490;
+    font-size: 1.15rem;
+}
+
+.trend-analysis-header h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 900;
+    color: var(--bn-text);
+}
+
+.trend-analysis-header p {
+    margin: 0.15rem 0 0;
+    font-size: 0.72rem;
+    color: var(--bn-text-muted);
+    font-weight: 600;
+}
+
+.trend-analysis-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0.9rem;
+}
+
+.trend-analysis-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.9rem 1rem;
+    background: var(--bn-surface);
+    border: 1px solid var(--bn-border);
+    border-radius: 16px;
+    transition: all 0.3s ease;
+}
+
+    .trend-analysis-item:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--bn-shadow-md);
+    }
+
+    .trend-analysis-item.best {
+        border-color: rgba(16, 185, 129, 0.25);
+    }
+
+    .trend-analysis-item.worst {
+        border-color: rgba(239, 68, 68, 0.25);
+    }
+
+    .trend-analysis-item.overall {
+        border-color: rgba(8, 145, 178, 0.25);
+    }
+
+    .trend-analysis-item.risk {
+        border-color: rgba(220, 38, 38, 0.3);
+    }
+
+.ta-item-icon {
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+}
+
+.trend-analysis-item.best .ta-item-icon {
+    background: rgba(16, 185, 129, 0.12);
+    color: #047857;
+}
+
+.trend-analysis-item.worst .ta-item-icon {
+    background: rgba(239, 68, 68, 0.12);
+    color: #b91c1c;
+}
+
+.trend-analysis-item.overall .ta-item-icon {
+    background: rgba(8, 145, 178, 0.12);
+    color: #0e7490;
+}
+
+.trend-analysis-item.risk .ta-item-icon {
+    background: rgba(220, 38, 38, 0.15);
+    color: #dc2626;
+}
+
+.ta-item-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.ta-item-label {
+    font-size: 0.68rem;
+    font-weight: 800;
+    color: var(--bn-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.15rem;
+}
+
+.ta-item-value {
+    font-size: 0.92rem;
+    font-weight: 900;
+    color: var(--bn-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.trend-analysis-item.best .ta-item-value {
+    color: #047857;
+}
+
+.trend-analysis-item.worst .ta-item-value {
+    color: #b91c1c;
+}
+
+.trend-analysis-item.risk .ta-item-value {
+    color: #dc2626;
+}
+
+/* ============================================================
+   Responsive
+============================================================ */
 @media (max-width: 991px) {
     .charts-grid {
         grid-template-columns: 1fr;
@@ -1240,6 +1665,23 @@ body {
         min-width: 260px;
         max-width: calc(100% - 2rem);
     }
+
+    .smart-alert {
+        flex-wrap: wrap;
+    }
+
+    .trend-analysis-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .section-divider {
+        margin: 1.5rem 0 1rem;
+    }
+
+    .divider-title {
+        font-size: 0.75rem;
+        padding: 0.35rem 0.85rem;
+    }
 }
 
 @media (max-width: 480px) {
@@ -1249,7 +1691,7 @@ body {
 }
 
 @media print {
-    .bg-aurora, .bg-grid, .filter-bar, .scroll-top-btn, .toast-stack {
+    .bg-aurora, .bg-grid, .filter-bar, .scroll-top-btn, .toast-stack, .smart-alert {
         display: none !important;
     }
 
@@ -1259,7 +1701,7 @@ body {
         padding: 0 !important;
     }
 
-    .chart-card, .hero-header, .kpi-card {
+    .chart-card, .hero-header, .kpi-card, .trend-analysis-card {
         box-shadow: none !important;
         border: 1px solid #ccc !important;
         page-break-inside: avoid;

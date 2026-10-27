@@ -2,7 +2,6 @@
    Doctor Notes Tab — Styles
 ============================================================ */
 
-/* -------- Theme Variables (Indigo theme) -------- */
 .doctornotes-container {
     --bn-primary: #0891b2;
     --bn-primary-dark: #0e7490;
@@ -72,9 +71,7 @@
     color-scheme: dark;
 }
 
-/* ============================================================
-   Animations
-============================================================ */
+/* Animations */
 @keyframes dn-slideUpFade {
     from {
         opacity: 0;
@@ -167,10 +164,28 @@
     }
 }
 
+@keyframes dn-criticalPulse {
+    0%, 100% {
+        box-shadow: 0 8px 24px -8px rgba(220, 38, 38, 0.5);
+    }
+
+    50% {
+        box-shadow: 0 8px 30px -6px rgba(220, 38, 38, 0.8);
+    }
+}
+
+@keyframes dn-badgePulse {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(153, 27, 27, 0.4);
+    }
+
+    50% {
+        box-shadow: 0 0 0 6px rgba(153, 27, 27, 0);
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
-    .doctornotes-container *,
-    .doctornotes-container *::before,
-    .doctornotes-container *::after {
+    .doctornotes-container *, .doctornotes-container *::before, .doctornotes-container *::after {
         animation-duration: 0.01ms !important;
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
@@ -178,9 +193,7 @@
     }
 }
 
-/* ============================================================
-   Card (Base)
-============================================================ */
+/* Card (Base) */
 .doctornotes-container .doctornotes-card {
     background: var(--bn-glass);
     backdrop-filter: blur(30px);
@@ -309,13 +322,17 @@
 
 .doctornotes-container .col-md-6:focus-within .form-label-custom,
 .doctornotes-container .col-md-12:focus-within .form-label-custom,
-.doctornotes-container .col-12:focus-within .form-label-custom {
+.doctornotes-container .col-12:focus-within .form-label-custom,
+.doctornotes-container .col-md-4:focus-within .form-label-custom,
+.doctornotes-container .col-md-8:focus-within .form-label-custom {
     color: var(--bn-primary);
 }
 
     .doctornotes-container .col-md-6:focus-within .form-label-custom i,
     .doctornotes-container .col-md-12:focus-within .form-label-custom i,
-    .doctornotes-container .col-12:focus-within .form-label-custom i {
+    .doctornotes-container .col-12:focus-within .form-label-custom i,
+    .doctornotes-container .col-md-4:focus-within .form-label-custom i,
+    .doctornotes-container .col-md-8:focus-within .form-label-custom i {
         transform: scale(1.2);
     }
 
@@ -360,9 +377,7 @@
     margin: 2rem 0;
 }
 
-/* ============================================================
-   Buttons
-============================================================ */
+/* Buttons */
 .doctornotes-container .btn-save {
     min-width: 180px;
     border: none;
@@ -435,9 +450,7 @@
         transform: translateY(-2px);
     }
 
-/* ============================================================
-   Doctor Note Form Card
-============================================================ */
+/* Form Card */
 .doctornotes-container .doctor-note-form-card {
     background: linear-gradient(135deg, var(--bn-surface-soft), var(--bn-surface));
     border: 1px solid var(--bn-border);
@@ -470,12 +483,148 @@
         transform: translateY(-2px);
     }
 
-/* ============================================================
-   Doctor Notes Grid & Cards
-============================================================ */
+/* Form Sections */
+.doctornotes-container .dn-form-section {
+    background: var(--bn-surface-soft);
+    border: 1px solid var(--bn-border);
+    border-radius: 14px;
+    padding: 1rem 1.1rem;
+    margin-bottom: 1rem;
+}
+
+.doctornotes-container .dn-form-section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    font-weight: 900;
+    color: var(--bn-text);
+    margin-bottom: 0.9rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 1px dashed var(--bn-border);
+}
+
+    .doctornotes-container .dn-form-section-title i {
+        color: var(--bn-primary);
+        font-size: 0.85rem;
+    }
+
+/* Mood Slider */
+.doctornotes-container .dn-mood-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-height: 50px;
+    padding: 0.5rem 1rem;
+    background: var(--bn-surface);
+    border: 2px solid var(--bn-border);
+    border-radius: 14px;
+}
+
+    .doctornotes-container .dn-mood-wrap .form-range {
+        flex: 1;
+        cursor: pointer;
+        accent-color: var(--bn-primary);
+    }
+
+.doctornotes-container .dn-mood-value {
+    min-width: 55px;
+    text-align: center;
+    font-weight: 900;
+    font-size: 0.82rem;
+    color: var(--bn-primary);
+    background: var(--bn-primary-light);
+    padding: 0.25rem 0.55rem;
+    border-radius: 8px;
+}
+
+/* Checkbox Group */
+.doctornotes-container .dn-checkbox-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    background: var(--bn-surface);
+    border: 2px solid var(--bn-border);
+    border-radius: 14px;
+}
+
+.doctornotes-container .dn-checkbox {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--bn-text-soft);
+    padding: 0.35rem 0.65rem;
+    border-radius: 10px;
+    transition: all var(--bn-transition);
+    user-select: none;
+}
+
+    .doctornotes-container .dn-checkbox:hover {
+        background: var(--bn-surface-soft);
+    }
+
+    .doctornotes-container .dn-checkbox input[type="checkbox"] {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+.doctornotes-container .dn-checkbox-mark {
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
+    border-radius: 6px;
+    border: 2px solid var(--bn-border);
+    background: var(--bn-surface);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--bn-transition);
+    position: relative;
+}
+
+    .doctornotes-container .dn-checkbox-mark::after {
+        content: "✓";
+        color: white;
+        font-weight: 900;
+        font-size: 0.75rem;
+        opacity: 0;
+        transform: scale(0.5);
+        transition: all var(--bn-transition);
+    }
+
+.doctornotes-container .dn-checkbox input:checked ~ .dn-checkbox-mark {
+    background: var(--bn-primary);
+    border-color: var(--bn-primary);
+}
+
+    .doctornotes-container .dn-checkbox input:checked ~ .dn-checkbox-mark::after {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+/* Filter Wrap */
+.doctornotes-container .dn-filter-wrap {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+    .doctornotes-container .dn-filter-wrap .form-control-custom {
+        min-height: 42px;
+        padding: 0.4rem 0.9rem;
+        font-size: 0.82rem;
+        min-width: 180px;
+    }
+
+/* Doctor Notes Grid */
 .doctornotes-container .doctor-notes-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
     gap: 1rem;
 }
 
@@ -489,7 +638,6 @@
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    cursor: default;
 }
 
     .doctornotes-container .doctor-note-card:hover {
@@ -522,6 +670,173 @@
 
     .doctornotes-container .doctor-note-card.doctor-note-priority-urgent::before {
         background: linear-gradient(180deg, #ef4444, #f87171);
+    }
+
+/* Badges Row */
+.doctornotes-container .dn-badges-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-bottom: 0.75rem;
+}
+
+.doctornotes-container .dn-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.22rem 0.6rem;
+    border-radius: 50px;
+    font-size: 0.68rem;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+    /* Note Type */
+    .doctornotes-container .dn-badge.type-progress {
+        background: rgba(8, 145, 178, 0.12);
+        color: #0e7490;
+    }
+
+    .doctornotes-container .dn-badge.type-soap {
+        background: rgba(99, 102, 241, 0.12);
+        color: #4338ca;
+    }
+
+    .doctornotes-container .dn-badge.type-incident {
+        background: rgba(239, 68, 68, 0.12);
+        color: #b91c1c;
+    }
+
+    .doctornotes-container .dn-badge.type-handoff {
+        background: rgba(245, 158, 11, 0.12);
+        color: #b45309;
+    }
+
+    .doctornotes-container .dn-badge.type-consultation {
+        background: rgba(16, 185, 129, 0.12);
+        color: #047857;
+    }
+
+    .doctornotes-container .dn-badge.type-discharge {
+        background: rgba(139, 92, 246, 0.12);
+        color: #6d28d9;
+    }
+
+    .doctornotes-container .dn-badge.type-evaluation {
+        background: rgba(236, 72, 153, 0.12);
+        color: #be185d;
+    }
+
+    .doctornotes-container .dn-badge.type-other {
+        background: var(--bn-surface-soft);
+        color: var(--bn-text-soft);
+    }
+
+    /* Risk */
+    .doctornotes-container .dn-badge.risk-none {
+        background: var(--bn-surface-soft);
+        color: var(--bn-text-muted);
+    }
+
+    .doctornotes-container .dn-badge.risk-low {
+        background: rgba(16, 185, 129, 0.15);
+        color: #047857;
+    }
+
+    .doctornotes-container .dn-badge.risk-medium {
+        background: rgba(245, 158, 11, 0.15);
+        color: #b45309;
+    }
+
+    .doctornotes-container .dn-badge.risk-high {
+        background: rgba(239, 68, 68, 0.15);
+        color: #b91c1c;
+    }
+
+    .doctornotes-container .dn-badge.risk-critical {
+        background: rgba(153, 27, 27, 0.2);
+        color: #7f1d1d;
+        animation: dn-badgePulse 1.5s ease-in-out infinite;
+    }
+
+    /* Visibility */
+    .doctornotes-container .dn-badge.vis-private {
+        background: rgba(100, 116, 139, 0.12);
+        color: #475569;
+    }
+
+    .doctornotes-container .dn-badge.vis-team {
+        background: rgba(99, 102, 241, 0.12);
+        color: #4338ca;
+    }
+
+    .doctornotes-container .dn-badge.vis-patient {
+        background: rgba(16, 185, 129, 0.12);
+        color: #047857;
+    }
+
+/* Mood */
+.doctornotes-container .dn-mood-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.22rem 0.6rem;
+    border-radius: 50px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    background: var(--bn-surface-soft);
+    color: var(--bn-text-soft);
+}
+
+    .doctornotes-container .dn-mood-badge.low {
+        background: rgba(239, 68, 68, 0.1);
+        color: #b91c1c;
+    }
+
+    .doctornotes-container .dn-mood-badge.mid {
+        background: rgba(245, 158, 11, 0.1);
+        color: #b45309;
+    }
+
+    .doctornotes-container .dn-mood-badge.high {
+        background: rgba(16, 185, 129, 0.1);
+        color: #047857;
+    }
+
+/* ICD-10 */
+.doctornotes-container .dn-icd-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.25rem 0.6rem;
+    border-radius: 8px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    background: rgba(99, 102, 241, 0.08);
+    color: #4338ca;
+    font-family: 'Courier New', monospace;
+    margin-bottom: 0.5rem;
+    width: fit-content;
+}
+
+/* Author Row */
+.doctornotes-container .dn-author-row {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--bn-text-muted);
+    margin-bottom: 0.5rem;
+    padding: 0.35rem 0.6rem;
+    background: var(--bn-surface-soft);
+    border-radius: 8px;
+    width: fit-content;
+}
+
+    .doctornotes-container .dn-author-row i {
+        color: var(--bn-primary);
+        font-size: 0.7rem;
     }
 
 .doctornotes-container .doctor-note-card-header {
@@ -564,21 +879,6 @@
     color: #b91c1c;
 }
 
-[data-theme="dark"] .doctornotes-container .doctor-note-priority-normal {
-    background: #312e81;
-    color: #a5b4fc;
-}
-
-[data-theme="dark"] .doctornotes-container .doctor-note-priority-important {
-    background: #78350f;
-    color: #fcd34d;
-}
-
-[data-theme="dark"] .doctornotes-container .doctor-note-priority-urgent {
-    background: #7f1d1d;
-    color: #fca5a5;
-}
-
 .doctornotes-container .doctor-note-category {
     display: inline-flex;
     align-items: center;
@@ -593,11 +893,6 @@
     width: fit-content;
 }
 
-[data-theme="dark"] .doctornotes-container .doctor-note-category {
-    background: #312e81;
-    color: #a5b4fc;
-}
-
 .doctornotes-container .doctor-note-content {
     font-size: 0.85rem;
     color: var(--bn-text-soft);
@@ -608,6 +903,61 @@
     word-wrap: break-word;
 }
 
+/* Symptoms */
+.doctornotes-container .dn-symptoms {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-top: 0.5rem;
+    padding-top: 0.6rem;
+    border-top: 1px dashed var(--bn-border);
+}
+
+.doctornotes-container .dn-symptom-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 50px;
+    font-size: 0.68rem;
+    font-weight: 800;
+    background: rgba(99, 102, 241, 0.1);
+    color: #4338ca;
+}
+
+    .doctornotes-container .dn-symptom-tag.critical {
+        background: rgba(220, 38, 38, 0.12);
+        color: #b91c1c;
+        animation: dn-badgePulse 2s ease-in-out infinite;
+    }
+
+/* Next Plan */
+.doctornotes-container .dn-next-plan {
+    margin-top: 0.6rem;
+    padding: 0.6rem 0.8rem;
+    background: rgba(16, 185, 129, 0.06);
+    border-radius: 10px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #047857;
+    border-right: 3px solid #10b981;
+    line-height: 1.5;
+}
+
+/* Link Badge */
+.doctornotes-container .dn-link-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.25rem 0.6rem;
+    border-radius: 50px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    background: rgba(8, 145, 178, 0.1);
+    color: #0e7490;
+    margin-top: 0.5rem;
+}
+
 .doctornotes-container .doctor-note-footer {
     display: flex;
     align-items: center;
@@ -615,7 +965,7 @@
     gap: 0.75rem;
     padding-top: 0.85rem;
     border-top: 1px solid var(--bn-border);
-    margin-top: auto;
+    margin-top: 0.85rem;
 }
 
 .doctornotes-container .doctor-note-date {
@@ -637,6 +987,12 @@
         padding: 0.3rem 0.6rem;
         font-size: 0.75rem;
         transition: all var(--bn-transition);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1.5px solid;
+        background: transparent;
+        cursor: pointer;
     }
 
         .doctornotes-container .doctor-note-actions .btn:hover {
@@ -663,9 +1019,7 @@
         color: white;
     }
 
-/* ============================================================
-   Empty State
-============================================================ */
+/* Empty State */
 .doctornotes-container .empty-state {
     text-align: center;
     padding: 2.5rem 1rem;
@@ -684,9 +1038,7 @@
         margin: 0;
     }
 
-/* ============================================================
-   Validation
-============================================================ */
+/* Validation */
 .doctornotes-container .form-control-custom {
     transition: border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
 }
@@ -755,9 +1107,129 @@
     margin-inline-start: 0.15rem;
 }
 
-/* ============================================================
-   Confirm Modal
-============================================================ */
+/* Validation Summary */
+.doctornotes-container .bn-validation-summary {
+    display: none;
+    background: var(--bn-danger-light);
+    border: 1.5px solid rgba(239, 68, 68, 0.3);
+    border-radius: 16px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.25rem;
+    animation: dn-slideUpFade 0.35s ease;
+}
+
+    .doctornotes-container .bn-validation-summary.show {
+        display: block;
+    }
+
+.doctornotes-container .bn-validation-summary-header {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-weight: 900;
+    font-size: 0.9rem;
+    color: var(--bn-danger);
+    margin-bottom: 0.6rem;
+}
+
+.doctornotes-container .bn-validation-summary ul {
+    margin: 0;
+    padding-inline-start: 1.5rem;
+    list-style: none;
+}
+
+.doctornotes-container .bn-validation-summary li {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--bn-text-soft);
+    padding: 0.25rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    border-radius: 6px;
+    padding-inline-start: 0.4rem;
+    transition: all var(--bn-transition);
+}
+
+    .doctornotes-container .bn-validation-summary li:hover {
+        background: rgba(239, 68, 68, 0.1);
+        transform: translateX(-3px);
+    }
+
+    .doctornotes-container .bn-validation-summary li::before {
+        content: "•";
+        color: var(--bn-danger);
+        font-weight: 900;
+        font-size: 1.2rem;
+        line-height: 0;
+    }
+
+/* Critical Alert */
+.doctornotes-container .dn-critical-alert {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    background: linear-gradient(135deg, #dc2626, #991b1b);
+    color: #fff;
+    border-radius: 16px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.25rem;
+    box-shadow: 0 8px 24px -8px rgba(220, 38, 38, 0.5);
+    animation: dn-criticalPulse 2s ease-in-out infinite;
+    position: relative;
+}
+
+.doctornotes-container .dn-critical-icon {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+}
+
+.doctornotes-container .dn-critical-body {
+    flex: 1;
+}
+
+.doctornotes-container .dn-critical-title {
+    font-size: 0.95rem;
+    font-weight: 900;
+    margin-bottom: 0.2rem;
+}
+
+.doctornotes-container .dn-critical-message {
+    font-size: 0.82rem;
+    font-weight: 600;
+    opacity: 0.95;
+    line-height: 1.5;
+}
+
+.doctornotes-container .dn-critical-close {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: #fff;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all var(--bn-transition);
+    flex-shrink: 0;
+}
+
+    .doctornotes-container .dn-critical-close:hover {
+        background: rgba(255, 255, 255, 0.35);
+        transform: scale(1.1);
+    }
+
+/* Modal */
 .doctornotes-container ~ .bn-modal-overlay,
 .bn-modal-overlay {
     position: fixed;
@@ -806,14 +1278,9 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--bn-primary-light, #cffafe);
-    color: var(--bn-primary-dark, #0e7490);
-    font-size: 1.15rem;
-}
-
-.bn-modal.bn-modal-danger .bn-modal-header-icon {
     background: var(--bn-danger-light, #fee2e2);
     color: var(--bn-danger, #ef4444);
+    font-size: 1.15rem;
 }
 
 .bn-modal-header-text h3 {
@@ -878,17 +1345,6 @@
         transform: translateY(-2px);
     }
 
-.bn-btn-primary {
-    background: var(--bn-gradient-primary, linear-gradient(135deg, #0891b2, #0e7490));
-    color: #fff;
-    box-shadow: 0 8px 20px -8px rgba(8, 145, 178, 0.55);
-}
-
-    .bn-btn-primary:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 12px 25px -8px rgba(8, 145, 178, 0.65);
-    }
-
 .bn-btn-danger {
     background: var(--bn-gradient-danger, linear-gradient(135deg, #ef4444, #dc2626));
     color: #fff;
@@ -900,14 +1356,151 @@
         box-shadow: 0 12px 25px -8px rgba(239, 68, 68, 0.65);
     }
 
-/* ============================================================
-   Toast — يُدار بالكامل من index.css
-   ⚠️ لا نضع قواعد .toast-container هنا لتجنب التعارض
-============================================================ */
+/* Dark mode */
+[data-theme="dark"] .doctornotes-container .dn-badge.type-progress {
+    background: rgba(34, 211, 238, 0.15);
+    color: #67e8f9;
+}
 
-/* ============================================================
-   Responsive
-============================================================ */
+[data-theme="dark"] .doctornotes-container .dn-badge.type-soap {
+    background: rgba(129, 140, 248, 0.15);
+    color: #a5b4fc;
+}
+
+[data-theme="dark"] .doctornotes-container .dn-badge.type-incident {
+    background: rgba(248, 113, 113, 0.15);
+    color: #fca5a5;
+}
+
+[data-theme="dark"] .doctornotes-container .dn-badge.type-handoff {
+    background: rgba(251, 191, 36, 0.15);
+    color: #fcd34d;
+}
+
+[data-theme="dark"] .doctornotes-container .dn-badge.type-consultation {
+    background: rgba(52, 211, 153, 0.15);
+    color: #6ee7b7;
+}
+
+[data-theme="dark"] .doctornotes-container .dn-badge.type-discharge {
+    background: rgba(167, 139, 250, 0.15);
+    color: #c4b5fd;
+}
+
+[data-theme="dark"] .doctornotes-container .dn-badge.type-evaluation {
+    background: rgba(244, 114, 182, 0.15);
+    color: #f9a8d4;
+}
+
+[data-theme="dark"] .doctornotes-container .dn-badge.risk-none {
+    background: rgba(148, 163, 184, 0.15);
+    color: #cbd5e1;
+}
+
+[data-theme="dark"] .doctornotes-container .dn-badge.risk-low {
+    background: rgba(52, 211, 153, 0.15);
+    color: #6ee7b7;
+}
+
+[data-theme="dark"] .doctornotes-container .dn-badge.risk-medium {
+    background: rgba(251, 191, 36, 0.15);
+    color: #fcd34d;
+}
+
+[data-theme="dark"] .doctornotes-container .dn-badge.risk-high {
+    background: rgba(248, 113, 113, 0.15);
+    color: #fca5a5;
+}
+
+[data-theme="dark"] .doctornotes-container .dn-badge.risk-critical {
+    background: rgba(127, 29, 29, 0.3);
+    color: #fecaca;
+}
+
+[data-theme="dark"] .doctornotes-container .dn-badge.vis-private {
+    background: rgba(148, 163, 184, 0.15);
+    color: #cbd5e1;
+}
+
+[data-theme="dark"] .doctornotes-container .dn-badge.vis-team {
+    background: rgba(129, 140, 248, 0.15);
+    color: #a5b4fc;
+}
+
+[data-theme="dark"] .doctornotes-container .dn-badge.vis-patient {
+    background: rgba(52, 211, 153, 0.15);
+    color: #6ee7b7;
+}
+
+[data-theme="dark"] .doctornotes-container .dn-form-section {
+    background: rgba(15, 23, 42, 0.4);
+}
+
+[data-theme="dark"] .doctornotes-container .dn-mood-badge.low {
+    background: rgba(248, 113, 113, 0.15);
+    color: #fca5a5;
+}
+
+[data-theme="dark"] .doctornotes-container .dn-mood-badge.mid {
+    background: rgba(251, 191, 36, 0.15);
+    color: #fcd34d;
+}
+
+[data-theme="dark"] .doctornotes-container .dn-mood-badge.high {
+    background: rgba(52, 211, 153, 0.15);
+    color: #6ee7b7;
+}
+
+[data-theme="dark"] .doctornotes-container .dn-author-row {
+    background: rgba(15, 23, 42, 0.5);
+}
+
+[data-theme="dark"] .doctornotes-container .dn-icd-badge {
+    background: rgba(129, 140, 248, 0.15);
+    color: #a5b4fc;
+}
+
+[data-theme="dark"] .doctornotes-container .dn-symptom-tag {
+    background: rgba(129, 140, 248, 0.15);
+    color: #a5b4fc;
+}
+
+    [data-theme="dark"] .doctornotes-container .dn-symptom-tag.critical {
+        background: rgba(248, 113, 113, 0.15);
+        color: #fca5a5;
+    }
+
+[data-theme="dark"] .doctornotes-container .dn-next-plan {
+    background: rgba(52, 211, 153, 0.08);
+    color: #6ee7b7;
+}
+
+[data-theme="dark"] .doctornotes-container .dn-link-badge {
+    background: rgba(34, 211, 238, 0.12);
+    color: #67e8f9;
+}
+
+[data-theme="dark"] .doctornotes-container .doctor-note-priority-normal {
+    background: #312e81;
+    color: #a5b4fc;
+}
+
+[data-theme="dark"] .doctornotes-container .doctor-note-priority-important {
+    background: #78350f;
+    color: #fcd34d;
+}
+
+[data-theme="dark"] .doctornotes-container .doctor-note-priority-urgent {
+    background: #7f1d1d;
+    color: #fca5a5;
+}
+
+[data-theme="dark"] .doctornotes-container .doctor-note-category {
+    background: #312e81;
+    color: #a5b4fc;
+}
+
+/* Responsive */
 @media (max-width: 767px) {
     .doctornotes-container .form-card-header {
         align-items: flex-start;
@@ -929,6 +1522,15 @@
     .doctornotes-container .doctor-note-form-card {
         padding: 1.25rem;
     }
+
+    .doctornotes-container .dn-filter-wrap {
+        width: 100%;
+    }
+
+        .doctornotes-container .dn-filter-wrap .form-control-custom {
+            flex: 1;
+            min-width: 140px;
+        }
 }
 
 @media (max-width: 575px) {
@@ -947,6 +1549,10 @@
     .doctornotes-container .bn-field-message {
         font-size: 0.72rem;
     }
+
+    .doctornotes-container .dn-critical-alert {
+        flex-wrap: wrap;
+    }
 }
 
 @media print {
@@ -955,16 +1561,16 @@
     .doctornotes-container .btn-secondary,
     .doctornotes-container .edit-status,
     .doctornotes-container .doctor-note-actions,
+    .doctornotes-container .dn-filter-wrap,
+    .doctornotes-container .dn-critical-alert,
+    .doctornotes-container .bn-field-message,
+    .doctornotes-container .bn-validation-summary,
     .bn-modal-overlay,
     .bn-confetti {
         display: none !important;
     }
 
-    .doctornotes-container .doctornotes-card {
-        box-shadow: none !important;
-        border: 1px solid #ccc !important;
-    }
-
+    .doctornotes-container .doctornotes-card,
     .doctornotes-container .doctor-note-card {
         box-shadow: none !important;
         border: 1px solid #ccc !important;

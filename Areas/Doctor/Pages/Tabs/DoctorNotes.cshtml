@@ -17,7 +17,7 @@
                 </div>
                 <div>
                     <h1>ملاحظات الطبيب المعالج</h1>
-                    <p>توثيق شامل لملاحظات الطبيب المعالج</p>
+                    <p>توثيق طبي وقانوني شامل لملاحظات الطبيب</p>
                 </div>
             </div>
             <div class="edit-status">
@@ -27,6 +27,18 @@
         </div>
 
         <div class="personal-form">
+
+            <!-- ====================== Critical Alert Banner ====================== -->
+            <div class="dn-critical-alert" id="dnCriticalAlert" style="display: none;">
+                <div class="dn-critical-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                <div class="dn-critical-body">
+                    <div class="dn-critical-title">تنبيه حرج</div>
+                    <div class="dn-critical-message" id="dnCriticalMessage">—</div>
+                </div>
+                <button type="button" class="dn-critical-close" id="dnCriticalClose" aria-label="إغلاق">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
 
             <!-- ====================== Form ====================== -->
             <div class="doctor-note-form-card">
@@ -38,68 +50,240 @@
                 <form id="doctorNoteForm" novalidate>
                     <input type="hidden" id="doctorNoteEditIndex" value="-1">
 
-                    <div class="row g-4">
-                        <div class="col-md-6">
-                            <label for="doctorNoteTitle" class="form-label-custom">
-                                <i class="fa-solid fa-heading"></i>
-                                عنوان الملاحظة
-                            </label>
-                            <input type="text" class="form-control form-control-custom" id="doctorNoteTitle" name="doctorNoteTitle" placeholder="مثال: تقييم الحالة بعد الجلسة الثالثة" required>
+                    <!-- Section 1: Basic -->
+                    <div class="dn-form-section">
+                        <div class="dn-form-section-title">
+                            <i class="fa-solid fa-circle-info"></i>
+                            المعلومات الأساسية
                         </div>
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <label for="doctorNoteTitle" class="form-label-custom">
+                                    <i class="fa-solid fa-heading"></i>
+                                    عنوان الملاحظة
+                                </label>
+                                <input type="text" class="form-control form-control-custom" id="doctorNoteTitle" name="doctorNoteTitle" placeholder="مثال: تقييم الحالة بعد الجلسة الثالثة" required>
+                            </div>
 
-                        <div class="col-md-6">
-                            <label for="doctorNoteDate" class="form-label-custom">
-                                <i class="fa-solid fa-calendar-days"></i>
-                                تاريخ الملاحظة
-                            </label>
-                            <input type="date" class="form-control form-control-custom" id="doctorNoteDate" name="doctorNoteDate" required>
+                            <div class="col-md-6">
+                                <label for="doctorNoteDate" class="form-label-custom">
+                                    <i class="fa-solid fa-calendar-days"></i>
+                                    تاريخ الملاحظة
+                                </label>
+                                <input type="date" class="form-control form-control-custom" id="doctorNoteDate" name="doctorNoteDate" required>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="doctorNoteType" class="form-label-custom">
+                                    <i class="fa-solid fa-file-medical"></i>
+                                    نوع الملاحظة
+                                </label>
+                                <select class="form-select form-control-custom" id="doctorNoteType" name="doctorNoteType" required>
+                                    <option value="">اختر نوع الملاحظة</option>
+                                    <option value="Progress">Progress Note - ملاحظة تقدم</option>
+                                    <option value="SOAP">SOAP Note - ملاحظة SOAP</option>
+                                    <option value="Incident">Incident Note - حادث طارئ</option>
+                                    <option value="Handoff">Handoff Note - تسليم لزميل</option>
+                                    <option value="Consultation">Consultation - استشارة</option>
+                                    <option value="Discharge">Discharge - ملخص خروج</option>
+                                    <option value="Evaluation">Psychiatric Evaluation - تقييم نفسي</option>
+                                    <option value="Other">أخرى</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="doctorNoteCategory" class="form-label-custom">
+                                    <i class="fa-solid fa-tags"></i>
+                                    فئة الملاحظة
+                                </label>
+                                <select class="form-select form-control-custom" id="doctorNoteCategory" name="doctorNoteCategory">
+                                    <option value="">اختر الفئة</option>
+                                    <option value="تشخيص">تشخيص</option>
+                                    <option value="خطة علاجية">خطة علاجية</option>
+                                    <option value="تقييم نفسي">تقييم نفسي</option>
+                                    <option value="تعديل دوائي">تعديل دوائي</option>
+                                    <option value="توصيات">توصيات</option>
+                                    <option value="متابعة">متابعة</option>
+                                    <option value="ملاحظة إكلينيكية">ملاحظة إكلينيكية</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="doctorNoteAuthor" class="form-label-custom">
+                                    <i class="fa-solid fa-user-pen"></i>
+                                    كاتب الملاحظة
+                                </label>
+                                <input type="text" class="form-control form-control-custom" id="doctorNoteAuthor" name="doctorNoteAuthor" placeholder="اسم الطبيب / المعالج" required>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="doctorNoteAuthorRole" class="form-label-custom">
+                                    <i class="fa-solid fa-id-badge"></i>
+                                    دور الكاتب
+                                </label>
+                                <select class="form-select form-control-custom" id="doctorNoteAuthorRole" name="doctorNoteAuthorRole" required>
+                                    <option value="">اختر الدور</option>
+                                    <option value="طبيب">طبيب</option>
+                                    <option value="معالج">معالج نفسي</option>
+                                    <option value="ممرض">ممرض</option>
+                                    <option value="إداري">إداري</option>
+                                    <option value="أخرى">أخرى</option>
+                                </select>
+                            </div>
                         </div>
+                    </div>
 
-                        <div class="col-md-6">
-                            <label for="doctorNoteCategory" class="form-label-custom">
-                                <i class="fa-solid fa-tags"></i>
-                                فئة الملاحظة
-                            </label>
-                            <select class="form-select form-control-custom" id="doctorNoteCategory" name="doctorNoteCategory">
-                                <option value="">اختر الفئة</option>
-                                <option value="تشخيص">تشخيص</option>
-                                <option value="خطة علاجية">خطة علاجية</option>
-                                <option value="تقييم نفسي">تقييم نفسي</option>
-                                <option value="تعديل دوائي">تعديل دوائي</option>
-                                <option value="توصيات">توصيات</option>
-                                <option value="متابعة">متابعة</option>
-                                <option value="ملاحظة إكلينيكية">ملاحظة إكلينيكية</option>
-                            </select>
+                    <!-- Section 2: Medical Assessment -->
+                    <div class="dn-form-section">
+                        <div class="dn-form-section-title">
+                            <i class="fa-solid fa-stethoscope"></i>
+                            التقييم الطبي
                         </div>
+                        <div class="row g-4">
+                            <div class="col-md-4">
+                                <label for="doctorNotePriority" class="form-label-custom">
+                                    <i class="fa-solid fa-flag"></i>
+                                    أهمية الملاحظة
+                                </label>
+                                <select class="form-select form-control-custom" id="doctorNotePriority" name="doctorNotePriority">
+                                    <option value="عادية">عادية</option>
+                                    <option value="مهمة">مهمة</option>
+                                    <option value="عاجلة">عاجلة</option>
+                                </select>
+                            </div>
 
-                        <div class="col-md-6">
-                            <label for="doctorNotePriority" class="form-label-custom">
-                                <i class="fa-solid fa-flag"></i>
-                                أهمية الملاحظة
-                            </label>
-                            <select class="form-select form-control-custom" id="doctorNotePriority" name="doctorNotePriority">
-                                <option value="عادية">عادية</option>
-                                <option value="مهمة">مهمة</option>
-                                <option value="عاجلة">عاجلة</option>
-                            </select>
+                            <div class="col-md-4">
+                                <label for="doctorNoteRiskLevel" class="form-label-custom">
+                                    <i class="fa-solid fa-triangle-exclamation"></i>
+                                    مستوى الخطر
+                                </label>
+                                <select class="form-select form-control-custom" id="doctorNoteRiskLevel" name="doctorNoteRiskLevel">
+                                    <option value="">لم يتم التقييم</option>
+                                    <option value="لا">لا يوجد</option>
+                                    <option value="منخفض">منخفض</option>
+                                    <option value="متوسط">متوسط</option>
+                                    <option value="عالي">عالي</option>
+                                    <option value="حرج">حرج</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label for="doctorNoteVisibility" class="form-label-custom">
+                                    <i class="fa-solid fa-lock"></i>
+                                    مستوى السرية
+                                </label>
+                                <select class="form-select form-control-custom" id="doctorNoteVisibility" name="doctorNoteVisibility" required>
+                                    <option value="خاص">خاص (للطبيب فقط)</option>
+                                    <option value="للفريق">للفريق الطبي</option>
+                                    <option value="للمريض">قابل للمشاركة مع المريض</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="doctorNoteMoodAtNote" class="form-label-custom">
+                                    <i class="fa-solid fa-face-smile"></i>
+                                    المزاج عند الملاحظة
+                                </label>
+                                <div class="dn-mood-wrap">
+                                    <input type="range" class="form-range" id="doctorNoteMoodAtNote" name="doctorNoteMoodAtNote" min="0" max="10" value="5" step="1">
+                                    <span class="dn-mood-value" id="doctorNoteMoodValue">5 / 10</span>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="doctorNoteIcd10" class="form-label-custom">
+                                    <i class="fa-solid fa-barcode"></i>
+                                    كود ICD-10 (اختياري)
+                                </label>
+                                <input type="text" class="form-control form-control-custom" id="doctorNoteIcd10" name="doctorNoteIcd10" placeholder="مثال: F41.1 - اضطراب القلق العام" maxlength="100">
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label-custom">
+                                    <i class="fa-solid fa-list-check"></i>
+                                    الأعراض المُلاحظة
+                                </label>
+                                <div class="dn-checkbox-group">
+                                    <label class="dn-checkbox"><input type="checkbox" value="قلق" class="dn-symptom"><span class="dn-checkbox-mark"></span><span>قلق</span></label>
+                                    <label class="dn-checkbox"><input type="checkbox" value="حزن / اكتئاب" class="dn-symptom"><span class="dn-checkbox-mark"></span><span>حزن / اكتئاب</span></label>
+                                    <label class="dn-checkbox"><input type="checkbox" value="هياج / غضب" class="dn-symptom"><span class="dn-checkbox-mark"></span><span>هياج / غضب</span></label>
+                                    <label class="dn-checkbox"><input type="checkbox" value="ذهان" class="dn-symptom"><span class="dn-checkbox-mark"></span><span>ذهان</span></label>
+                                    <label class="dn-checkbox"><input type="checkbox" value="أفكار انتحارية" class="dn-symptom"><span class="dn-checkbox-mark"></span><span>أفكار انتحارية</span></label>
+                                    <label class="dn-checkbox"><input type="checkbox" value="إيذاء ذاتي" class="dn-symptom"><span class="dn-checkbox-mark"></span><span>إيذاء ذاتي</span></label>
+                                    <label class="dn-checkbox"><input type="checkbox" value="أرق" class="dn-symptom"><span class="dn-checkbox-mark"></span><span>أرق</span></label>
+                                    <label class="dn-checkbox"><input type="checkbox" value="فقدان شهية" class="dn-symptom"><span class="dn-checkbox-mark"></span><span>فقدان شهية</span></label>
+                                    <label class="dn-checkbox"><input type="checkbox" value="عزلة اجتماعية" class="dn-symptom"><span class="dn-checkbox-mark"></span><span>عزلة اجتماعية</span></label>
+                                    <label class="dn-checkbox"><input type="checkbox" value="ضعف تركيز" class="dn-symptom"><span class="dn-checkbox-mark"></span><span>ضعف تركيز</span></label>
+                                </div>
+                            </div>
                         </div>
+                    </div>
 
-                        <div class="col-12">
-                            <label for="doctorNoteContent" class="form-label-custom">
-                                <i class="fa-solid fa-align-right"></i>
-                                محتوى الملاحظة الطبية
-                            </label>
-                            <textarea class="form-control form-control-custom" id="doctorNoteContent" name="doctorNoteContent" placeholder="اكتب تفاصيل الملاحظة الطبية كاملة..." style="min-height: 140px;" required></textarea>
+                    <!-- Section 3: Context -->
+                    <div class="dn-form-section">
+                        <div class="dn-form-section-title">
+                            <i class="fa-solid fa-link"></i>
+                            الربط السياقي
+                        </div>
+                        <div class="row g-4">
+                            <div class="col-md-4">
+                                <label for="doctorNoteLinkType" class="form-label-custom">
+                                    <i class="fa-solid fa-diagram-project"></i>
+                                    نوع الربط
+                                </label>
+                                <select class="form-select form-control-custom" id="doctorNoteLinkType" name="doctorNoteLinkType">
+                                    <option value="">بدون ربط</option>
+                                    <option value="جلسة">جلسة استماع</option>
+                                    <option value="زيارة">زيارة</option>
+                                    <option value="خطة">خطة علاجية</option>
+                                    <option value="دواء">دواء</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-8">
+                                <label for="doctorNoteLinkItem" class="form-label-custom">
+                                    <i class="fa-solid fa-list"></i>
+                                    ربط بعنصر محدد
+                                </label>
+                                <select class="form-select form-control-custom" id="doctorNoteLinkItem" name="doctorNoteLinkItem" disabled>
+                                    <option value="">اختر نوع الربط أولاً</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 4: Content -->
+                    <div class="dn-form-section">
+                        <div class="dn-form-section-title">
+                            <i class="fa-solid fa-pen"></i>
+                            المحتوى
+                        </div>
+                        <div class="row g-4">
+                            <div class="col-12">
+                                <label for="doctorNoteContent" class="form-label-custom">
+                                    <i class="fa-solid fa-align-right"></i>
+                                    محتوى الملاحظة الطبية
+                                </label>
+                                <textarea class="form-control form-control-custom" id="doctorNoteContent" name="doctorNoteContent" placeholder="اكتب تفاصيل الملاحظة الطبية كاملة..." style="min-height: 140px;" required></textarea>
+                            </div>
+
+                            <div class="col-12">
+                                <label for="doctorNoteNextPlan" class="form-label-custom">
+                                    <i class="fa-solid fa-forward"></i>
+                                    الخطة التالية
+                                </label>
+                                <textarea class="form-control form-control-custom" id="doctorNoteNextPlan" name="doctorNoteNextPlan" placeholder="ما الذي سيتم فعله بعد هذه الملاحظة؟" style="min-height: 80px;"></textarea>
+                            </div>
                         </div>
                     </div>
 
                     <div class="d-flex gap-2 justify-content-end mt-4 flex-wrap">
-                        <button type="button" id="doctorNoteCancelBtn" class="btn btn-secondary px-4 py-2 d-none" style="border-radius: 14px; font-weight: 800;" onclick="resetDoctorNoteForm()">
-                            <i class="fa-solid fa-xmark ms-1"></i>
+                        <button type="button" id="doctorNoteCancelBtn" class="btn-secondary d-none" onclick="resetDoctorNoteForm()">
+                            <i class="fa-solid fa-xmark"></i>
                             إلغاء التعديل
                         </button>
                         <button type="submit" id="doctorNoteSubmitBtn" class="btn-save">
-                            <i class="fa-solid fa-plus ms-1"></i>
+                            <i class="fa-solid fa-plus"></i>
                             إضافة الملاحظة الطبية
                         </button>
                     </div>
@@ -108,17 +292,40 @@
 
             <hr class="form-divider">
 
-            <!-- ====================== Notes Grid ====================== -->
-            <div class="form-section-title mb-3">
-                <i class="fa-solid fa-list-check"></i>
-                قائمة الملاحظات الطبية المسجلة
+            <!-- ====================== Filters & Grid ====================== -->
+            <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                <div class="form-section-title mb-0">
+                    <i class="fa-solid fa-list-check"></i>
+                    قائمة الملاحظات الطبية المسجلة
+                </div>
+                <div class="dn-filter-wrap">
+                    <select id="dnFilterType" class="form-select form-control-custom">
+                        <option value="">كل الأنواع</option>
+                        <option value="Progress">Progress Note</option>
+                        <option value="SOAP">SOAP Note</option>
+                        <option value="Incident">Incident Note</option>
+                        <option value="Handoff">Handoff Note</option>
+                        <option value="Consultation">Consultation</option>
+                        <option value="Discharge">Discharge</option>
+                        <option value="Evaluation">Evaluation</option>
+                        <option value="Other">أخرى</option>
+                    </select>
+                    <select id="dnFilterRisk" class="form-select form-control-custom">
+                        <option value="">كل مستويات الخطر</option>
+                        <option value="لا">لا يوجد</option>
+                        <option value="منخفض">منخفض</option>
+                        <option value="متوسط">متوسط</option>
+                        <option value="عالي">عالي</option>
+                        <option value="حرج">حرج</option>
+                    </select>
+                </div>
             </div>
 
             <div class="doctor-notes-grid" id="doctorNotesGrid"></div>
 
-            <div id="doctorNotesEmptyState" class="text-center text-muted py-5 d-none">
-                <i class="fa-solid fa-folder-open fa-2x mb-3 text-secondary"></i>
-                <p class="fw-bold mb-0">لا توجد ملاحظات طبية مسجلة لهذا المريض حتى الآن.</p>
+            <div id="doctorNotesEmptyState" class="empty-state" style="display: none;">
+                <i class="fa-solid fa-folder-open"></i>
+                <p>لا توجد ملاحظات طبية مسجلة لهذا المريض حتى الآن.</p>
             </div>
 
         </div>
@@ -127,11 +334,9 @@
 
 </div>
 
-<!-- ============================================================
-     Confirm Modal
-============================================================ -->
-<div class="bn-modal-overlay" id="bnConfirmModal" role="dialog" aria-modal="true" aria-labelledby="bnConfirmModalTitle">
-    <div class="bn-modal bn-modal-danger">
+<!-- Confirm Delete Modal -->
+<div class="bn-modal-overlay" id="bnConfirmModal" role="dialog" aria-modal="true">
+    <div class="bn-modal">
         <div class="bn-modal-header">
             <div class="bn-modal-header-icon">
                 <i class="fa-solid fa-triangle-exclamation"></i>

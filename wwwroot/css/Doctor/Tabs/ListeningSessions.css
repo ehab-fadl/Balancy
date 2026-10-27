@@ -2,7 +2,6 @@
    Listening Sessions Tab — Styles
 ============================================================ */
 
-/* -------- Theme Variables (Cyan theme) -------- */
 .listening-sessions-container {
     --bn-primary: #0891b2;
     --bn-primary-dark: #0e7490;
@@ -72,9 +71,7 @@
     color-scheme: dark;
 }
 
-/* ============================================================
-   Animations
-============================================================ */
+/* Animations */
 @keyframes ls-slideUpFade {
     from {
         opacity: 0;
@@ -179,10 +176,18 @@
     }
 }
 
+@keyframes ls-riskPulse {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(153, 27, 27, 0.5);
+    }
+
+    50% {
+        box-shadow: 0 0 0 8px rgba(153, 27, 27, 0);
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
-    .listening-sessions-container *,
-    .listening-sessions-container *::before,
-    .listening-sessions-container *::after {
+    .listening-sessions-container *, .listening-sessions-container *::before, .listening-sessions-container *::after {
         animation-duration: 0.01ms !important;
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
@@ -190,9 +195,7 @@
     }
 }
 
-/* ============================================================
-   Card (Base)
-============================================================ */
+/* Card */
 .listening-sessions-container .listening-sessions-card {
     background: var(--bn-glass);
     backdrop-filter: blur(30px);
@@ -278,9 +281,7 @@
     background: rgba(34, 211, 238, 0.1);
 }
 
-/* ============================================================
-   Form
-============================================================ */
+/* Form */
 .listening-sessions-container .personal-form {
     padding: 1.75rem;
 }
@@ -401,9 +402,7 @@
     margin: 2rem 0;
 }
 
-/* ============================================================
-   Buttons
-============================================================ */
+/* Buttons */
 .listening-sessions-container .btn-save {
     min-width: 180px;
     border: none;
@@ -476,9 +475,7 @@
         transform: translateY(-2px);
     }
 
-/* ============================================================
-   Table
-============================================================ */
+/* Table */
 .listening-sessions-container .session-table-wrapper {
     overflow-x: auto;
 }
@@ -584,6 +581,11 @@
     color: #b45309;
 }
 
+.listening-sessions-container .badge-status-noshow {
+    background: rgba(148, 163, 184, 0.15);
+    color: #475569;
+}
+
 .listening-sessions-container .badge-type-default {
     background: #e0e7ff;
     color: #4338ca;
@@ -609,12 +611,17 @@
     color: #fcd34d;
 }
 
+[data-theme="dark"] .listening-sessions-container .badge-status-noshow {
+    background: rgba(148, 163, 184, 0.15);
+    color: #cbd5e1;
+}
+
 [data-theme="dark"] .listening-sessions-container .badge-type-default {
     background: #312e81;
     color: #a5b4fc;
 }
 
-/* Action Buttons */
+/* Action buttons */
 .listening-sessions-container .action-btns {
     display: flex;
     gap: 0.35rem;
@@ -656,9 +663,7 @@
             transform: translateY(-2px);
         }
 
-/* ============================================================
-   Empty State
-============================================================ */
+/* Empty state */
 .listening-sessions-container .empty-state {
     text-align: center;
     padding: 2.5rem 1rem;
@@ -677,9 +682,7 @@
         margin: 0;
     }
 
-/* ============================================================
-   Validation
-============================================================ */
+/* Validation */
 .listening-sessions-container .form-control-custom {
     transition: border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
 }
@@ -702,6 +705,15 @@
         background-position: left 0.9rem center;
         background-size: 1.1rem;
         animation: ls-invalidShake 0.4s ease;
+    }
+
+    .listening-sessions-container .form-control-custom.is-warning {
+        border-color: #f59e0b !important;
+        padding-left: 2.75rem;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23f59e0b'%3E%3Cpath d='M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: left 0.9rem center;
+        background-size: 1.1rem;
     }
 
 .listening-sessions-container .bn-field-message {
@@ -733,7 +745,7 @@
     }
 
     .listening-sessions-container .bn-field-message.warning {
-        color: var(--bn-warning);
+        color: #b45309;
     }
 
     .listening-sessions-container .bn-field-message i {
@@ -748,9 +760,6 @@
     margin-inline-start: 0.15rem;
 }
 
-/* ============================================================
-   ✅ Validation Summary (لوح الأخطاء) — جديد
-============================================================ */
 .listening-sessions-container .bn-validation-summary {
     display: none;
     background: var(--bn-danger-light);
@@ -799,11 +808,6 @@
     .listening-sessions-container .bn-summary-close:hover {
         background: rgba(239, 68, 68, 0.15);
         transform: scale(1.1);
-    }
-
-    .listening-sessions-container .bn-summary-close:focus-visible {
-        outline: 2px solid var(--bn-danger);
-        outline-offset: 2px;
     }
 
 .listening-sessions-container .bn-validation-summary ul {
@@ -856,9 +860,360 @@
         background: rgba(248, 113, 113, 0.15);
     }
 
-/* ============================================================
-   Confirm Modal
-============================================================ */
+/* Stats Summary */
+.listening-sessions-container .ls-stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 0.85rem;
+    margin-bottom: 1.5rem;
+}
+
+.listening-sessions-container .ls-stat-card {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: var(--bn-surface);
+    border: 1px solid var(--bn-border);
+    border-radius: 16px;
+    padding: 0.9rem 1rem;
+    transition: all var(--bn-transition);
+}
+
+    .listening-sessions-container .ls-stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--bn-shadow-md);
+    }
+
+.listening-sessions-container .ls-stat-icon {
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+}
+
+.listening-sessions-container .ls-stat-icon-primary {
+    background: rgba(8, 145, 178, 0.1);
+    color: #0891b2;
+}
+
+.listening-sessions-container .ls-stat-icon-success {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+}
+
+.listening-sessions-container .ls-stat-icon-info {
+    background: rgba(99, 102, 241, 0.1);
+    color: #6366f1;
+}
+
+.listening-sessions-container .ls-stat-icon-warning {
+    background: rgba(245, 158, 11, 0.1);
+    color: #f59e0b;
+}
+
+.listening-sessions-container .ls-stat-value {
+    font-size: 1.15rem;
+    font-weight: 900;
+    color: var(--bn-text);
+    line-height: 1.2;
+}
+
+.listening-sessions-container .ls-stat-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--bn-text-muted);
+    margin-top: 0.15rem;
+}
+
+/* Form Sections */
+.listening-sessions-container .ls-form-section {
+    background: var(--bn-surface-soft);
+    border: 1px solid var(--bn-border);
+    border-radius: 14px;
+    padding: 1rem 1.1rem;
+    margin-bottom: 1rem;
+}
+
+.listening-sessions-container .ls-form-section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    font-weight: 900;
+    color: var(--bn-text);
+    margin-bottom: 0.9rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 1px dashed var(--bn-border);
+}
+
+    .listening-sessions-container .ls-form-section-title i {
+        color: var(--bn-primary);
+        font-size: 0.85rem;
+    }
+
+/* Mood Slider */
+.listening-sessions-container .ls-mood-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-height: 50px;
+    padding: 0.5rem 1rem;
+    background: var(--bn-surface);
+    border: 2px solid var(--bn-border);
+    border-radius: 14px;
+}
+
+    .listening-sessions-container .ls-mood-wrap .form-range {
+        flex: 1;
+        cursor: pointer;
+        accent-color: var(--bn-primary);
+    }
+
+.listening-sessions-container .ls-mood-value {
+    min-width: 65px;
+    text-align: center;
+    font-weight: 900;
+    font-size: 0.82rem;
+    padding: 0.25rem 0.55rem;
+    border-radius: 8px;
+}
+
+.listening-sessions-container .ls-mood-before {
+    color: #dc2626;
+    background: rgba(220, 38, 38, 0.1);
+}
+
+.listening-sessions-container .ls-mood-after {
+    color: #10b981;
+    background: rgba(16, 185, 129, 0.1);
+}
+
+.listening-sessions-container .ls-mood-change {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1rem;
+    border-radius: 12px;
+    font-weight: 800;
+    font-size: 0.85rem;
+    background: var(--bn-surface-soft);
+    color: var(--bn-text-soft);
+    transition: all var(--bn-transition);
+}
+
+    .listening-sessions-container .ls-mood-change.improved {
+        background: rgba(16, 185, 129, 0.1);
+        color: #047857;
+    }
+
+    .listening-sessions-container .ls-mood-change.declined {
+        background: rgba(239, 68, 68, 0.1);
+        color: #b91c1c;
+    }
+
+/* Checkbox Group */
+.listening-sessions-container .ls-checkbox-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    min-height: 50px;
+    align-items: center;
+    padding: 0.5rem;
+    background: var(--bn-surface);
+    border: 2px solid var(--bn-border);
+    border-radius: 14px;
+}
+
+.listening-sessions-container .ls-checkbox {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--bn-text-soft);
+    padding: 0.35rem 0.65rem;
+    border-radius: 10px;
+    transition: all var(--bn-transition);
+    user-select: none;
+}
+
+    .listening-sessions-container .ls-checkbox:hover {
+        background: var(--bn-surface-soft);
+    }
+
+    .listening-sessions-container .ls-checkbox input[type="checkbox"] {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+.listening-sessions-container .ls-checkbox-mark {
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
+    border-radius: 6px;
+    border: 2px solid var(--bn-border);
+    background: var(--bn-surface);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--bn-transition);
+    position: relative;
+}
+
+    .listening-sessions-container .ls-checkbox-mark::after {
+        content: "✓";
+        color: white;
+        font-weight: 900;
+        font-size: 0.75rem;
+        opacity: 0;
+        transform: scale(0.5);
+        transition: all var(--bn-transition);
+    }
+
+.listening-sessions-container .ls-checkbox input:checked ~ .ls-checkbox-mark {
+    background: var(--bn-primary);
+    border-color: var(--bn-primary);
+}
+
+    .listening-sessions-container .ls-checkbox input:checked ~ .ls-checkbox-mark::after {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+/* Mood Cell in Table */
+.listening-sessions-container .ls-mood-cell {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.78rem;
+    font-weight: 800;
+}
+
+    .listening-sessions-container .ls-mood-cell .before {
+        color: #dc2626;
+    }
+
+    .listening-sessions-container .ls-mood-cell .arrow {
+        color: var(--bn-text-muted);
+        font-size: 0.7rem;
+    }
+
+    .listening-sessions-container .ls-mood-cell .after {
+        color: #10b981;
+    }
+
+    .listening-sessions-container .ls-mood-cell .change-badge {
+        margin-inline-start: auto;
+        padding: 0.15rem 0.45rem;
+        border-radius: 50px;
+        font-size: 0.68rem;
+        font-weight: 900;
+    }
+
+        .listening-sessions-container .ls-mood-cell .change-badge.positive {
+            background: rgba(16, 185, 129, 0.15);
+            color: #047857;
+        }
+
+        .listening-sessions-container .ls-mood-cell .change-badge.negative {
+            background: rgba(239, 68, 68, 0.15);
+            color: #b91c1c;
+        }
+
+        .listening-sessions-container .ls-mood-cell .change-badge.neutral {
+            background: rgba(148, 163, 184, 0.15);
+            color: #475569;
+        }
+
+/* Risk Badges */
+.listening-sessions-container .ls-risk-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.25rem 0.6rem;
+    border-radius: 50px;
+    font-size: 0.7rem;
+    font-weight: 900;
+    white-space: nowrap;
+}
+
+    .listening-sessions-container .ls-risk-badge.risk-low {
+        background: rgba(16, 185, 129, 0.15);
+        color: #047857;
+    }
+
+    .listening-sessions-container .ls-risk-badge.risk-medium {
+        background: rgba(245, 158, 11, 0.15);
+        color: #b45309;
+    }
+
+    .listening-sessions-container .ls-risk-badge.risk-high {
+        background: rgba(239, 68, 68, 0.15);
+        color: #b91c1c;
+    }
+
+    .listening-sessions-container .ls-risk-badge.risk-critical {
+        background: rgba(153, 27, 27, 0.2);
+        color: #7f1d1d;
+        animation: ls-riskPulse 2s ease-in-out infinite;
+    }
+
+    .listening-sessions-container .ls-risk-badge.risk-none {
+        background: var(--bn-surface-soft);
+        color: var(--bn-text-muted);
+    }
+
+[data-theme="dark"] .listening-sessions-container .ls-mood-before {
+    background: rgba(248, 113, 113, 0.15);
+    color: #fca5a5;
+}
+
+[data-theme="dark"] .listening-sessions-container .ls-mood-after {
+    background: rgba(52, 211, 153, 0.15);
+    color: #6ee7b7;
+}
+
+[data-theme="dark"] .listening-sessions-container .ls-mood-change.improved {
+    background: rgba(52, 211, 153, 0.1);
+    color: #6ee7b7;
+}
+
+[data-theme="dark"] .listening-sessions-container .ls-mood-change.declined {
+    background: rgba(248, 113, 113, 0.1);
+    color: #fca5a5;
+}
+
+[data-theme="dark"] .listening-sessions-container .ls-risk-badge.risk-low {
+    background: rgba(52, 211, 153, 0.15);
+    color: #6ee7b7;
+}
+
+[data-theme="dark"] .listening-sessions-container .ls-risk-badge.risk-medium {
+    background: rgba(251, 191, 36, 0.15);
+    color: #fcd34d;
+}
+
+[data-theme="dark"] .listening-sessions-container .ls-risk-badge.risk-high {
+    background: rgba(248, 113, 113, 0.15);
+    color: #fca5a5;
+}
+
+[data-theme="dark"] .listening-sessions-container .ls-risk-badge.risk-critical {
+    background: rgba(127, 29, 29, 0.3);
+    color: #fecaca;
+}
+
+[data-theme="dark"] .listening-sessions-container .ls-form-section {
+    background: rgba(15, 23, 42, 0.4);
+}
+
+/* Modal */
 .listening-sessions-container ~ .bn-modal-overlay,
 .bn-modal-overlay {
     position: fixed;
@@ -985,13 +1340,7 @@
         box-shadow: 0 12px 25px -8px rgba(239, 68, 68, 0.65);
     }
 
-/* ============================================================
-   Toast — يُدار بالكامل من index.css
-============================================================ */
-
-/* ============================================================
-   Responsive
-============================================================ */
+/* Responsive */
 @media (max-width: 767px) {
     .listening-sessions-container .form-card-header {
         align-items: flex-start;
@@ -1005,6 +1354,10 @@
 
     .listening-sessions-container .session-form-card {
         padding: 1.15rem;
+    }
+
+    .listening-sessions-container .ls-stats-row {
+        grid-template-columns: repeat(2, 1fr);
     }
 
     .listening-sessions-container .table-mobile-cards thead {
@@ -1080,6 +1433,10 @@
     .listening-sessions-container .session-form-card {
         padding: 1rem;
     }
+
+    .listening-sessions-container .ls-stats-row {
+        grid-template-columns: 1fr;
+    }
 }
 
 @media print {
@@ -1087,9 +1444,9 @@
     .listening-sessions-container .btn-secondary,
     .listening-sessions-container .action-btns,
     .listening-sessions-container .session-form-card,
+    .listening-sessions-container .ls-stats-row,
     .listening-sessions-container .bn-validation-summary,
-    .bn-modal-overlay,
-    .bn-confetti {
+    .bn-modal-overlay, .bn-confetti {
         display: none !important;
     }
 

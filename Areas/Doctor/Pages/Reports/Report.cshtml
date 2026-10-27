@@ -2,13 +2,8 @@
 @model Balancy.Areas.Doctor.Pages.Reports.ReportModel
 @{
     ViewData["Title"] = "مدير التقارير";
-
 }
- 
 
-<!-- ============================================================
-     Body
-============================================================ -->
 <main class="app-body">
     <div class="container">
 
@@ -17,11 +12,11 @@
             <div class="welcome-content">
                 <div class="welcome-eyebrow">
                     <i class="fa-solid fa-wand-magic-sparkles"></i>
-                    تقارير ذكية
+                    تقارير نفسية ذكية
                 </div>
                 <h1 class="welcome-title">مرحباً بك في مدير التقارير</h1>
                 <p class="welcome-desc">
-                    أنشئ تقارير طبية احترافية بنقرة واحدة — تقارير شاملة، تقييمات نفسية، أدوية، مؤشرات حيوية، وزيارات. جميع التقارير قابلة للتحميل بصيغة PDF و HTML ومحفوظة باسم المريض.
+                    أنشئ تقارير نفسية احترافية بنقرة واحدة، مع **15 وثيقة قانونية وإدارية** كاملة. كل حقل في الوثائق القانونية يُدخله الطبيب يدوياً ويُحفظ في السجل الطبي للمريض.
                 </p>
             </div>
             <div class="welcome-badge">
@@ -53,10 +48,10 @@
                 </div>
             </div>
             <div class="stat-card">
-                <div class="stat-card-icon i-4"><i class="fa-solid fa-users"></i></div>
+                <div class="stat-card-icon i-4"><i class="fa-solid fa-scale-balanced"></i></div>
                 <div class="stat-card-body">
-                    <span class="stat-card-value" id="stPatients">0</span>
-                    <span class="stat-card-label">عدد المرضى</span>
+                    <span class="stat-card-value" id="stLegal">0</span>
+                    <span class="stat-card-label">وثائق قانونية</span>
                 </div>
             </div>
         </section>
@@ -70,6 +65,17 @@
                     <p>اختر قالباً لإنشاء تقرير جديد</p>
                 </div>
             </div>
+        </div>
+
+        <div class="tpl-tabs" id="tplTabs">
+            <button class="tpl-tab is-active" data-tpl-group="clinical">
+                <i class="fa-solid fa-stethoscope"></i>
+                <span>تقارير سريرية</span>
+            </button>
+            <button class="tpl-tab" data-tpl-group="legal">
+                <i class="fa-solid fa-scale-balanced"></i>
+                <span>وثائق قانونية وإدارية (15)</span>
+            </button>
         </div>
 
         <div class="templates-grid" id="templatesGrid"></div>
@@ -127,20 +133,10 @@
                 <span>نفسية</span>
                 <span class="tab-count" id="tcPsych">0</span>
             </button>
-            <button class="tab-btn" data-filter="meds">
-                <i class="fa-solid fa-prescription"></i>
-                <span>أدوية</span>
-                <span class="tab-count" id="tcMeds">0</span>
-            </button>
-            <button class="tab-btn" data-filter="vitals">
-                <i class="fa-solid fa-heart-pulse"></i>
-                <span>حيوية</span>
-                <span class="tab-count" id="tcVitals">0</span>
-            </button>
-            <button class="tab-btn" data-filter="visits">
-                <i class="fa-solid fa-calendar-check"></i>
-                <span>زيارات</span>
-                <span class="tab-count" id="tcVisits">0</span>
+            <button class="tab-btn" data-filter="legal">
+                <i class="fa-solid fa-scale-balanced"></i>
+                <span>قانونية (15)</span>
+                <span class="tab-count" id="tcLegal">0</span>
             </button>
             <button class="tab-btn" data-filter="favorite">
                 <i class="fa-solid fa-star"></i>
@@ -168,80 +164,110 @@
 </div>
 
 <!-- ============================================================
-     Wizard Modal
+     Wizard Modal — Dynamic Legal Report Form
 ============================================================ -->
 <div class="modal-overlay" id="wizardModal" role="dialog" aria-modal="true">
     <div class="modal modal-lg">
         <div class="modal-head">
             <div class="modal-head-icon"><i class="fa-solid fa-file-circle-plus"></i></div>
             <div class="modal-head-text">
-                <h3>توليد تقرير جديد</h3>
-                <p>اتبع الخطوات لإنشاء تقريرك</p>
+                <h3 id="wizModalTitle">توليد تقرير جديد</h3>
+                <p id="wizModalSubtitle">اتبع الخطوات لإنشاء تقريرك</p>
             </div>
             <button type="button" class="modal-close" id="wizClose"><i class="fa-solid fa-xmark"></i></button>
         </div>
 
         <div class="modal-body">
-            <div class="steps">
+            <!-- Steps Indicator -->
+            <div class="steps" id="wizSteps">
                 <div class="step is-active" data-step="1">
                     <div class="step-circle">1</div>
-                    <span class="step-label">نوع التقرير</span>
+                    <span class="step-label">النوع والمريض</span>
                 </div>
                 <div class="step" data-step="2">
                     <div class="step-circle">2</div>
-                    <span class="step-label">الأقسام</span>
+                    <span class="step-label">بيانات التقرير</span>
                 </div>
                 <div class="step" data-step="3">
                     <div class="step-circle">3</div>
-                    <span class="step-label">المعاينة</span>
+                    <span class="step-label">المعاينة والحفظ</span>
                 </div>
             </div>
 
+            <!-- Step 1: Type & Patient -->
             <div class="step-panel is-active" data-panel="1">
                 <div class="field">
                     <label class="field-label"><i class="fa-solid fa-user"></i> اسم المريض <span style="color: var(--c-danger);">*</span></label>
-                    <input type="text" class="field-input field-patient-highlight" id="wizPatient" placeholder="اكتب اسم المريض كاملاً...">
+                    <input type="text" class="field-input field-patient-highlight" id="wizPatient" placeholder="اكتب اسم المريض كاملاً..." required>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="field">
+                            <label class="field-label"><i class="fa-solid fa-calendar"></i> تاريخ الميلاد</label>
+                            <input type="date" class="field-input" id="wizPatientDob">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="field">
+                            <label class="field-label"><i class="fa-solid fa-venus-mars"></i> الجنس</label>
+                            <select class="field-select" id="wizPatientGender">
+                                <option value="">— اختر —</option>
+                                <option value="male">ذكر</option>
+                                <option value="female">أنثى</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="field">
-                    <label class="field-label"><i class="fa-solid fa-tag"></i> نوع التقرير</label>
-                    <select class="field-select" id="wizType">
-                        <option value="medical">تقرير طبي شامل</option>
-                        <option value="psych">تقرير تقييم نفسي</option>
-                        <option value="meds">تقرير الأدوية والوصفات</option>
-                        <option value="vitals">تقرير المؤشرات الحيوية</option>
-                        <option value="visits">تقرير الزيارات والمواعيد</option>
-                        <option value="custom">تقرير مخصص</option>
+                    <label class="field-label"><i class="fa-solid fa-tag"></i> نوع الوثيقة <span style="color: var(--c-danger);">*</span></label>
+                    <select class="field-select" id="wizType" required>
+                        <optgroup label="التقارير السريرية">
+                            <option value="medical">تقرير طبي شامل</option>
+                            <option value="psych">تقرير تقييم نفسي</option>
+                            <option value="meds">تقرير الأدوية والوصفات</option>
+                            <option value="vitals">تقرير المؤشرات الحيوية</option>
+                            <option value="visits">تقرير الزيارات والمواعيد</option>
+                            <option value="emergency">تقرير طوارئ (حرج فقط)</option>
+                        </optgroup>
+                        <optgroup label="الوثائق القانونية والإدارية (15)">
+                            <option value="consent">موافقة مستنيرة (Informed Consent)</option>
+                            <option value="legalReport">تقرير قانوني / قضائي (Forensic Report)</option>
+                            <option value="violenceRisk">تقييم خطر العنف (Violence Risk)</option>
+                            <option value="treatmentPlan">خطة علاجية رسمية (Treatment Plan)</option>
+                            <option value="discharge">ملخص خروج / تحويل (Discharge Summary)</option>
+                            <option value="refusal">رفض العلاج (Treatment Refusal)</option>
+                            <option value="capacity">تقرير الأهلية العقلية (Capacity Assessment)</option>
+                            <option value="involuntary">تقرير الإدخال القسري (Involuntary Admission)</option>
+                            <option value="fitnessWork">تقرير اللياقة للعمل / التأمين (Fitness for Work)</option>
+                            <option value="mandatoryReport">إفادة الإبلاغ الإلزامي (Mandatory Reporting)</option>
+                            <option value="roi">نموذج الإفراج عن المعلومات (ROI)</option>
+                            <option value="antidepressantMonitoring">مراقبة مضادات الاكتئاب (Antidepressant Monitoring)</option>
+                            <option value="ectPre">تقرير ما قبل ECT / rTMS (Pre-ECT)</option>
+                            <option value="secondOpinion">تقرير الرأي الثاني (Second Opinion)</option>
+                            <option value="npp">إشعار الخصوصية (Notice of Privacy Practices)</option>
+                        </optgroup>
                     </select>
                 </div>
 
                 <div class="field">
-                    <label class="field-label"><i class="fa-solid fa-heading"></i> عنوان التقرير</label>
-                    <input type="text" class="field-input" id="wizTitle" placeholder="مثال: تقرير طبي شامل - أكتوبر 2024">
+                    <label class="field-label"><i class="fa-solid fa-heading"></i> عنوان الوثيقة <span style="color: var(--c-danger);">*</span></label>
+                    <input type="text" class="field-input" id="wizTitle" placeholder="مثال: موافقة مستنيرة — بدء سيرترالين" required>
+                </div>
+
+                <div class="field">
+                    <label class="field-label"><i class="fa-solid fa-calendar-days"></i> تاريخ الوثيقة</label>
+                    <input type="date" class="field-input" id="wizDate">
                 </div>
             </div>
 
+            <!-- Step 2: DYNAMIC FIELDS — تُبنى حسب النوع -->
             <div class="step-panel" data-panel="2">
-                <div class="field">
-                    <label class="field-label"><i class="fa-solid fa-list-check"></i> اختر الأقسام</label>
-                    <div class="sections-grid" id="wizSections"></div>
-                </div>
-                <div class="field">
-                    <label class="field-label"><i class="fa-solid fa-calendar-days"></i> النطاق الزمني</label>
-                    <select class="field-select" id="wizRange">
-                        <option value="all">كل الفترات</option>
-                        <option value="month">آخر 30 يوم</option>
-                        <option value="3months">آخر 3 أشهر</option>
-                        <option value="6months">آخر 6 أشهر</option>
-                        <option value="year">آخر سنة</option>
-                    </select>
-                </div>
-                <div class="field">
-                    <label class="field-label"><i class="fa-solid fa-note-sticky"></i> ملاحظات إضافية</label>
-                    <textarea class="field-textarea" id="wizNotes" placeholder="ملاحظات ستظهر في نهاية التقرير..."></textarea>
-                </div>
+                <div id="wizDynamicFields"></div>
             </div>
 
+            <!-- Step 3: Preview -->
             <div class="step-panel" data-panel="3">
                 <div class="preview-panel" id="wizPreview"></div>
             </div>
@@ -258,15 +284,13 @@
                 التالي <i class="fa-solid fa-arrow-left"></i>
             </button>
             <button type="button" class="btn btn-success" id="wizSave" style="display:none;">
-                <i class="fa-solid fa-floppy-disk"></i> حفظ التقرير
+                <i class="fa-solid fa-floppy-disk"></i> حفظ الوثيقة
             </button>
         </div>
     </div>
 </div>
 
-<!-- ============================================================
-     Preview Modal
-============================================================ -->
+<!-- Preview Modal -->
 <div class="modal-overlay" id="previewModal" role="dialog" aria-modal="true">
     <div class="modal modal-xl">
         <div class="modal-head">
@@ -297,9 +321,7 @@
     </div>
 </div>
 
-<!-- ============================================================
-     Confirm Modal
-============================================================ -->
+<!-- Confirm Modal -->
 <div class="modal-overlay" id="confirmModal" role="dialog" aria-modal="true">
     <div class="modal">
         <div class="modal-head">
@@ -338,6 +360,6 @@
     <div class="loading-text"><i class="fa-solid fa-file-pdf"></i> جاري توليد ملف PDF...</div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="~/js/doctor/Reports/Report.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>

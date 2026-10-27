@@ -179,6 +179,26 @@
     }
 }
 
+@keyframes pn-criticalPulse {
+    0%, 100% {
+        box-shadow: 0 8px 24px -8px rgba(220, 38, 38, 0.5);
+    }
+
+    50% {
+        box-shadow: 0 8px 30px -6px rgba(220, 38, 38, 0.8);
+    }
+}
+
+@keyframes pn-badgePulse {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(153, 27, 27, 0.4);
+    }
+
+    50% {
+        box-shadow: 0 0 0 6px rgba(153, 27, 27, 0);
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
     .patientnotes-container *,
     .patientnotes-container *::before,
@@ -402,6 +422,152 @@
 }
 
 /* ============================================================
+   Form Sections
+============================================================ */
+.patientnotes-container .pn-form-section {
+    background: var(--bn-surface-soft);
+    border: 1px solid var(--bn-border);
+    border-radius: 14px;
+    padding: 1rem 1.1rem;
+    margin-bottom: 1rem;
+}
+
+.patientnotes-container .pn-form-section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    font-weight: 900;
+    color: var(--bn-text);
+    margin-bottom: 0.9rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 1px dashed var(--bn-border);
+}
+
+    .patientnotes-container .pn-form-section-title i {
+        color: var(--bn-primary);
+        font-size: 0.85rem;
+    }
+
+/* ============================================================
+   Mood Slider
+============================================================ */
+.patientnotes-container .pn-mood-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-height: 50px;
+    padding: 0.5rem 1rem;
+    background: var(--bn-surface);
+    border: 2px solid var(--bn-border);
+    border-radius: 14px;
+}
+
+    .patientnotes-container .pn-mood-wrap .form-range {
+        flex: 1;
+        cursor: pointer;
+        accent-color: var(--bn-primary);
+    }
+
+.patientnotes-container .pn-mood-value {
+    min-width: 55px;
+    text-align: center;
+    font-weight: 900;
+    font-size: 0.82rem;
+    color: var(--bn-primary);
+    background: var(--bn-primary-light);
+    padding: 0.25rem 0.55rem;
+    border-radius: 8px;
+}
+
+/* ============================================================
+   Checkbox Group
+============================================================ */
+.patientnotes-container .pn-checkbox-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    background: var(--bn-surface);
+    border: 2px solid var(--bn-border);
+    border-radius: 14px;
+}
+
+.patientnotes-container .pn-checkbox {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--bn-text-soft);
+    padding: 0.35rem 0.65rem;
+    border-radius: 10px;
+    transition: all var(--bn-transition);
+    user-select: none;
+}
+
+    .patientnotes-container .pn-checkbox:hover {
+        background: var(--bn-surface-soft);
+    }
+
+    .patientnotes-container .pn-checkbox input[type="checkbox"] {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+.patientnotes-container .pn-checkbox-mark {
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
+    border-radius: 6px;
+    border: 2px solid var(--bn-border);
+    background: var(--bn-surface);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--bn-transition);
+    position: relative;
+}
+
+    .patientnotes-container .pn-checkbox-mark::after {
+        content: "✓";
+        color: white;
+        font-weight: 900;
+        font-size: 0.75rem;
+        opacity: 0;
+        transform: scale(0.5);
+        transition: all var(--bn-transition);
+    }
+
+.patientnotes-container .pn-checkbox input:checked ~ .pn-checkbox-mark {
+    background: var(--bn-primary);
+    border-color: var(--bn-primary);
+}
+
+    .patientnotes-container .pn-checkbox input:checked ~ .pn-checkbox-mark::after {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+/* ============================================================
+   Filter Wrap
+============================================================ */
+.patientnotes-container .pn-filter-wrap {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+    .patientnotes-container .pn-filter-wrap .form-control-custom {
+        min-height: 42px;
+        padding: 0.4rem 0.9rem;
+        font-size: 0.82rem;
+        min-width: 180px;
+    }
+
+/* ============================================================
    Buttons
 ============================================================ */
 .patientnotes-container .btn-save {
@@ -481,7 +647,7 @@
 ============================================================ */
 .patientnotes-container .notes-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
     gap: 1rem;
 }
 
@@ -529,6 +695,38 @@
     .patientnotes-container .note-card.note-priority-urgent::before {
         background: linear-gradient(180deg, #ef4444, #f87171);
     }
+
+/* ⚡ Badges Row */
+.patientnotes-container .note-badges-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-bottom: 0.75rem;
+}
+
+/* ⚡ Author Row */
+.patientnotes-container .note-author-row {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--bn-text-muted);
+    margin-bottom: 0.5rem;
+    padding: 0.35rem 0.6rem;
+    background: var(--bn-surface-soft);
+    border-radius: 8px;
+    width: fit-content;
+}
+
+    .patientnotes-container .note-author-row i {
+        color: var(--bn-primary);
+        font-size: 0.7rem;
+    }
+
+[data-theme="dark"] .patientnotes-container .note-author-row {
+    background: rgba(15, 23, 42, 0.5);
+}
 
 .patientnotes-container .note-card-header {
     display: flex;
@@ -614,6 +812,81 @@
     word-wrap: break-word;
 }
 
+/* ⚡ Symptoms */
+.patientnotes-container .note-symptoms {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-top: 0.5rem;
+    padding-top: 0.6rem;
+    border-top: 1px dashed var(--bn-border);
+}
+
+.patientnotes-container .note-symptom-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 50px;
+    font-size: 0.68rem;
+    font-weight: 800;
+    background: rgba(99, 102, 241, 0.1);
+    color: #4338ca;
+}
+
+    .patientnotes-container .note-symptom-tag.critical {
+        background: rgba(220, 38, 38, 0.12);
+        color: #b91c1c;
+        animation: pn-badgePulse 2s ease-in-out infinite;
+    }
+
+[data-theme="dark"] .patientnotes-container .note-symptom-tag {
+    background: rgba(129, 140, 248, 0.15);
+    color: #a5b4fc;
+}
+
+    [data-theme="dark"] .patientnotes-container .note-symptom-tag.critical {
+        background: rgba(248, 113, 113, 0.15);
+        color: #fca5a5;
+    }
+
+/* ⚡ Next Plan */
+.patientnotes-container .note-next-plan {
+    margin-top: 0.6rem;
+    padding: 0.6rem 0.8rem;
+    background: rgba(16, 185, 129, 0.06);
+    border-radius: 10px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #047857;
+    border-right: 3px solid #10b981;
+    line-height: 1.5;
+}
+
+[data-theme="dark"] .patientnotes-container .note-next-plan {
+    background: rgba(52, 211, 153, 0.08);
+    color: #6ee7b7;
+}
+
+/* ⚡ Link Badge */
+.patientnotes-container .note-link-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.25rem 0.6rem;
+    border-radius: 50px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    background: rgba(8, 145, 178, 0.1);
+    color: #0e7490;
+    margin-top: 0.5rem;
+}
+
+[data-theme="dark"] .patientnotes-container .note-link-badge {
+    background: rgba(34, 211, 238, 0.12);
+    color: #67e8f9;
+}
+
 .patientnotes-container .note-footer {
     display: flex;
     align-items: center;
@@ -621,7 +894,7 @@
     gap: 0.75rem;
     padding-top: 0.85rem;
     border-top: 1px solid var(--bn-border);
-    margin-top: auto;
+    margin-top: 0.85rem;
 }
 
 .patientnotes-container .note-date {
@@ -674,6 +947,283 @@
             background: var(--bn-danger);
             color: white;
         }
+
+/* ============================================================
+   Badges (Note Type / Risk / Visibility / Mood)
+============================================================ */
+.patientnotes-container .pn-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.22rem 0.6rem;
+    border-radius: 50px;
+    font-size: 0.68rem;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+    /* Note Type */
+    .patientnotes-container .pn-badge.type-progress {
+        background: rgba(8, 145, 178, 0.12);
+        color: #0e7490;
+    }
+
+    .patientnotes-container .pn-badge.type-soap {
+        background: rgba(99, 102, 241, 0.12);
+        color: #4338ca;
+    }
+
+    .patientnotes-container .pn-badge.type-incident {
+        background: rgba(239, 68, 68, 0.12);
+        color: #b91c1c;
+    }
+
+    .patientnotes-container .pn-badge.type-handoff {
+        background: rgba(245, 158, 11, 0.12);
+        color: #b45309;
+    }
+
+    .patientnotes-container .pn-badge.type-consultation {
+        background: rgba(16, 185, 129, 0.12);
+        color: #047857;
+    }
+
+    .patientnotes-container .pn-badge.type-discharge {
+        background: rgba(139, 92, 246, 0.12);
+        color: #6d28d9;
+    }
+
+    .patientnotes-container .pn-badge.type-other {
+        background: var(--bn-surface-soft);
+        color: var(--bn-text-soft);
+    }
+
+    /* Risk */
+    .patientnotes-container .pn-badge.risk-none {
+        background: var(--bn-surface-soft);
+        color: var(--bn-text-muted);
+    }
+
+    .patientnotes-container .pn-badge.risk-low {
+        background: rgba(16, 185, 129, 0.15);
+        color: #047857;
+    }
+
+    .patientnotes-container .pn-badge.risk-medium {
+        background: rgba(245, 158, 11, 0.15);
+        color: #b45309;
+    }
+
+    .patientnotes-container .pn-badge.risk-high {
+        background: rgba(239, 68, 68, 0.15);
+        color: #b91c1c;
+    }
+
+    .patientnotes-container .pn-badge.risk-critical {
+        background: rgba(153, 27, 27, 0.2);
+        color: #7f1d1d;
+        animation: pn-badgePulse 1.5s ease-in-out infinite;
+    }
+
+    /* Visibility */
+    .patientnotes-container .pn-badge.vis-private {
+        background: rgba(100, 116, 139, 0.12);
+        color: #475569;
+    }
+
+    .patientnotes-container .pn-badge.vis-team {
+        background: rgba(99, 102, 241, 0.12);
+        color: #4338ca;
+    }
+
+    .patientnotes-container .pn-badge.vis-patient {
+        background: rgba(16, 185, 129, 0.12);
+        color: #047857;
+    }
+
+/* Mood */
+.patientnotes-container .note-mood {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.22rem 0.6rem;
+    border-radius: 50px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    background: var(--bn-surface-soft);
+    color: var(--bn-text-soft);
+}
+
+    .patientnotes-container .note-mood.low {
+        background: rgba(239, 68, 68, 0.1);
+        color: #b91c1c;
+    }
+
+    .patientnotes-container .note-mood.mid {
+        background: rgba(245, 158, 11, 0.1);
+        color: #b45309;
+    }
+
+    .patientnotes-container .note-mood.high {
+        background: rgba(16, 185, 129, 0.1);
+        color: #047857;
+    }
+
+/* Dark Mode */
+[data-theme="dark"] .patientnotes-container .pn-badge.type-progress {
+    background: rgba(34, 211, 238, 0.15);
+    color: #67e8f9;
+}
+
+[data-theme="dark"] .patientnotes-container .pn-badge.type-soap {
+    background: rgba(129, 140, 248, 0.15);
+    color: #a5b4fc;
+}
+
+[data-theme="dark"] .patientnotes-container .pn-badge.type-incident {
+    background: rgba(248, 113, 113, 0.15);
+    color: #fca5a5;
+}
+
+[data-theme="dark"] .patientnotes-container .pn-badge.type-handoff {
+    background: rgba(251, 191, 36, 0.15);
+    color: #fcd34d;
+}
+
+[data-theme="dark"] .patientnotes-container .pn-badge.type-consultation {
+    background: rgba(52, 211, 153, 0.15);
+    color: #6ee7b7;
+}
+
+[data-theme="dark"] .patientnotes-container .pn-badge.type-discharge {
+    background: rgba(167, 139, 250, 0.15);
+    color: #c4b5fd;
+}
+
+[data-theme="dark"] .patientnotes-container .pn-badge.risk-none {
+    background: rgba(148, 163, 184, 0.15);
+    color: #cbd5e1;
+}
+
+[data-theme="dark"] .patientnotes-container .pn-badge.risk-low {
+    background: rgba(52, 211, 153, 0.15);
+    color: #6ee7b7;
+}
+
+[data-theme="dark"] .patientnotes-container .pn-badge.risk-medium {
+    background: rgba(251, 191, 36, 0.15);
+    color: #fcd34d;
+}
+
+[data-theme="dark"] .patientnotes-container .pn-badge.risk-high {
+    background: rgba(248, 113, 113, 0.15);
+    color: #fca5a5;
+}
+
+[data-theme="dark"] .patientnotes-container .pn-badge.risk-critical {
+    background: rgba(127, 29, 29, 0.3);
+    color: #fecaca;
+}
+
+[data-theme="dark"] .patientnotes-container .pn-badge.vis-private {
+    background: rgba(148, 163, 184, 0.15);
+    color: #cbd5e1;
+}
+
+[data-theme="dark"] .patientnotes-container .pn-badge.vis-team {
+    background: rgba(129, 140, 248, 0.15);
+    color: #a5b4fc;
+}
+
+[data-theme="dark"] .patientnotes-container .pn-badge.vis-patient {
+    background: rgba(52, 211, 153, 0.15);
+    color: #6ee7b7;
+}
+
+[data-theme="dark"] .patientnotes-container .pn-form-section {
+    background: rgba(15, 23, 42, 0.4);
+}
+
+[data-theme="dark"] .patientnotes-container .note-mood.low {
+    background: rgba(248, 113, 113, 0.15);
+    color: #fca5a5;
+}
+
+[data-theme="dark"] .patientnotes-container .note-mood.mid {
+    background: rgba(251, 191, 36, 0.15);
+    color: #fcd34d;
+}
+
+[data-theme="dark"] .patientnotes-container .note-mood.high {
+    background: rgba(52, 211, 153, 0.15);
+    color: #6ee7b7;
+}
+
+/* ============================================================
+   Critical Alert Banner
+============================================================ */
+.patientnotes-container .pn-critical-alert {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    background: linear-gradient(135deg, #dc2626, #991b1b);
+    color: #fff;
+    border-radius: 16px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.25rem;
+    box-shadow: 0 8px 24px -8px rgba(220, 38, 38, 0.5);
+    animation: pn-criticalPulse 2s ease-in-out infinite;
+    position: relative;
+}
+
+.patientnotes-container .pn-critical-icon {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+}
+
+.patientnotes-container .pn-critical-body {
+    flex: 1;
+}
+
+.patientnotes-container .pn-critical-title {
+    font-size: 0.95rem;
+    font-weight: 900;
+    margin-bottom: 0.2rem;
+}
+
+.patientnotes-container .pn-critical-message {
+    font-size: 0.82rem;
+    font-weight: 600;
+    opacity: 0.95;
+    line-height: 1.5;
+}
+
+.patientnotes-container .pn-critical-close {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: #fff;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all var(--bn-transition);
+    flex-shrink: 0;
+}
+
+    .patientnotes-container .pn-critical-close:hover {
+        background: rgba(255, 255, 255, 0.35);
+        transform: scale(1.1);
+    }
 
 /* ============================================================
    Empty State
@@ -758,9 +1308,6 @@
     margin-inline-start: 0.15rem;
 }
 
-/* ============================================================
-   ✅ Validation Summary (لوح الأخطاء) — جديد
-============================================================ */
 .patientnotes-container .bn-validation-summary {
     display: none;
     background: var(--bn-danger-light);
@@ -809,11 +1356,6 @@
     .patientnotes-container .bn-summary-close:hover {
         background: rgba(239, 68, 68, 0.15);
         transform: scale(1.1);
-    }
-
-    .patientnotes-container .bn-summary-close:focus-visible {
-        outline: 2px solid var(--bn-danger);
-        outline-offset: 2px;
     }
 
 .patientnotes-container .bn-validation-summary ul {
@@ -996,10 +1538,6 @@
     }
 
 /* ============================================================
-   Toast — يُدار بالكامل من index.css
-============================================================ */
-
-/* ============================================================
    Responsive
 ============================================================ */
 @media (max-width: 767px) {
@@ -1020,6 +1558,15 @@
     .patientnotes-container .notes-grid {
         grid-template-columns: 1fr;
     }
+
+    .patientnotes-container .pn-filter-wrap {
+        width: 100%;
+    }
+
+        .patientnotes-container .pn-filter-wrap .form-control-custom {
+            flex: 1;
+            min-width: 140px;
+        }
 }
 
 @media (max-width: 575px) {
@@ -1034,6 +1581,10 @@
     .patientnotes-container .note-form-card {
         padding: 1rem;
     }
+
+    .patientnotes-container .pn-critical-alert {
+        flex-wrap: wrap;
+    }
 }
 
 @media print {
@@ -1041,6 +1592,8 @@
     .patientnotes-container .btn-secondary,
     .patientnotes-container .note-actions,
     .patientnotes-container .note-form-card,
+    .patientnotes-container .pn-critical-alert,
+    .patientnotes-container .pn-filter-wrap,
     .patientnotes-container .bn-validation-summary,
     .bn-modal-overlay,
     .bn-confetti {

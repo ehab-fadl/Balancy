@@ -17,7 +17,7 @@
                 </div>
                 <div>
                     <h1>تسجيل الزيارة (Visit Management)</h1>
-                    <p>تسجيل زيارات المريض مع تحديد سبب الزيارة والملاحظات</p>
+                    <p>تسجيل زيارات المريض مع تحديد نوع الزيارة ومكانها والملاحظات</p>
                 </div>
             </div>
             <div class="edit-status">
@@ -39,6 +39,7 @@
                     <input type="hidden" id="visitEditIndex" value="-1">
 
                     <div class="row g-4">
+                        <!-- سبب الزيارة -->
                         <div class="col-md-6">
                             <label for="visitReason" class="form-label-custom">
                                 <i class="fa-solid fa-comment-medical"></i>
@@ -47,6 +48,7 @@
                             <input type="text" class="form-control form-control-custom" id="visitReason" name="visitReason" placeholder="مثال: متابعة دورية..." required>
                         </div>
 
+                        <!-- تاريخ الزيارة -->
                         <div class="col-md-6">
                             <label for="visitDate" class="form-label-custom">
                                 <i class="fa-solid fa-calendar-days"></i>
@@ -55,7 +57,38 @@
                             <input type="date" class="form-control form-control-custom" id="visitDate" name="visitDate" required>
                         </div>
 
+                        <!-- ✅ نوع الزيارة (جديد) -->
                         <div class="col-md-6">
+                            <label for="visitType" class="form-label-custom">
+                                <i class="fa-solid fa-tag"></i>
+                                نوع الزيارة
+                            </label>
+                            <select class="form-select form-control-custom" id="visitType" name="visitType" required>
+                                <option value="">اختر نوع الزيارة</option>
+                                <option value="أولى">زيارة أولى</option>
+                                <option value="متابعة">متابعة</option>
+                                <option value="طارئة">طارئة</option>
+                                <option value="استشارة سريعة">استشارة سريعة</option>
+                            </select>
+                        </div>
+
+                        <!-- ✅ مكان الزيارة (جديد) -->
+                        <div class="col-md-6">
+                            <label for="visitLocation" class="form-label-custom">
+                                <i class="fa-solid fa-location-dot"></i>
+                                مكان الزيارة
+                            </label>
+                            <select class="form-select form-control-custom" id="visitLocation" name="visitLocation" required>
+                                <option value="">اختر مكان الزيارة</option>
+                                <option value="عيادة">عيادة</option>
+                                <option value="منزل">منزل</option>
+                                <option value="أونلاين">أونلاين</option>
+                                <option value="مستشفى">مستشفى</option>
+                            </select>
+                        </div>
+
+                        <!-- ملاحظات -->
+                        <div class="col-12">
                             <label for="visitNotes" class="form-label-custom">
                                 <i class="fa-solid fa-note-sticky"></i>
                                 ملاحظات
@@ -63,8 +96,8 @@
                             <input type="text" class="form-control form-control-custom" id="visitNotes" name="visitNotes" placeholder="ملاحظات إضافية (اختياري)">
                         </div>
 
-                        <!-- ✅ زر حجز موعد الزيارة القادمة -->
-                        <div class="col-md-6">
+                        <!-- زر حجز موعد الزيارة القادمة -->
+                        <div class="col-12">
                             <label class="form-label-custom">
                                 <i class="fa-solid fa-calendar-plus"></i>
                                 موعد الزيارة القادمة
@@ -107,7 +140,9 @@
                         <tr>
                             <th>#</th>
                             <th>سبب الزيارة</th>
-                            <th>تاريخ الزيارة</th>
+                            <th>النوع</th>
+                            <th>المكان</th>
+                            <th>التاريخ</th>
                             <th>ملاحظات</th>
                             <th class="text-center">الإجراءات</th>
                         </tr>

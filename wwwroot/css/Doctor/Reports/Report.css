@@ -1,9 +1,12 @@
-﻿
+﻿/* ============================================================
+   Reports Manager — Complete CSS
+   يحتوي على كل التنسيقات: الأساسية + الإضافات الطبية
+============================================================ */
+
 /* ============================================================
-           Design Tokens
-        ============================================================ */
+   Design Tokens
+============================================================ */
 :root {
-    /* Primary — Teal/Cyan (نفس التطبيق) */
     --c-primary: #0891b2;
     --c-primary-dark: #0e7490;
     --c-primary-light: #cffafe;
@@ -11,10 +14,8 @@
     --c-secondary: #0d9488;
     --c-secondary-dark: #0f766e;
     --c-secondary-light: #ccfbf1;
-    /* Accent */
     --c-accent: #f59e0b;
     --c-accent-light: #fef3c7;
-    /* Semantic */
     --c-success: #10b981;
     --c-success-light: #d1fae5;
     --c-danger: #ef4444;
@@ -23,14 +24,13 @@
     --c-warning-light: #fef3c7;
     --c-info: #0ea5e9;
     --c-info-light: #e0f2fe;
-    /* Category */
     --c-medical: #0ea5e9;
     --c-psych: #8b5cf6;
     --c-meds: #10b981;
     --c-vitals: #f43f5e;
     --c-visits: #f59e0b;
+    --c-emergency: #dc2626;
     --c-custom: #6366f1;
-    /* Surfaces */
     --c-bg: #f8fafc;
     --c-bg-soft: #f1f5f9;
     --c-surface: #ffffff;
@@ -38,26 +38,21 @@
     --c-border: #e2e8f0;
     --c-border-soft: #f1f5f9;
     --c-border-strong: #cbd5e1;
-    /* Text */
     --c-text: #0f172a;
     --c-text-2: #334155;
     --c-text-3: #64748b;
     --c-text-4: #94a3b8;
-    /* Shadows */
     --sh-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
     --sh-sm: 0 1px 3px rgba(15, 23, 42, 0.06);
     --sh-md: 0 4px 12px -2px rgba(15, 23, 42, 0.08);
     --sh-lg: 0 12px 28px -8px rgba(15, 23, 42, 0.12);
     --sh-xl: 0 24px 48px -12px rgba(15, 23, 42, 0.18);
-    /* Radius */
     --r-sm: 8px;
     --r-md: 12px;
     --r-lg: 16px;
     --r-xl: 22px;
-    /* Transitions */
     --t-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
     --t-normal: 0.28s cubic-bezier(0.4, 0, 0.2, 1);
-    /* Container */
     --container: 1440px;
 }
 
@@ -84,6 +79,7 @@
     --c-meds: #34d399;
     --c-vitals: #fb7185;
     --c-visits: #fbbf24;
+    --c-emergency: #f87171;
     --c-custom: #818cf8;
     --c-bg: #0f172a;
     --c-bg-soft: #1e293b;
@@ -110,8 +106,8 @@
     }
 
 /* ============================================================
-           Reset
-        ============================================================ */
+   Reset
+============================================================ */
 *, *::before, *::after {
     margin: 0;
     padding: 0;
@@ -174,8 +170,8 @@ input, select, textarea {
     }
 
 /* ============================================================
-           App Shell
-        ============================================================ */
+   App Shell
+============================================================ */
 .app {
     min-height: 100vh;
     display: flex;
@@ -190,8 +186,8 @@ input, select, textarea {
 }
 
 /* ============================================================
-           Header
-        ============================================================ */
+   Header
+============================================================ */
 .app-header {
     background: var(--c-surface);
     border-bottom: 1px solid var(--c-border);
@@ -278,16 +274,16 @@ input, select, textarea {
 }
 
 /* ============================================================
-           Page Body
-        ============================================================ */
+   Page Body
+============================================================ */
 .app-body {
     flex: 1;
     padding: 36px 0 100px;
 }
 
 /* ============================================================
-           Welcome Strip
-        ============================================================ */
+   Welcome Strip
+============================================================ */
 .welcome-strip {
     background: linear-gradient(120deg, #0891b2 0%, #0d9488 55%, #14b8a6 100%);
     border-radius: var(--r-xl);
@@ -381,8 +377,8 @@ input, select, textarea {
 }
 
 /* ============================================================
-           Stats Row
-        ============================================================ */
+   Stats Row
+============================================================ */
 .stats-row {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -480,8 +476,8 @@ input, select, textarea {
 }
 
 /* ============================================================
-           Section Head
-        ============================================================ */
+   Section Head
+============================================================ */
 .section-head {
     display: flex;
     align-items: center;
@@ -529,8 +525,8 @@ input, select, textarea {
 }
 
 /* ============================================================
-           Templates Grid
-        ============================================================ */
+   Templates Grid
+============================================================ */
 .templates-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -595,6 +591,10 @@ input, select, textarea {
         background: var(--c-visits);
     }
 
+    .tpl-card.t-emergency::before {
+        background: var(--c-emergency);
+    }
+
     .tpl-card.t-custom::before {
         background: var(--c-custom);
     }
@@ -634,6 +634,10 @@ input, select, textarea {
 
 .t-visits .tpl-icon {
     background: linear-gradient(135deg, #fbbf24, #f59e0b);
+}
+
+.t-emergency .tpl-icon {
+    background: linear-gradient(135deg, #f87171, #dc2626);
 }
 
 .t-custom .tpl-icon {
@@ -681,8 +685,8 @@ input, select, textarea {
 }
 
 /* ============================================================
-           Toolbar
-        ============================================================ */
+   Toolbar
+============================================================ */
 .toolbar {
     background: var(--c-surface);
     border: 1px solid var(--c-border);
@@ -767,8 +771,8 @@ input, select, textarea {
     }
 
 /* ============================================================
-           Tabs
-        ============================================================ */
+   Tabs
+============================================================ */
 .tabs-bar {
     display: flex;
     gap: 8px;
@@ -830,8 +834,8 @@ input, select, textarea {
     }
 
 /* ============================================================
-           Reports Grid
-        ============================================================ */
+   Reports Grid
+============================================================ */
 .reports-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
@@ -899,6 +903,10 @@ input, select, textarea {
 
 .rpt-card.c-visits .rpt-icon {
     background: linear-gradient(135deg, #fbbf24, #f59e0b);
+}
+
+.rpt-card.c-emergency .rpt-icon {
+    background: linear-gradient(135deg, #f87171, #dc2626);
 }
 
 .rpt-card.c-custom .rpt-icon {
@@ -1137,8 +1145,8 @@ input, select, textarea {
     }
 
 /* ============================================================
-           Empty State
-        ============================================================ */
+   Empty State
+============================================================ */
 .empty-box {
     text-align: center;
     padding: 80px 24px;
@@ -1176,8 +1184,8 @@ input, select, textarea {
 }
 
 /* ============================================================
-           FAB
-        ============================================================ */
+   FAB
+============================================================ */
 .fab {
     position: fixed;
     bottom: 28px;
@@ -1205,8 +1213,8 @@ input, select, textarea {
     }
 
 /* ============================================================
-           ✅ Modal Overlay — مُقوّى ضد CSS التطبيق
-        ============================================================ */
+   Modal Overlay
+============================================================ */
 .modal-overlay {
     position: fixed !important;
     top: 0 !important;
@@ -1256,9 +1264,6 @@ input, select, textarea {
     }
 }
 
-/* ============================================================
-           ✅ Modal — مُقوّى ضد CSS التطبيق
-        ============================================================ */
 .modal {
     background: var(--c-surface) !important;
     border-radius: var(--r-xl) !important;
@@ -1387,54 +1392,7 @@ input, select, textarea {
     box-sizing: border-box !important;
 }
 
-/* ============================================================
-           ✅ Modal-SM (تأكيد الحذف) — حجم صغير ومتناسق
-        ============================================================ */
-.modal.modal-sm .modal-head {
-    padding: 18px 22px !important;
-}
-
-.modal.modal-sm .modal-head-icon {
-    width: 42px !important;
-    height: 42px !important;
-    font-size: 17px !important;
-}
-
-.modal.modal-sm .modal-head-text h3 {
-    font-size: 16px !important;
-}
-
-.modal.modal-sm .modal-head-text p {
-    font-size: 12px !important;
-}
-
-.modal.modal-sm .modal-close {
-    width: 34px !important;
-    height: 34px !important;
-    font-size: 13px !important;
-}
-
-.modal.modal-sm .modal-body {
-    padding: 22px !important;
-}
-
-    .modal.modal-sm .modal-body p {
-        font-size: 14px !important;
-        line-height: 1.7 !important;
-    }
-
-.modal.modal-sm .modal-foot {
-    padding: 14px 22px !important;
-}
-
-.modal.modal-sm .btn {
-    padding: 10px 18px !important;
-    font-size: 13px !important;
-}
-
-/* ============================================================
-           Form Fields
-        ============================================================ */
+/* Form Fields */
 .field {
     margin-bottom: 22px;
 }
@@ -1495,9 +1453,7 @@ input, select, textarea {
     border-color: var(--c-primary-light);
 }
 
-/* ============================================================
-           Wizard Steps
-        ============================================================ */
+/* Wizard Steps */
 .steps {
     display: flex;
     justify-content: space-between;
@@ -1584,9 +1540,7 @@ input, select, textarea {
         display: block;
     }
 
-/* ============================================================
-           Sections Grid
-        ============================================================ */
+/* Sections Grid */
 .sections-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
@@ -1675,9 +1629,7 @@ input, select, textarea {
     color: #67e8f9;
 }
 
-/* ============================================================
-           Preview Panel
-        ============================================================ */
+/* Preview Panel */
 .preview-panel {
     background: var(--c-surface-alt);
     border: 1px solid var(--c-border);
@@ -1689,9 +1641,7 @@ input, select, textarea {
     line-height: 1.8;
 }
 
-/* ============================================================
-           Buttons
-        ============================================================ */
+/* Buttons */
 .btn {
     display: inline-flex;
     align-items: center;
@@ -1748,8 +1698,8 @@ input, select, textarea {
     }
 
 /* ============================================================
-           ✅ Toast — المنتصف على اليمين
-        ============================================================ */
+   Toast
+============================================================ */
 .toast {
     position: fixed !important;
     top: 50% !important;
@@ -1844,8 +1794,8 @@ input, select, textarea {
 }
 
 /* ============================================================
-           Loading
-        ============================================================ */
+   Loading
+============================================================ */
 .loading {
     position: fixed !important;
     inset: 0 !important;
@@ -1889,8 +1839,8 @@ input, select, textarea {
 }
 
 /* ============================================================
-           Printable Report
-        ============================================================ */
+   Printable Report
+============================================================ */
 .printable {
     padding: 32px;
     background: white;
@@ -2140,8 +2090,533 @@ input, select, textarea {
 }
 
 /* ============================================================
-           Responsive
-        ============================================================ */
+   ⚡ Red Flags Banner
+============================================================ */
+.rep-flags-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 16px 20px;
+    border-radius: 12px;
+    margin-bottom: 24px;
+    border-right: 4px solid;
+    animation: flagPulse 2s ease-in-out infinite;
+}
+
+    .rep-flags-banner.critical {
+        background: linear-gradient(135deg, #fef2f2, #fee2e2);
+        border-color: #dc2626;
+        color: #991b1b;
+    }
+
+    .rep-flags-banner.high {
+        background: linear-gradient(135deg, #fff7ed, #ffedd5);
+        border-color: #ea580c;
+        color: #9a3412;
+    }
+
+    .rep-flags-banner.moderate {
+        background: linear-gradient(135deg, #fefce8, #fef9c3);
+        border-color: #ca8a04;
+        color: #854d0e;
+    }
+
+    .rep-flags-banner.ok {
+        background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+        border-color: #16a34a;
+        color: #166534;
+    }
+
+[data-theme="dark"] .rep-flags-banner.critical {
+    background: rgba(220, 38, 38, 0.15);
+    color: #fca5a5;
+}
+
+[data-theme="dark"] .rep-flags-banner.high {
+    background: rgba(234, 88, 12, 0.15);
+    color: #fdba74;
+}
+
+[data-theme="dark"] .rep-flags-banner.moderate {
+    background: rgba(202, 138, 4, 0.15);
+    color: #fde047;
+}
+
+[data-theme="dark"] .rep-flags-banner.ok {
+    background: rgba(22, 163, 74, 0.15);
+    color: #86efac;
+}
+
+@keyframes flagPulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.005);
+    }
+}
+
+.rep-flags-icon {
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    background: rgba(255, 255, 255, 0.5);
+}
+
+[data-theme="dark"] .rep-flags-icon {
+    background: rgba(0, 0, 0, 0.25);
+}
+
+.rep-flags-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.rep-flags-title {
+    font-size: 14px;
+    font-weight: 900;
+    margin: 0 0 6px;
+    font-family: 'Cairo', sans-serif;
+}
+
+.rep-flags-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+    .rep-flags-list li {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 4px 10px;
+        background: rgba(255, 255, 255, 0.6);
+        border-radius: 50px;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+[data-theme="dark"] .rep-flags-list li {
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.rep-flags-list li i {
+    font-size: 10px;
+}
+
+/* ============================================================
+   ⚡ Executive Summary
+============================================================ */
+.rep-executive {
+    background: linear-gradient(135deg, #ecfeff, #f0fdfa);
+    border: 2px solid #0891b2;
+    border-radius: 14px;
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    position: relative;
+}
+
+[data-theme="dark"] .rep-executive {
+    background: rgba(8, 145, 178, 0.08);
+    border-color: #22d3ee;
+}
+
+.rep-executive-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 16px;
+    font-weight: 900;
+    color: #0e7490;
+    margin: 0 0 14px;
+    padding-bottom: 10px;
+    border-bottom: 2px dashed #0891b2;
+    font-family: 'Cairo', sans-serif;
+}
+
+[data-theme="dark"] .rep-executive-title {
+    color: #67e8f9;
+    border-color: #22d3ee;
+}
+
+.rep-executive-title i {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: #0891b2;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+}
+
+.rep-executive-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 14px;
+}
+
+.rep-executive-item {
+    padding: 10px 12px;
+    background: rgba(255, 255, 255, 0.7);
+    border-radius: 10px;
+    border-right: 3px solid #0891b2;
+}
+
+[data-theme="dark"] .rep-executive-item {
+    background: rgba(30, 41, 59, 0.6);
+    border-color: #22d3ee;
+}
+
+.rep-executive-label {
+    font-size: 10px;
+    font-weight: 800;
+    color: #0e7490;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin: 0 0 3px;
+}
+
+[data-theme="dark"] .rep-executive-label {
+    color: #22d3ee;
+}
+
+.rep-executive-value {
+    font-size: 14px;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0;
+    line-height: 1.4;
+}
+
+[data-theme="dark"] .rep-executive-value {
+    color: #f1f5f9;
+}
+
+/* ============================================================
+   ⚡ Clinical Status Card
+============================================================ */
+.rep-status-card {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.rep-status-item {
+    padding: 14px 16px;
+    background: #f8fafc;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    text-align: center;
+}
+
+[data-theme="dark"] .rep-status-item {
+    background: rgba(15, 23, 42, 0.4);
+    border-color: #334155;
+}
+
+.rep-status-label {
+    font-size: 10px;
+    font-weight: 800;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin: 0 0 6px;
+}
+
+.rep-status-value {
+    font-size: 24px;
+    font-weight: 900;
+    color: #0f172a;
+    line-height: 1;
+    font-family: 'Cairo', sans-serif;
+}
+
+[data-theme="dark"] .rep-status-value {
+    color: #f1f5f9;
+}
+
+.rep-status-value.low {
+    color: #16a34a;
+}
+
+.rep-status-value.medium {
+    color: #ca8a04;
+}
+
+.rep-status-value.high {
+    color: #ea580c;
+}
+
+.rep-status-value.critical {
+    color: #dc2626;
+}
+
+/* ============================================================
+   ⚡ Comparison Table
+============================================================ */
+.rep-comparison {
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+}
+
+[data-theme="dark"] .rep-comparison {
+    background: rgba(15, 23, 42, 0.4);
+}
+
+.rep-comparison-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr auto 1fr 1fr;
+    gap: 12px;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px dashed #cbd5e1;
+}
+
+[data-theme="dark"] .rep-comparison-row {
+    border-color: #334155;
+}
+
+.rep-comparison-row:last-child {
+    border-bottom: none;
+}
+
+.rep-comp-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+[data-theme="dark"] .rep-comp-name {
+    color: #f1f5f9;
+}
+
+.rep-comp-before {
+    font-size: 13px;
+    font-weight: 800;
+    color: #64748b;
+    text-align: center;
+}
+
+.rep-comp-arrow {
+    color: #94a3b8;
+    font-size: 12px;
+    text-align: center;
+}
+
+.rep-comp-after {
+    font-size: 13px;
+    font-weight: 900;
+    color: #0891b2;
+    text-align: center;
+}
+
+.rep-comp-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: 50px;
+    font-size: 11px;
+    font-weight: 800;
+    min-width: 70px;
+}
+
+    .rep-comp-badge.improved {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .rep-comp-badge.worsened {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .rep-comp-badge.stable {
+        background: #f1f5f9;
+        color: #475569;
+    }
+
+[data-theme="dark"] .rep-comp-badge.improved {
+    background: rgba(22, 163, 74, 0.2);
+    color: #86efac;
+}
+
+[data-theme="dark"] .rep-comp-badge.worsened {
+    background: rgba(220, 38, 38, 0.2);
+    color: #fca5a5;
+}
+
+[data-theme="dark"] .rep-comp-badge.stable {
+    background: rgba(71, 85, 105, 0.3);
+    color: #cbd5e1;
+}
+
+/* ============================================================
+   ⚡ Recommendations
+============================================================ */
+.rep-recommendations {
+    background: linear-gradient(135deg, #f0fdf4, #ecfdf5);
+    border: 2px solid #16a34a;
+    border-radius: 14px;
+    padding: 20px 24px;
+    margin-bottom: 20px;
+}
+
+[data-theme="dark"] .rep-recommendations {
+    background: rgba(22, 163, 74, 0.08);
+    border-color: #22c55e;
+}
+
+.rep-recommendations-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 15px;
+    font-weight: 900;
+    color: #166534;
+    margin: 0 0 14px;
+    font-family: 'Cairo', sans-serif;
+}
+
+[data-theme="dark"] .rep-recommendations-title {
+    color: #86efac;
+}
+
+.rep-recommendations-title i {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    background: #16a34a;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+}
+
+.rep-recommendations-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+    .rep-recommendations-list li {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 8px 12px;
+        background: rgba(255, 255, 255, 0.7);
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        color: #14532d;
+        line-height: 1.6;
+    }
+
+[data-theme="dark"] .rep-recommendations-list li {
+    background: rgba(30, 41, 59, 0.6);
+    color: #d1fae5;
+}
+
+.rep-recommendations-list li i {
+    color: #16a34a;
+    font-size: 12px;
+    margin-top: 3px;
+    flex-shrink: 0;
+}
+
+/* ============================================================
+   ⚡ Signature
+============================================================ */
+.rep-signature {
+    display: flex;
+    justify-content: space-between;
+    gap: 40px;
+    margin-top: 40px;
+    padding: 20px 40px;
+    border-top: 2px dashed #cbd5e1;
+}
+
+[data-theme="dark"] .rep-signature {
+    border-color: #334155;
+}
+
+.rep-signature-block {
+    flex: 1;
+    text-align: center;
+}
+
+.rep-signature-line {
+    height: 40px;
+    border-bottom: 1.5px dashed #94a3b8;
+    margin-bottom: 8px;
+}
+
+.rep-signature-label {
+    font-size: 12px;
+    font-weight: 800;
+    color: #64748b;
+}
+
+[data-theme="dark"] .rep-signature-label {
+    color: #94a3b8;
+}
+
+.rep-signature-name {
+    font-size: 11px;
+    font-weight: 600;
+    color: #94a3b8;
+    margin-top: 2px;
+}
+
+/* ============================================================
+   ⚡ Disclaimer
+============================================================ */
+.rep-disclaimer {
+    margin-top: 24px;
+    padding: 14px 18px;
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: 10px;
+    font-size: 11px;
+    color: #78350f;
+    line-height: 1.7;
+    text-align: center;
+    font-weight: 600;
+}
+
+[data-theme="dark"] .rep-disclaimer {
+    background: rgba(120, 53, 15, 0.15);
+    border-color: #a16207;
+    color: #fcd34d;
+}
+
+.rep-disclaimer i {
+    color: #f59e0b;
+    margin-left: 4px;
+}
+
+/* ============================================================
+   Responsive
+============================================================ */
 @media (max-width: 1100px) {
     .stats-row {
         grid-template-columns: repeat(2, 1fr);
@@ -2261,12 +2736,7 @@ input, select, textarea {
         max-height: 95vh !important;
     }
 
-        .modal.modal-lg,
-        .modal.modal-xl {
-            max-width: 100% !important;
-        }
-
-        .modal.modal-sm {
+        .modal.modal-lg, .modal.modal-xl, .modal.modal-sm {
             max-width: 100% !important;
         }
 
@@ -2286,7 +2756,6 @@ input, select, textarea {
         grid-template-columns: 1fr;
     }
 
-    /* ✅ Toast في الموبايل: أسفل الشاشة */
     .toast {
         top: auto !important;
         bottom: 20px !important;
@@ -2310,6 +2779,17 @@ input, select, textarea {
         width: 56px;
         height: 56px;
         font-size: 22px;
+    }
+
+    .rep-signature {
+        padding: 20px 10px;
+        gap: 20px;
+    }
+
+    .rep-comparison-row {
+        grid-template-columns: 1fr;
+        gap: 6px;
+        text-align: center;
     }
 }
 
@@ -2371,5 +2851,1777 @@ input, select, textarea {
     .printable {
         padding: 0 !important;
     }
+
+    .rep-flags-banner {
+        animation: none;
+        page-break-inside: avoid;
+    }
+
+    .rep-executive, .rep-recommendations, .rep-comparison,
+    .rep-signature, .rep-disclaimer {
+        page-break-inside: avoid;
+    }
+}
+/* ============================================================
+   ⚖️ LEGAL & ADMINISTRATIVE DOCUMENTS — Additions
+   (أضف في نهاية الملف — لا يعدل شيئاً قديماً)
+============================================================ */
+
+/* Tabs للمجموعات (سريري / قانوني) */
+.tpl-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 24px;
+    padding: 6px;
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: var(--r-md);
+    overflow-x: auto;
+    scrollbar-width: none;
 }
 
+    .tpl-tabs::-webkit-scrollbar {
+        display: none;
+    }
+
+.tpl-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 22px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--c-text-3);
+    white-space: nowrap;
+    transition: all var(--t-fast);
+    flex-shrink: 0;
+}
+
+    .tpl-tab:hover {
+        background: var(--c-surface-alt);
+        color: var(--c-text);
+    }
+
+    .tpl-tab.is-active {
+        background: linear-gradient(135deg, var(--c-primary), var(--c-secondary));
+        color: white;
+        box-shadow: 0 8px 18px -6px rgba(8, 145, 178, 0.55);
+    }
+
+/* ===== قوالب قانونية جديدة ===== */
+.tpl-card.t-consent::before {
+    background: #d97706;
+}
+
+.tpl-card.t-legal::before {
+    background: #1e293b;
+}
+
+.tpl-card.t-violence::before {
+    background: #b91c1c;
+}
+
+.tpl-card.t-tplan::before {
+    background: #7c3aed;
+}
+
+.tpl-card.t-discharge::before {
+    background: #0891b2;
+}
+
+.tpl-card.t-refusal::before {
+    background: #be123c;
+}
+
+.t-consent .tpl-icon {
+    background: linear-gradient(135deg, #fbbf24, #d97706);
+}
+
+.t-legal .tpl-icon {
+    background: linear-gradient(135deg, #334155, #0f172a);
+}
+
+.t-violence .tpl-icon {
+    background: linear-gradient(135deg, #ef4444, #b91c1c);
+}
+
+.t-tplan .tpl-icon {
+    background: linear-gradient(135deg, #a78bfa, #7c3aed);
+}
+
+.t-discharge .tpl-icon {
+    background: linear-gradient(135deg, #22d3ee, #0891b2);
+}
+
+.t-refusal .tpl-icon {
+    background: linear-gradient(135deg, #f472b6, #be123c);
+}
+
+/* ===== بطاقات تقارير قانونية محفوظة ===== */
+.rpt-card.c-consent .rpt-icon {
+    background: linear-gradient(135deg, #fbbf24, #d97706);
+}
+
+.rpt-card.c-legal .rpt-icon {
+    background: linear-gradient(135deg, #334155, #0f172a);
+}
+
+.rpt-card.c-violence .rpt-icon {
+    background: linear-gradient(135deg, #ef4444, #b91c1c);
+}
+
+.rpt-card.c-tplan .rpt-icon {
+    background: linear-gradient(135deg, #a78bfa, #7c3aed);
+}
+
+.rpt-card.c-discharge .rpt-icon {
+    background: linear-gradient(135deg, #22d3ee, #0891b2);
+}
+
+.rpt-card.c-refusal .rpt-icon {
+    background: linear-gradient(135deg, #f472b6, #be123c);
+}
+
+/* ===== Legal Document Banner (يظهر في أعلى الوثيقة القانونية) ===== */
+.rep-legal-banner {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 22px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #fef3c7, #fde68a);
+    border: 2px solid #d97706;
+    margin-bottom: 22px;
+    color: #78350f;
+}
+
+[data-theme="dark"] .rep-legal-banner {
+    background: rgba(217, 119, 6, 0.15);
+    color: #fcd34d;
+    border-color: #d97706;
+}
+
+.rep-legal-banner.severity-critical {
+    background: linear-gradient(135deg, #fee2e2, #fecaca);
+    border-color: #b91c1c;
+    color: #7f1d1d;
+}
+
+[data-theme="dark"] .rep-legal-banner.severity-critical {
+    background: rgba(185, 28, 28, 0.15);
+    color: #fca5a5;
+}
+
+.rep-legal-banner.severity-high {
+    background: linear-gradient(135deg, #fff7ed, #ffedd5);
+    border-color: #ea580c;
+    color: #9a3412;
+}
+
+[data-theme="dark"] .rep-legal-banner.severity-high {
+    background: rgba(234, 88, 12, 0.15);
+    color: #fdba74;
+}
+
+.rep-legal-banner-icon {
+    width: 46px;
+    height: 46px;
+    min-width: 46px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+}
+
+[data-theme="dark"] .rep-legal-banner-icon {
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.rep-legal-banner-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.rep-legal-banner-title {
+    font-size: 15px;
+    font-weight: 900;
+    margin: 0 0 4px;
+    font-family: 'Cairo', sans-serif;
+    letter-spacing: 0.01em;
+}
+
+.rep-legal-banner-desc {
+    font-size: 12px;
+    margin: 0;
+    font-weight: 600;
+    line-height: 1.6;
+    opacity: 0.9;
+}
+
+/* ===== Consent / Legal Blocks (نصوص قانونية) ===== */
+.rep-legal-block {
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    border-right: 4px solid #0e7490;
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin-bottom: 16px;
+    font-size: 13px;
+    line-height: 1.9;
+    color: #1e293b;
+}
+
+[data-theme="dark"] .rep-legal-block {
+    background: rgba(15, 23, 42, 0.4);
+    border-color: #334155;
+    border-right-color: #22d3ee;
+    color: #f1f5f9;
+}
+
+.rep-legal-block h4 {
+    margin: 0 0 10px;
+    font-size: 14px;
+    font-weight: 900;
+    color: #0e7490;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+[data-theme="dark"] .rep-legal-block h4 {
+    color: #67e8f9;
+}
+
+.rep-legal-block ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+    .rep-legal-block ul li {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 8px 12px;
+        background: rgba(255, 255, 255, 0.7);
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+[data-theme="dark"] .rep-legal-block ul li {
+    background: rgba(30, 41, 59, 0.6);
+}
+
+.rep-legal-block ul li i {
+    color: #0891b2;
+    margin-top: 2px;
+    flex-shrink: 0;
+    font-size: 12px;
+}
+
+/* ===== Danger Block (للنصوص الحساسة كرفض العلاج) ===== */
+.rep-legal-block.danger {
+    border-right-color: #b91c1c;
+    background: #fef2f2;
+    border-color: #fecaca;
+}
+
+[data-theme="dark"] .rep-legal-block.danger {
+    background: rgba(185, 28, 28, 0.1);
+    border-color: rgba(185, 28, 28, 0.4);
+    border-right-color: #ef4444;
+}
+
+.rep-legal-block.danger h4 {
+    color: #991b1b;
+}
+
+[data-theme="dark"] .rep-legal-block.danger h4 {
+    color: #fca5a5;
+}
+
+/* ===== Signature Section (متقدم) ===== */
+.rep-legal-signatures {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+    margin-top: 30px;
+    padding: 24px;
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    border-radius: 12px;
+}
+
+[data-theme="dark"] .rep-legal-signatures {
+    background: rgba(15, 23, 42, 0.4);
+    border-color: #334155;
+}
+
+.rep-sig-block {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 14px 16px;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+}
+
+[data-theme="dark"] .rep-sig-block {
+    background: rgba(30, 41, 59, 0.7);
+    border-color: #334155;
+}
+
+.rep-sig-block-label {
+    font-size: 11px;
+    font-weight: 900;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+[data-theme="dark"] .rep-sig-block-label {
+    color: #94a3b8;
+}
+
+.rep-sig-block-line {
+    height: 42px;
+    border-bottom: 1.5px dashed #94a3b8;
+    margin-bottom: 6px;
+    position: relative;
+}
+
+    .rep-sig-block-line::after {
+        content: "";
+        position: absolute;
+        bottom: -3px;
+        right: 0;
+        font-size: 10px;
+        color: #94a3b8;
+    }
+
+.rep-sig-block-name {
+    font-size: 13px;
+    font-weight: 800;
+    color: #0f172a;
+    min-height: 20px;
+}
+
+[data-theme="dark"] .rep-sig-block-name {
+    color: #f1f5f9;
+}
+
+.rep-sig-block-meta {
+    font-size: 11px;
+    color: #64748b;
+    font-weight: 600;
+}
+
+/* ===== Confirmation Row (في نهاية الوثائق القانونية) ===== */
+.rep-confirmation {
+    margin-top: 24px;
+    padding: 16px 20px;
+    background: linear-gradient(135deg, #ecfdf5, #f0fdf4);
+    border: 2px solid #16a34a;
+    border-radius: 10px;
+    font-size: 13px;
+    line-height: 1.9;
+    color: #14532d;
+    font-weight: 600;
+}
+
+[data-theme="dark"] .rep-confirmation {
+    background: rgba(22, 163, 74, 0.1);
+    border-color: #22c55e;
+    color: #86efac;
+}
+
+.rep-confirmation strong {
+    font-weight: 900;
+}
+
+/* ===== Witness section للوثائق القانونية ===== */
+.rep-witness-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-top: 20px;
+    padding-top: 18px;
+    border-top: 2px dashed #cbd5e1;
+}
+
+[data-theme="dark"] .rep-witness-row {
+    border-color: #334155;
+}
+
+.rep-witness-block {
+    text-align: center;
+    font-size: 12px;
+    color: #64748b;
+    font-weight: 700;
+}
+
+[data-theme="dark"] .rep-witness-block {
+    color: #94a3b8;
+}
+
+.rep-witness-line {
+    height: 38px;
+    border-bottom: 1.5px dashed #94a3b8;
+    margin-bottom: 6px;
+}
+
+@media (max-width: 640px) {
+    .rep-legal-signatures {
+        grid-template-columns: 1fr;
+    }
+
+    .rep-witness-row {
+        grid-template-columns: 1fr;
+    }
+}
+/* ============================================================
+   ⚖️ COMPLETE LEGAL DOCUMENTS — Additions (9 new types)
+   أضف في نهاية الملف — لا يعدل شيئاً قديماً
+============================================================ */
+
+/* ===== Tabs للمجموعات ===== */
+.tpl-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 24px;
+    padding: 6px;
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: var(--r-md);
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+    .tpl-tabs::-webkit-scrollbar {
+        display: none;
+    }
+
+.tpl-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 22px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--c-text-3);
+    white-space: nowrap;
+    transition: all var(--t-fast);
+    flex-shrink: 0;
+}
+
+    .tpl-tab:hover {
+        background: var(--c-surface-alt);
+        color: var(--c-text);
+    }
+
+    .tpl-tab.is-active {
+        background: linear-gradient(135deg, var(--c-primary), var(--c-secondary));
+        color: white;
+        box-shadow: 0 8px 18px -6px rgba(8, 145, 178, 0.55);
+    }
+
+/* ===== القوالب القانونية الستة القديمة ===== */
+.tpl-card.t-consent::before {
+    background: #d97706;
+}
+
+.tpl-card.t-legal::before {
+    background: #1e293b;
+}
+
+.tpl-card.t-violence::before {
+    background: #b91c1c;
+}
+
+.tpl-card.t-tplan::before {
+    background: #7c3aed;
+}
+
+.tpl-card.t-discharge::before {
+    background: #0891b2;
+}
+
+.tpl-card.t-refusal::before {
+    background: #be123c;
+}
+
+.t-consent .tpl-icon {
+    background: linear-gradient(135deg, #fbbf24, #d97706);
+}
+
+.t-legal .tpl-icon {
+    background: linear-gradient(135deg, #334155, #0f172a);
+}
+
+.t-violence .tpl-icon {
+    background: linear-gradient(135deg, #ef4444, #b91c1c);
+}
+
+.t-tplan .tpl-icon {
+    background: linear-gradient(135deg, #a78bfa, #7c3aed);
+}
+
+.t-discharge .tpl-icon {
+    background: linear-gradient(135deg, #22d3ee, #0891b2);
+}
+
+.t-refusal .tpl-icon {
+    background: linear-gradient(135deg, #f472b6, #be123c);
+}
+
+/* ===== القوالب القانونية التسعة الجديدة ===== */
+.tpl-card.t-capacity::before {
+    background: #4338ca;
+}
+
+.tpl-card.t-involuntary::before {
+    background: #991b1b;
+}
+
+.tpl-card.t-fitness::before {
+    background: #0f766e;
+}
+
+.tpl-card.t-mandatory::before {
+    background: #c2410c;
+}
+
+.tpl-card.t-roi::before {
+    background: #6d28d9;
+}
+
+.tpl-card.t-monitoring::before {
+    background: #0369a1;
+}
+
+.tpl-card.t-ect::before {
+    background: #be185d;
+}
+
+.tpl-card.t-second::before {
+    background: #4b5563;
+}
+
+.tpl-card.t-npp::before {
+    background: #78716c;
+}
+
+.t-capacity .tpl-icon {
+    background: linear-gradient(135deg, #818cf8, #4338ca);
+}
+
+.t-involuntary .tpl-icon {
+    background: linear-gradient(135deg, #f87171, #991b1b);
+}
+
+.t-fitness .tpl-icon {
+    background: linear-gradient(135deg, #2dd4bf, #0f766e);
+}
+
+.t-mandatory .tpl-icon {
+    background: linear-gradient(135deg, #fb923c, #c2410c);
+}
+
+.t-roi .tpl-icon {
+    background: linear-gradient(135deg, #a78bfa, #6d28d9);
+}
+
+.t-monitoring .tpl-icon {
+    background: linear-gradient(135deg, #38bdf8, #0369a1);
+}
+
+.t-ect .tpl-icon {
+    background: linear-gradient(135deg, #f472b6, #be185d);
+}
+
+.t-second .tpl-icon {
+    background: linear-gradient(135deg, #9ca3af, #4b5563);
+}
+
+.t-npp .tpl-icon {
+    background: linear-gradient(135deg, #a8a29e, #78716c);
+}
+
+/* ===== بطاقات التقارير المحفوظة (9 جديدة) ===== */
+.rpt-card.c-capacity .rpt-icon {
+    background: linear-gradient(135deg, #818cf8, #4338ca);
+}
+
+.rpt-card.c-involuntary .rpt-icon {
+    background: linear-gradient(135deg, #f87171, #991b1b);
+}
+
+.rpt-card.c-fitness .rpt-icon {
+    background: linear-gradient(135deg, #2dd4bf, #0f766e);
+}
+
+.rpt-card.c-mandatory .rpt-icon {
+    background: linear-gradient(135deg, #fb923c, #c2410c);
+}
+
+.rpt-card.c-roi .rpt-icon {
+    background: linear-gradient(135deg, #a78bfa, #6d28d9);
+}
+
+.rpt-card.c-monitoring .rpt-icon {
+    background: linear-gradient(135deg, #38bdf8, #0369a1);
+}
+
+.rpt-card.c-ect .rpt-icon {
+    background: linear-gradient(135deg, #f472b6, #be185d);
+}
+
+.rpt-card.c-second .rpt-icon {
+    background: linear-gradient(135deg, #9ca3af, #4b5563);
+}
+
+.rpt-card.c-npp .rpt-icon {
+    background: linear-gradient(135deg, #a8a29e, #78716c);
+}
+
+/* ===== Legal Banner ===== */
+.rep-legal-banner {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 22px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #fef3c7, #fde68a);
+    border: 2px solid #d97706;
+    margin-bottom: 22px;
+    color: #78350f;
+}
+
+[data-theme="dark"] .rep-legal-banner {
+    background: rgba(217, 119, 6, 0.15);
+    color: #fcd34d;
+    border-color: #d97706;
+}
+
+.rep-legal-banner.severity-critical {
+    background: linear-gradient(135deg, #fee2e2, #fecaca);
+    border-color: #b91c1c;
+    color: #7f1d1d;
+}
+
+[data-theme="dark"] .rep-legal-banner.severity-critical {
+    background: rgba(185, 28, 28, 0.15);
+    color: #fca5a5;
+}
+
+.rep-legal-banner.severity-high {
+    background: linear-gradient(135deg, #fff7ed, #ffedd5);
+    border-color: #ea580c;
+    color: #9a3412;
+}
+
+[data-theme="dark"] .rep-legal-banner.severity-high {
+    background: rgba(234, 88, 12, 0.15);
+    color: #fdba74;
+}
+
+.rep-legal-banner-icon {
+    width: 46px;
+    height: 46px;
+    min-width: 46px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+}
+
+[data-theme="dark"] .rep-legal-banner-icon {
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.rep-legal-banner-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.rep-legal-banner-title {
+    font-size: 15px;
+    font-weight: 900;
+    margin: 0 0 4px;
+    font-family: 'Cairo', sans-serif;
+}
+
+.rep-legal-banner-desc {
+    font-size: 12px;
+    margin: 0;
+    font-weight: 600;
+    line-height: 1.6;
+    opacity: 0.9;
+}
+
+/* ===== Legal Blocks ===== */
+.rep-legal-block {
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    border-right: 4px solid #0e7490;
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin-bottom: 16px;
+    font-size: 13px;
+    line-height: 1.9;
+    color: #1e293b;
+}
+
+[data-theme="dark"] .rep-legal-block {
+    background: rgba(15, 23, 42, 0.4);
+    border-color: #334155;
+    border-right-color: #22d3ee;
+    color: #f1f5f9;
+}
+
+.rep-legal-block h4 {
+    margin: 0 0 10px;
+    font-size: 14px;
+    font-weight: 900;
+    color: #0e7490;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+[data-theme="dark"] .rep-legal-block h4 {
+    color: #67e8f9;
+}
+
+.rep-legal-block ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+    .rep-legal-block ul li {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 8px 12px;
+        background: rgba(255, 255, 255, 0.7);
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+[data-theme="dark"] .rep-legal-block ul li {
+    background: rgba(30, 41, 59, 0.6);
+}
+
+.rep-legal-block ul li i {
+    color: #0891b2;
+    margin-top: 2px;
+    flex-shrink: 0;
+    font-size: 12px;
+}
+
+.rep-legal-block.danger {
+    border-right-color: #b91c1c;
+    background: #fef2f2;
+    border-color: #fecaca;
+}
+
+[data-theme="dark"] .rep-legal-block.danger {
+    background: rgba(185, 28, 28, 0.1);
+    border-color: rgba(185, 28, 28, 0.4);
+    border-right-color: #ef4444;
+}
+
+.rep-legal-block.danger h4 {
+    color: #991b1b;
+}
+
+[data-theme="dark"] .rep-legal-block.danger h4 {
+    color: #fca5a5;
+}
+
+/* ===== Signature Section ===== */
+.rep-legal-signatures {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+    margin-top: 30px;
+    padding: 24px;
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    border-radius: 12px;
+}
+
+[data-theme="dark"] .rep-legal-signatures {
+    background: rgba(15, 23, 42, 0.4);
+    border-color: #334155;
+}
+
+.rep-sig-block {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 14px 16px;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+}
+
+[data-theme="dark"] .rep-sig-block {
+    background: rgba(30, 41, 59, 0.7);
+    border-color: #334155;
+}
+
+.rep-sig-block-label {
+    font-size: 11px;
+    font-weight: 900;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+[data-theme="dark"] .rep-sig-block-label {
+    color: #94a3b8;
+}
+
+.rep-sig-block-line {
+    height: 42px;
+    border-bottom: 1.5px dashed #94a3b8;
+    margin-bottom: 6px;
+}
+
+.rep-sig-block-name {
+    font-size: 13px;
+    font-weight: 800;
+    color: #0f172a;
+    min-height: 20px;
+}
+
+[data-theme="dark"] .rep-sig-block-name {
+    color: #f1f5f9;
+}
+
+.rep-sig-block-meta {
+    font-size: 11px;
+    color: #64748b;
+    font-weight: 600;
+}
+
+/* ===== Witness Row ===== */
+.rep-witness-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-top: 20px;
+    padding-top: 18px;
+    border-top: 2px dashed #cbd5e1;
+}
+
+[data-theme="dark"] .rep-witness-row {
+    border-color: #334155;
+}
+
+.rep-witness-block {
+    text-align: center;
+    font-size: 12px;
+    color: #64748b;
+    font-weight: 700;
+}
+
+[data-theme="dark"] .rep-witness-block {
+    color: #94a3b8;
+}
+
+.rep-witness-line {
+    height: 38px;
+    border-bottom: 1.5px dashed #94a3b8;
+    margin-bottom: 6px;
+}
+
+/* ===== Confirmation Box ===== */
+.rep-confirmation {
+    margin-top: 24px;
+    padding: 16px 20px;
+    background: linear-gradient(135deg, #ecfdf5, #f0fdf4);
+    border: 2px solid #16a34a;
+    border-radius: 10px;
+    font-size: 13px;
+    line-height: 1.9;
+    color: #14532d;
+    font-weight: 600;
+}
+
+[data-theme="dark"] .rep-confirmation {
+    background: rgba(22, 163, 74, 0.1);
+    border-color: #22c55e;
+    color: #86efac;
+}
+
+/* ===== Checkbox Grid for ROI / Monitoring ===== */
+.rep-checkbox-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 8px;
+    margin: 10px 0;
+}
+
+.rep-checkbox-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.7);
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+[data-theme="dark"] .rep-checkbox-item {
+    background: rgba(30, 41, 59, 0.6);
+    border-color: #334155;
+}
+
+.rep-checkbox-item input {
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+/* ===== Capacity Four-Test Table ===== */
+.rep-capacity-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin: 10px 0;
+}
+
+.rep-capacity-item {
+    padding: 12px 14px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    border-right: 3px solid #4338ca;
+}
+
+[data-theme="dark"] .rep-capacity-item {
+    background: rgba(15, 23, 42, 0.4);
+    border-color: #334155;
+}
+
+.rep-capacity-item h5 {
+    margin: 0 0 6px;
+    font-size: 12px;
+    font-weight: 900;
+    color: #4338ca;
+}
+
+[data-theme="dark"] .rep-capacity-item h5 {
+    color: #a5b4fc;
+}
+
+.rep-capacity-item p {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.7;
+    color: #475569;
+}
+
+[data-theme="dark"] .rep-capacity-item p {
+    color: #cbd5e1;
+}
+
+@media (max-width: 640px) {
+    .rep-legal-signatures {
+        grid-template-columns: 1fr;
+    }
+
+    .rep-witness-row {
+        grid-template-columns: 1fr;
+    }
+
+    .rep-capacity-grid {
+        grid-template-columns: 1fr;
+    }
+}
+/* ============================================================
+   DYNAMIC LEGAL FORM — Additions
+   أضف في نهاية الملف — لا يعدل شيئاً قديماً
+============================================================ */
+
+/* Tabs للمجموعات */
+.tpl-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 24px;
+    padding: 6px;
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: var(--r-md);
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+    .tpl-tabs::-webkit-scrollbar {
+        display: none;
+    }
+
+.tpl-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 22px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--c-text-3);
+    white-space: nowrap;
+    transition: all var(--t-fast);
+    flex-shrink: 0;
+}
+
+    .tpl-tab:hover {
+        background: var(--c-surface-alt);
+        color: var(--c-text);
+    }
+
+    .tpl-tab.is-active {
+        background: linear-gradient(135deg, var(--c-primary), var(--c-secondary));
+        color: white;
+        box-shadow: 0 8px 18px -6px rgba(8, 145, 178, 0.55);
+    }
+
+/* القوالب القانونية */
+.tpl-card.t-consent::before {
+    background: #d97706;
+}
+
+.tpl-card.t-legal::before {
+    background: #1e293b;
+}
+
+.tpl-card.t-violence::before {
+    background: #b91c1c;
+}
+
+.tpl-card.t-tplan::before {
+    background: #7c3aed;
+}
+
+.tpl-card.t-discharge::before {
+    background: #0891b2;
+}
+
+.tpl-card.t-refusal::before {
+    background: #be123c;
+}
+
+.tpl-card.t-capacity::before {
+    background: #4338ca;
+}
+
+.tpl-card.t-involuntary::before {
+    background: #991b1b;
+}
+
+.tpl-card.t-fitness::before {
+    background: #0f766e;
+}
+
+.tpl-card.t-mandatory::before {
+    background: #c2410c;
+}
+
+.tpl-card.t-roi::before {
+    background: #6d28d9;
+}
+
+.tpl-card.t-monitoring::before {
+    background: #0369a1;
+}
+
+.tpl-card.t-ect::before {
+    background: #be185d;
+}
+
+.tpl-card.t-second::before {
+    background: #4b5563;
+}
+
+.tpl-card.t-npp::before {
+    background: #78716c;
+}
+
+.t-consent .tpl-icon {
+    background: linear-gradient(135deg, #fbbf24, #d97706);
+}
+
+.t-legal .tpl-icon {
+    background: linear-gradient(135deg, #334155, #0f172a);
+}
+
+.t-violence .tpl-icon {
+    background: linear-gradient(135deg, #ef4444, #b91c1c);
+}
+
+.t-tplan .tpl-icon {
+    background: linear-gradient(135deg, #a78bfa, #7c3aed);
+}
+
+.t-discharge .tpl-icon {
+    background: linear-gradient(135deg, #22d3ee, #0891b2);
+}
+
+.t-refusal .tpl-icon {
+    background: linear-gradient(135deg, #f472b6, #be123c);
+}
+
+.t-capacity .tpl-icon {
+    background: linear-gradient(135deg, #818cf8, #4338ca);
+}
+
+.t-involuntary .tpl-icon {
+    background: linear-gradient(135deg, #f87171, #991b1b);
+}
+
+.t-fitness .tpl-icon {
+    background: linear-gradient(135deg, #2dd4bf, #0f766e);
+}
+
+.t-mandatory .tpl-icon {
+    background: linear-gradient(135deg, #fb923c, #c2410c);
+}
+
+.t-roi .tpl-icon {
+    background: linear-gradient(135deg, #a78bfa, #6d28d9);
+}
+
+.t-monitoring .tpl-icon {
+    background: linear-gradient(135deg, #38bdf8, #0369a1);
+}
+
+.t-ect .tpl-icon {
+    background: linear-gradient(135deg, #f472b6, #be185d);
+}
+
+.t-second .tpl-icon {
+    background: linear-gradient(135deg, #9ca3af, #4b5563);
+}
+
+.t-npp .tpl-icon {
+    background: linear-gradient(135deg, #a8a29e, #78716c);
+}
+
+.rpt-card.c-consent .rpt-icon {
+    background: linear-gradient(135deg, #fbbf24, #d97706);
+}
+
+.rpt-card.c-legal .rpt-icon {
+    background: linear-gradient(135deg, #334155, #0f172a);
+}
+
+.rpt-card.c-violence .rpt-icon {
+    background: linear-gradient(135deg, #ef4444, #b91c1c);
+}
+
+.rpt-card.c-tplan .rpt-icon {
+    background: linear-gradient(135deg, #a78bfa, #7c3aed);
+}
+
+.rpt-card.c-discharge .rpt-icon {
+    background: linear-gradient(135deg, #22d3ee, #0891b2);
+}
+
+.rpt-card.c-refusal .rpt-icon {
+    background: linear-gradient(135deg, #f472b6, #be123c);
+}
+
+.rpt-card.c-capacity .rpt-icon {
+    background: linear-gradient(135deg, #818cf8, #4338ca);
+}
+
+.rpt-card.c-involuntary .rpt-icon {
+    background: linear-gradient(135deg, #f87171, #991b1b);
+}
+
+.rpt-card.c-fitness .rpt-icon {
+    background: linear-gradient(135deg, #2dd4bf, #0f766e);
+}
+
+.rpt-card.c-mandatory .rpt-icon {
+    background: linear-gradient(135deg, #fb923c, #c2410c);
+}
+
+.rpt-card.c-roi .rpt-icon {
+    background: linear-gradient(135deg, #a78bfa, #6d28d9);
+}
+
+.rpt-card.c-monitoring .rpt-icon {
+    background: linear-gradient(135deg, #38bdf8, #0369a1);
+}
+
+.rpt-card.c-ect .rpt-icon {
+    background: linear-gradient(135deg, #f472b6, #be185d);
+}
+
+.rpt-card.c-second .rpt-icon {
+    background: linear-gradient(135deg, #9ca3af, #4b5563);
+}
+
+.rpt-card.c-npp .rpt-icon {
+    background: linear-gradient(135deg, #a8a29e, #78716c);
+}
+
+/* Legal Banner */
+.rep-legal-banner {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 22px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #fef3c7, #fde68a);
+    border: 2px solid #d97706;
+    margin-bottom: 22px;
+    color: #78350f;
+}
+
+[data-theme="dark"] .rep-legal-banner {
+    background: rgba(217, 119, 6, 0.15);
+    color: #fcd34d;
+    border-color: #d97706;
+}
+
+.rep-legal-banner.severity-critical {
+    background: linear-gradient(135deg, #fee2e2, #fecaca);
+    border-color: #b91c1c;
+    color: #7f1d1d;
+}
+
+[data-theme="dark"] .rep-legal-banner.severity-critical {
+    background: rgba(185, 28, 28, 0.15);
+    color: #fca5a5;
+}
+
+.rep-legal-banner.severity-high {
+    background: linear-gradient(135deg, #fff7ed, #ffedd5);
+    border-color: #ea580c;
+    color: #9a3412;
+}
+
+[data-theme="dark"] .rep-legal-banner.severity-high {
+    background: rgba(234, 88, 12, 0.15);
+    color: #fdba74;
+}
+
+.rep-legal-banner-icon {
+    width: 46px;
+    height: 46px;
+    min-width: 46px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+}
+
+[data-theme="dark"] .rep-legal-banner-icon {
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.rep-legal-banner-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.rep-legal-banner-title {
+    font-size: 15px;
+    font-weight: 900;
+    margin: 0 0 4px;
+    font-family: 'Cairo', sans-serif;
+}
+
+.rep-legal-banner-desc {
+    font-size: 12px;
+    margin: 0;
+    font-weight: 600;
+    line-height: 1.6;
+    opacity: 0.9;
+}
+
+/* Legal Blocks */
+.rep-legal-block {
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    border-right: 4px solid #0e7490;
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin-bottom: 16px;
+    font-size: 13px;
+    line-height: 1.9;
+    color: #1e293b;
+}
+
+[data-theme="dark"] .rep-legal-block {
+    background: rgba(15, 23, 42, 0.4);
+    border-color: #334155;
+    border-right-color: #22d3ee;
+    color: #f1f5f9;
+}
+
+.rep-legal-block h4 {
+    margin: 0 0 10px;
+    font-size: 14px;
+    font-weight: 900;
+    color: #0e7490;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+[data-theme="dark"] .rep-legal-block h4 {
+    color: #67e8f9;
+}
+
+.rep-legal-block ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+    .rep-legal-block ul li {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 8px 12px;
+        background: rgba(255, 255, 255, 0.7);
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+[data-theme="dark"] .rep-legal-block ul li {
+    background: rgba(30, 41, 59, 0.6);
+}
+
+.rep-legal-block ul li i {
+    color: #0891b2;
+    margin-top: 2px;
+    flex-shrink: 0;
+    font-size: 12px;
+}
+
+.rep-legal-block.danger {
+    border-right-color: #b91c1c;
+    background: #fef2f2;
+    border-color: #fecaca;
+}
+
+[data-theme="dark"] .rep-legal-block.danger {
+    background: rgba(185, 28, 28, 0.1);
+    border-color: rgba(185, 28, 28, 0.4);
+    border-right-color: #ef4444;
+}
+
+.rep-legal-block.danger h4 {
+    color: #991b1b;
+}
+
+[data-theme="dark"] .rep-legal-block.danger h4 {
+    color: #fca5a5;
+}
+
+/* Signatures */
+.rep-legal-signatures {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+    margin-top: 30px;
+    padding: 24px;
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    border-radius: 12px;
+}
+
+[data-theme="dark"] .rep-legal-signatures {
+    background: rgba(15, 23, 42, 0.4);
+    border-color: #334155;
+}
+
+.rep-sig-block {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 14px 16px;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+}
+
+[data-theme="dark"] .rep-sig-block {
+    background: rgba(30, 41, 59, 0.7);
+    border-color: #334155;
+}
+
+.rep-sig-block-label {
+    font-size: 11px;
+    font-weight: 900;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+[data-theme="dark"] .rep-sig-block-label {
+    color: #94a3b8;
+}
+
+.rep-sig-block-line {
+    height: 42px;
+    border-bottom: 1.5px dashed #94a3b8;
+    margin-bottom: 6px;
+}
+
+.rep-sig-block-name {
+    font-size: 13px;
+    font-weight: 800;
+    color: #0f172a;
+    min-height: 20px;
+}
+
+[data-theme="dark"] .rep-sig-block-name {
+    color: #f1f5f9;
+}
+
+.rep-sig-block-meta {
+    font-size: 11px;
+    color: #64748b;
+    font-weight: 600;
+}
+
+.rep-witness-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-top: 20px;
+    padding-top: 18px;
+    border-top: 2px dashed #cbd5e1;
+}
+
+[data-theme="dark"] .rep-witness-row {
+    border-color: #334155;
+}
+
+.rep-witness-block {
+    text-align: center;
+    font-size: 12px;
+    color: #64748b;
+    font-weight: 700;
+}
+
+[data-theme="dark"] .rep-witness-block {
+    color: #94a3b8;
+}
+
+.rep-witness-line {
+    height: 38px;
+    border-bottom: 1.5px dashed #94a3b8;
+    margin-bottom: 6px;
+}
+
+.rep-confirmation {
+    margin-top: 24px;
+    padding: 16px 20px;
+    background: linear-gradient(135deg, #ecfdf5, #f0fdf4);
+    border: 2px solid #16a34a;
+    border-radius: 10px;
+    font-size: 13px;
+    line-height: 1.9;
+    color: #14532d;
+    font-weight: 600;
+}
+
+[data-theme="dark"] .rep-confirmation {
+    background: rgba(22, 163, 74, 0.1);
+    border-color: #22c55e;
+    color: #86efac;
+}
+
+.rep-checkbox-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 8px;
+    margin: 10px 0;
+}
+
+.rep-checkbox-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.7);
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+[data-theme="dark"] .rep-checkbox-item {
+    background: rgba(30, 41, 59, 0.6);
+    border-color: #334155;
+}
+
+.rep-checkbox-item input {
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+.rep-capacity-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin: 10px 0;
+}
+
+.rep-capacity-item {
+    padding: 12px 14px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    border-right: 3px solid #4338ca;
+}
+
+[data-theme="dark"] .rep-capacity-item {
+    background: rgba(15, 23, 42, 0.4);
+    border-color: #334155;
+}
+
+.rep-capacity-item h5 {
+    margin: 0 0 6px;
+    font-size: 12px;
+    font-weight: 900;
+    color: #4338ca;
+}
+
+[data-theme="dark"] .rep-capacity-item h5 {
+    color: #a5b4fc;
+}
+
+.rep-capacity-item p {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.7;
+    color: #475569;
+}
+
+[data-theme="dark"] .rep-capacity-item p {
+    color: #cbd5e1;
+}
+
+/* ============================================================
+   DYNAMIC FORM SECTIONS (Step 2)
+============================================================ */
+.wiz-section {
+    background: var(--c-surface-alt);
+    border: 1px solid var(--c-border);
+    border-radius: var(--r-md);
+    padding: 18px 20px;
+    margin-bottom: 16px;
+}
+
+.wiz-section-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    font-weight: 900;
+    color: var(--c-text);
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px dashed var(--c-border);
+}
+
+    .wiz-section-title i {
+        width: 30px;
+        height: 30px;
+        border-radius: 8px;
+        background: var(--c-primary-light);
+        color: var(--c-primary-dark);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+    }
+
+[data-theme="dark"] .wiz-section-title i {
+    background: rgba(34, 211, 238, 0.15);
+    color: #67e8f9;
+}
+
+.wiz-field {
+    margin-bottom: 14px;
+}
+
+    .wiz-field:last-child {
+        margin-bottom: 0;
+    }
+
+    .wiz-field label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--c-text-2);
+        margin-bottom: 8px;
+    }
+
+        .wiz-field label i {
+            color: var(--c-primary);
+            font-size: 12px;
+        }
+
+    .wiz-field .req {
+        color: var(--c-danger);
+        font-weight: 900;
+    }
+
+    .wiz-field input[type="text"],
+    .wiz-field input[type="date"],
+    .wiz-field input[type="number"],
+    .wiz-field input[type="email"],
+    .wiz-field input[type="tel"],
+    .wiz-field select,
+    .wiz-field textarea {
+        width: 100%;
+        padding: 11px 14px;
+        border: 1px solid var(--c-border);
+        border-radius: var(--r-sm);
+        background: var(--c-surface);
+        color: var(--c-text);
+        font-size: 13px;
+        font-weight: 500;
+        transition: all var(--t-fast);
+        font-family: inherit;
+    }
+
+        .wiz-field input:focus,
+        .wiz-field select:focus,
+        .wiz-field textarea:focus {
+            outline: none;
+            border-color: var(--c-primary);
+            box-shadow: 0 0 0 3px var(--c-primary-light);
+        }
+
+    .wiz-field textarea {
+        min-height: 90px;
+        resize: vertical;
+        line-height: 1.7;
+    }
+
+.wiz-field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+}
+
+@media (max-width: 640px) {
+    .wiz-field-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+.wiz-checkbox {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 14px;
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: var(--r-sm);
+    cursor: pointer;
+    transition: all var(--t-fast);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--c-text-2);
+}
+
+    .wiz-checkbox:hover {
+        border-color: var(--c-primary);
+        background: var(--c-primary-soft);
+    }
+
+    .wiz-checkbox input {
+        margin-top: 2px;
+        width: 18px;
+        height: 18px;
+        accent-color: var(--c-primary);
+        flex-shrink: 0;
+    }
+
+    .wiz-checkbox.checked {
+        background: var(--c-primary-soft);
+        border-color: var(--c-primary);
+    }
+
+.wiz-helper {
+    font-size: 11px;
+    color: var(--c-text-4);
+    font-weight: 600;
+    margin-top: 4px;
+    display: flex;
+    align-items: flex-start;
+    gap: 4px;
+}
+
+    .wiz-helper i {
+        color: var(--c-info);
+        font-size: 10px;
+        margin-top: 2px;
+    }
+
+/* Empty state */
+.wiz-empty {
+    text-align: center;
+    padding: 30px 20px;
+    color: var(--c-text-3);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+    .wiz-empty i {
+        font-size: 32px;
+        color: var(--c-text-4);
+        margin-bottom: 10px;
+        display: block;
+    }
+
+@media (max-width: 640px) {
+    .rep-legal-signatures {
+        grid-template-columns: 1fr;
+    }
+
+    .rep-witness-row {
+        grid-template-columns: 1fr;
+    }
+
+    .rep-capacity-grid {
+        grid-template-columns: 1fr;
+    }
+}

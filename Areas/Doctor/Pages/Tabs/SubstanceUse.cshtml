@@ -16,21 +16,51 @@
                     <i class="fa-solid fa-wine-bottle"></i>
                 </div>
                 <div>
-                    <h1>تعاطي الكحول أو المواد المخدرة</h1>
-                    <p>إدارة سجل المواد التي يتعاطاها المريض ومتابعة آخر مرة تم فيها التعاطي</p>
+                    <h1>سجل تعاطي المواد (Substance Use)</h1>
+                    <p>تقييم شامل لتعاطي المواد: النوع، الطريقة، الشدة، والتأثير على الحياة</p>
                 </div>
             </div>
             <div class="edit-status">
                 <i class="fa-solid fa-clipboard-list"></i>
-                سجل التعاطي
+                <span id="substanceCountBadge">0 مادة</span>
             </div>
         </div>
 
         <div class="personal-form">
 
-            <!-- ====================================================
-                 Form: Add / Edit Substance
-            ===================================================== -->
+            <!-- ====================== Risk Summary ====================== -->
+            <div class="su-risk-summary" id="suRiskSummary">
+                <div class="su-risk-item su-risk-active">
+                    <div class="su-risk-icon"><i class="fa-solid fa-circle-play"></i></div>
+                    <div>
+                        <div class="su-risk-value" id="suStatActive">0</div>
+                        <div class="su-risk-label">نشط</div>
+                    </div>
+                </div>
+                <div class="su-risk-item su-risk-recovery">
+                    <div class="su-risk-icon"><i class="fa-solid fa-heart-pulse"></i></div>
+                    <div>
+                        <div class="su-risk-value" id="suStatRecovery">0</div>
+                        <div class="su-risk-label">في التعافي</div>
+                    </div>
+                </div>
+                <div class="su-risk-item su-risk-relapse">
+                    <div class="su-risk-icon"><i class="fa-solid fa-rotate-left"></i></div>
+                    <div>
+                        <div class="su-risk-value" id="suStatRelapse">0</div>
+                        <div class="su-risk-label">انتكاسة</div>
+                    </div>
+                </div>
+                <div class="su-risk-item su-risk-severe">
+                    <div class="su-risk-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                    <div>
+                        <div class="su-risk-value" id="suStatSevere">0</div>
+                        <div class="su-risk-label">شديد الخطورة</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ====================== Form ====================== -->
             <div class="substance-form-card">
                 <h3 id="substanceUseFormTitle" class="form-section-title">
                     <i class="fa-solid fa-plus-circle"></i>
@@ -40,81 +70,300 @@
                 <form id="substanceUseForm" novalidate>
                     <input type="hidden" id="substanceUseEditIndex" value="-1">
 
-                    <div class="row g-4">
-                        <div class="col-md-6">
-                            <label for="substanceName" class="form-label-custom">
-                                <i class="fa-solid fa-prescription-bottle"></i>
-                                اسم المادة
-                            </label>
-                            <input type="text" class="form-control form-control-custom" id="substanceName" name="substanceName" required placeholder="مثال: الكحول">
+                    <!-- Section 1: Basic Info -->
+                    <div class="su-form-section">
+                        <div class="su-form-section-title">
+                            <i class="fa-solid fa-circle-info"></i>
+                            المعلومات الأساسية
                         </div>
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <label for="substanceName" class="form-label-custom">
+                                    <i class="fa-solid fa-tag"></i>
+                                    اسم المادة
+                                </label>
+                                <input type="text" class="form-control form-control-custom" id="substanceName" name="substanceName" placeholder="مثال: الكحول، النيكوتين..." required>
+                            </div>
 
-                        <div class="col-md-6">
-                            <label for="substanceAmount" class="form-label-custom">
-                                <i class="fa-solid fa-scale-balanced"></i>
-                                الكمية
-                            </label>
-                            <input type="text" class="form-control form-control-custom" id="substanceAmount" name="substanceAmount" required placeholder="مثال: 2-3 كؤوس يومياً">
+                            <div class="col-md-6">
+                                <label for="substanceType" class="form-label-custom">
+                                    <i class="fa-solid fa-layer-group"></i>
+                                    نوع المادة
+                                </label>
+                                <select class="form-select form-control-custom" id="substanceType" name="substanceType" required>
+                                    <option value="">اختر نوع المادة</option>
+                                    <option value="كحول">كحول</option>
+                                    <option value="أفيونات">أفيونات (هيروين، مورفين، ترامادول)</option>
+                                    <option value="منشطات">منشطات (كوكايين، أمفيتامين)</option>
+                                    <option value="كانابينويدات">كانابينويدات (حشيش، ماريغوانا)</option>
+                                    <option value="مهدئات">مهدئات (بنزوديازيبينات)</option>
+                                    <option value="مهلوسات">مهلوسات (LSD، فطر)</option>
+                                    <option value="تبغ">تبغ / نيكوتين</option>
+                                    <option value="كافيين">كافيين</option>
+                                    <option value="أخرى">أخرى</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="substanceRoute" class="form-label-custom">
+                                    <i class="fa-solid fa-syringe"></i>
+                                    طريقة التعاطي
+                                </label>
+                                <select class="form-select form-control-custom" id="substanceRoute" name="substanceRoute" required>
+                                    <option value="">اختر الطريقة</option>
+                                    <option value="فموي">فموي</option>
+                                    <option value="استنشاق">استنشاق</option>
+                                    <option value="حقن">حقن</option>
+                                    <option value="أنفي">أنفي</option>
+                                    <option value="تدخين">تدخين</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="substanceFrequency" class="form-label-custom">
+                                    <i class="fa-solid fa-clock"></i>
+                                    تكرار الاستخدام
+                                </label>
+                                <select class="form-select form-control-custom" id="substanceFrequency" name="substanceFrequency" required>
+                                    <option value="">اختر التكرار</option>
+                                    <option value="يومياً">يومياً</option>
+                                    <option value="أسبوعياً">أسبوعياً</option>
+                                    <option value="شهرياً">شهرياً</option>
+                                    <option value="عرضياً">عرضياً</option>
+                                </select>
+                            </div>
                         </div>
+                    </div>
 
-                        <div class="col-md-6">
-                            <label for="substanceLastUse" class="form-label-custom">
-                                <i class="fa-solid fa-calendar-days"></i>
-                                آخر مرة تعاطاها
-                            </label>
-                            <input type="date" class="form-control form-control-custom" id="substanceLastUse" name="substanceLastUse" required>
+                    <!-- Section 2: Usage Details -->
+                    <div class="su-form-section">
+                        <div class="su-form-section-title">
+                            <i class="fa-solid fa-chart-simple"></i>
+                            تفاصيل الاستخدام
                         </div>
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <label for="substanceAmount" class="form-label-custom">
+                                    <i class="fa-solid fa-scale-balanced"></i>
+                                    الجرعة اليومية
+                                </label>
+                                <input type="text" class="form-control form-control-custom" id="substanceAmount" name="substanceAmount" placeholder="مثال: 2-3 كؤوس / 10 ملغ" required>
+                            </div>
 
-                        <div class="col-md-6">
-                            <label for="substanceNotes" class="form-label-custom">
-                                <i class="fa-solid fa-note-sticky"></i>
-                                ملاحظات
-                            </label>
-                            <textarea class="form-control form-control-custom" id="substanceNotes" name="substanceNotes" placeholder="ملاحظات إضافية (اختياري)" style="min-height: 50px;"></textarea>
+                            <div class="col-md-6">
+                                <label for="substanceDuration" class="form-label-custom">
+                                    <i class="fa-solid fa-hourglass-half"></i>
+                                    مدة التعاطي (بالسنوات)
+                                </label>
+                                <input type="number" class="form-control form-control-custom" id="substanceDuration" name="substanceDuration" placeholder="مثال: 3" min="0" max="80" step="0.5">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="substanceAgeOfOnset" class="form-label-custom">
+                                    <i class="fa-solid fa-cake-candles"></i>
+                                    عمر البداية
+                                </label>
+                                <input type="number" class="form-control form-control-custom" id="substanceAgeOfOnset" name="substanceAgeOfOnset" placeholder="مثال: 18" min="5" max="100">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="substanceReason" class="form-label-custom">
+                                    <i class="fa-solid fa-question"></i>
+                                    سبب التعاطي
+                                </label>
+                                <select class="form-select form-control-custom" id="substanceReason" name="substanceReason">
+                                    <option value="">اختر السبب (اختياري)</option>
+                                    <option value="ترفيهي">ترفيهي</option>
+                                    <option value="تجريبي">تجريبي</option>
+                                    <option value="علاجي">علاجي</option>
+                                    <option value="ضغط نفسي">ضغط نفسي</option>
+                                    <option value="تأثير الأصدقاء">تأثير الأصدقاء</option>
+                                    <option value="أخرى">أخرى</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="substanceLastUse" class="form-label-custom">
+                                    <i class="fa-solid fa-calendar-days"></i>
+                                    تاريخ آخر استخدام
+                                </label>
+                                <input type="date" class="form-control form-control-custom" id="substanceLastUse" name="substanceLastUse" required>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="substanceCurrentStatus" class="form-label-custom">
+                                    <i class="fa-solid fa-circle-check"></i>
+                                    الحالة الحالية
+                                </label>
+                                <select class="form-select form-control-custom" id="substanceCurrentStatus" name="substanceCurrentStatus" required>
+                                    <option value="">اختر الحالة</option>
+                                    <option value="نشط">نشط</option>
+                                    <option value="متوقف">متوقف</option>
+                                    <option value="في التعافي">في التعافي</option>
+                                    <option value="انتكاسة">انتكاسة</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 3: Medical Assessment -->
+                    <div class="su-form-section">
+                        <div class="su-form-section-title">
+                            <i class="fa-solid fa-stethoscope"></i>
+                            التقييم الطبي
+                        </div>
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <label for="substanceCraving" class="form-label-custom">
+                                    <i class="fa-solid fa-fire"></i>
+                                    مستوى الرغبة (Craving)
+                                </label>
+                                <div class="su-craving-wrap">
+                                    <input type="range" class="form-range" id="substanceCraving" name="substanceCraving" min="0" max="10" value="0" step="1">
+                                    <span class="su-craving-value" id="substanceCravingValue">0 / 10</span>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="substanceSeverity" class="form-label-custom">
+                                    <i class="fa-solid fa-gauge-high"></i>
+                                    شدة الاضطراب (DSM-5)
+                                </label>
+                                <select class="form-select form-control-custom" id="substanceSeverity" name="substanceSeverity" required>
+                                    <option value="">اختر الشدة</option>
+                                    <option value="خفيف">خفيف (2-3 أعراض)</option>
+                                    <option value="متوسط">متوسط (4-5 أعراض)</option>
+                                    <option value="شديد">شديد (6+ أعراض)</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label-custom">
+                                    <i class="fa-solid fa-heart-pulse"></i>
+                                    الاعتماد
+                                </label>
+                                <div class="su-checkbox-group">
+                                    <label class="su-checkbox">
+                                        <input type="checkbox" id="substancePhysicalDependence" name="substancePhysicalDependence">
+                                        <span class="su-checkbox-mark"></span>
+                                        <span>اعتماد جسدي</span>
+                                    </label>
+                                    <label class="su-checkbox">
+                                        <input type="checkbox" id="substancePsychologicalDependence" name="substancePsychologicalDependence">
+                                        <span class="su-checkbox-mark"></span>
+                                        <span>اعتماد نفسي</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label-custom">
+                                    <i class="fa-solid fa-chart-line"></i>
+                                    تأثيرات على الحياة
+                                </label>
+                                <div class="su-checkbox-group su-checkbox-group-vertical">
+                                    <label class="su-checkbox">
+                                        <input type="checkbox" id="substanceImpactWork" name="substanceImpactWork">
+                                        <span class="su-checkbox-mark"></span>
+                                        <span>العمل / الدراسة</span>
+                                    </label>
+                                    <label class="su-checkbox">
+                                        <input type="checkbox" id="substanceImpactRelationships" name="substanceImpactRelationships">
+                                        <span class="su-checkbox-mark"></span>
+                                        <span>العلاقات الاجتماعية</span>
+                                    </label>
+                                    <label class="su-checkbox">
+                                        <input type="checkbox" id="substanceImpactHealth" name="substanceImpactHealth">
+                                        <span class="su-checkbox-mark"></span>
+                                        <span>الصحة العامة</span>
+                                    </label>
+                                    <label class="su-checkbox">
+                                        <input type="checkbox" id="substanceImpactLegal" name="substanceImpactLegal">
+                                        <span class="su-checkbox-mark"></span>
+                                        <span>مشاكل قانونية</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="substanceQuitAttempts" class="form-label-custom">
+                                    <i class="fa-solid fa-rotate-left"></i>
+                                    محاولات الإقلاع السابقة
+                                </label>
+                                <input type="number" class="form-control form-control-custom" id="substanceQuitAttempts" name="substanceQuitAttempts" placeholder="عدد المحاولات" min="0" max="100">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="substanceLastQuitDate" class="form-label-custom">
+                                    <i class="fa-solid fa-calendar-xmark"></i>
+                                    تاريخ آخر محاولة إقلاع
+                                </label>
+                                <input type="date" class="form-control form-control-custom" id="substanceLastQuitDate" name="substanceLastQuitDate">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 4: Notes -->
+                    <div class="su-form-section">
+                        <div class="su-form-section-title">
+                            <i class="fa-solid fa-note-sticky"></i>
+                            ملاحظات
+                        </div>
+                        <div class="row g-4">
+                            <div class="col-12">
+                                <label for="substanceNotes" class="form-label-custom">
+                                    <i class="fa-solid fa-pen"></i>
+                                    ملاحظات الطبيب
+                                </label>
+                                <textarea class="form-control form-control-custom" id="substanceNotes" name="substanceNotes" placeholder="ملاحظات إضافية..." style="min-height: 100px;"></textarea>
+                            </div>
                         </div>
                     </div>
 
                     <div class="d-flex gap-2 justify-content-end mt-4 flex-wrap">
-                        <button type="button" id="substanceUseCancelBtn" class="btn-secondary d-none" onclick="resetSubstanceUseForm()">
-                            <i class="fa-solid fa-xmark"></i>
+                        <button type="button" id="substanceUseCancelBtn" class="btn btn-secondary px-4 py-2 d-none" style="border-radius: 14px; font-weight: 800;" onclick="resetSubstanceUseForm()">
+                            <i class="fa-solid fa-xmark ms-1"></i>
                             إلغاء التعديل
                         </button>
                         <button type="submit" id="substanceUseSubmitBtn" class="btn-save">
-                            <i class="fa-solid fa-plus"></i>
+                            <i class="fa-solid fa-plus ms-1"></i>
                             إضافة المادة
                         </button>
                     </div>
                 </form>
             </div>
 
-            <!-- ====================================================
-                 Table: Substance Use Record
-            ===================================================== -->
-            <div class="form-section-title">
-                <i class="fa-solid fa-table-list"></i>
-                سجل التعاطي
-                <span id="substanceCountBadge" style="display:none; margin-inline-start: auto; background: var(--bn-primary-light); color: var(--bn-primary-dark); padding: 0.2rem 0.65rem; border-radius: 50px; font-size: 0.72rem; font-weight: 900;">0</span>
+            <hr class="form-divider">
+
+            <!-- ====================== Table ====================== -->
+            <div class="form-section-title mb-3">
+                <i class="fa-solid fa-list-check"></i>
+                قائمة المواد المسجلة
             </div>
 
             <div class="substance-table-wrapper">
-                <table class="table-custom table-mobile-cards">
+                <table class="table table-hover align-middle substance-table table-mobile-cards mb-0" style="font-size: 0.88rem;">
                     <thead>
                         <tr>
-                            <th style="width: 50px;">#</th>
-                            <th>اسم المادة</th>
-                            <th>الكمية</th>
-                            <th>آخر مرة تعاطاها</th>
-                            <th>ملاحظات</th>
-                            <th class="text-center" style="width: 130px;">العمليات</th>
+                            <th>#</th>
+                            <th>المادة</th>
+                            <th>النوع</th>
+                            <th>الجرعة</th>
+                            <th>التكرار</th>
+                            <th>آخر استخدام</th>
+                            <th>الحالة</th>
+                            <th>الشدة</th>
+                            <th>الرغبة</th>
+                            <th class="text-center">الإجراءات</th>
                         </tr>
                     </thead>
                     <tbody id="substanceUseTableBody"></tbody>
                 </table>
             </div>
 
-            <div id="substanceUseEmptyState" class="empty-state" style="display: none;">
-                <i class="fa-solid fa-folder-open"></i>
-                <p>لا توجد مواد مسجلة لهذا المريض حتى الآن.</p>
+            <div id="substanceUseEmptyState" class="empty-state">
+                <i class="fa-solid fa-wine-bottle"></i>
+                <p>لا توجد مواد مسجّلة لهذا المريض حتى الآن.</p>
             </div>
 
         </div>
@@ -123,11 +372,9 @@
 
 </div>
 
-<!-- ============================================================
-     Confirm Delete Modal
-============================================================ -->
-<div class="bn-modal-overlay" id="bnConfirmModal" role="dialog" aria-modal="true">
-    <div class="bn-modal">
+<!-- Confirm Modal -->
+<div class="bn-modal-overlay" id="bnConfirmModal" role="dialog" aria-modal="true" aria-labelledby="bnConfirmModalTitle">
+    <div class="bn-modal bn-modal-danger">
         <div class="bn-modal-header">
             <div class="bn-modal-header-icon">
                 <i class="fa-solid fa-triangle-exclamation"></i>

@@ -17,7 +17,7 @@
                 </div>
                 <div>
                     <h1>جلسات الاستماع والمتابعة</h1>
-                    <p>إدارة كاملة لجلسات الاستماع والعلاج النفسي</p>
+                    <p>توثيق طبي شامل للجلسات النفسية والعلاجية</p>
                 </div>
             </div>
             <div class="edit-status">
@@ -28,6 +28,39 @@
 
         <div class="personal-form">
 
+            <!-- Stats Summary -->
+            <div class="ls-stats-row">
+                <div class="ls-stat-card">
+                    <div class="ls-stat-icon ls-stat-icon-primary"><i class="fa-solid fa-headphones"></i></div>
+                    <div class="ls-stat-body">
+                        <div class="ls-stat-value" id="lsStatTotal">0</div>
+                        <div class="ls-stat-label">إجمالي الجلسات</div>
+                    </div>
+                </div>
+                <div class="ls-stat-card">
+                    <div class="ls-stat-icon ls-stat-icon-success"><i class="fa-solid fa-circle-check"></i></div>
+                    <div class="ls-stat-body">
+                        <div class="ls-stat-value" id="lsStatCompleted">0</div>
+                        <div class="ls-stat-label">جلسات مكتملة</div>
+                    </div>
+                </div>
+                <div class="ls-stat-card">
+                    <div class="ls-stat-icon ls-stat-icon-info"><i class="fa-solid fa-calendar-days"></i></div>
+                    <div class="ls-stat-body">
+                        <div class="ls-stat-value" id="lsStatScheduled">0</div>
+                        <div class="ls-stat-label">جلسات مجدولة</div>
+                    </div>
+                </div>
+                <div class="ls-stat-card">
+                    <div class="ls-stat-icon ls-stat-icon-warning"><i class="fa-solid fa-chart-line"></i></div>
+                    <div class="ls-stat-body">
+                        <div class="ls-stat-value" id="lsStatMoodChange">—</div>
+                        <div class="ls-stat-label">متوسط تحسن المزاج</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form -->
             <div class="session-form-card">
                 <h3 id="sessionFormTitle" class="form-section-title">
                     <i class="fa-solid fa-plus-circle"></i>
@@ -36,76 +69,291 @@
 
                 <form id="listeningSessionForm" novalidate>
                     <input type="hidden" id="sessionEditIndex" value="-1">
+                    <input type="hidden" id="sessionMoodBeforeHidden" value="5">
+                    <input type="hidden" id="sessionMoodAfterHidden" value="5">
 
-                    <div class="row g-4">
-                        <div class="col-md-6">
-                            <label for="sessionTitle" class="form-label-custom">
-                                <i class="fa-solid fa-heading"></i>
-                                عنوان الجلسة
-                            </label>
-                            <input type="text" class="form-control form-control-custom" id="sessionTitle" name="sessionTitle" placeholder="مثال: جلسة متابعة أسبوعية" required>
+                    <!-- Section 1: Basic Info -->
+                    <div class="ls-form-section">
+                        <div class="ls-form-section-title">
+                            <i class="fa-solid fa-circle-info"></i>
+                            المعلومات الأساسية
                         </div>
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <label for="sessionTitle" class="form-label-custom">
+                                    <i class="fa-solid fa-heading"></i>
+                                    عنوان الجلسة
+                                </label>
+                                <input type="text" class="form-control form-control-custom" id="sessionTitle" name="sessionTitle" placeholder="مثال: جلسة متابعة أسبوعية" required>
+                            </div>
 
-                        <div class="col-md-6">
-                            <label for="sessionDate" class="form-label-custom">
-                                <i class="fa-solid fa-calendar-days"></i>
-                                تاريخ الجلسة
-                            </label>
-                            <input type="date" class="form-control form-control-custom" id="sessionDate" name="sessionDate" required>
+                            <div class="col-md-6">
+                                <label for="sessionDate" class="form-label-custom">
+                                    <i class="fa-solid fa-calendar-days"></i>
+                                    تاريخ الجلسة
+                                </label>
+                                <input type="date" class="form-control form-control-custom" id="sessionDate" name="sessionDate" required>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="sessionTime" class="form-label-custom">
+                                    <i class="fa-solid fa-clock"></i>
+                                    وقت الجلسة
+                                </label>
+                                <input type="time" class="form-control form-control-custom" id="sessionTime" name="sessionTime">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="sessionDuration" class="form-label-custom">
+                                    <i class="fa-solid fa-hourglass-half"></i>
+                                    مدة الجلسة (بالدقائق)
+                                </label>
+                                <input type="number" class="form-control form-control-custom" id="sessionDuration" name="sessionDuration" placeholder="مثال: 45" min="1" max="480">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="sessionType" class="form-label-custom">
+                                    <i class="fa-solid fa-tag"></i>
+                                    نوع الجلسة
+                                </label>
+                                <select class="form-select form-control-custom" id="sessionType" name="sessionType">
+                                    <option value="">اختر نوع الجلسة</option>
+                                    <option value="جلسة استماع فردية">جلسة استماع فردية</option>
+                                    <option value="جلسة علاج نفسي">جلسة علاج نفسي</option>
+                                    <option value="جلسة متابعة">جلسة متابعة</option>
+                                    <option value="جلسة طارئة">جلسة طارئة</option>
+                                    <option value="جلسة جماعية">جلسة جماعية</option>
+                                    <option value="جلسة أسرية">جلسة أسرية</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="sessionStatus" class="form-label-custom">
+                                    <i class="fa-solid fa-circle-check"></i>
+                                    حالة الجلسة
+                                </label>
+                                <select class="form-select form-control-custom" id="sessionStatus" name="sessionStatus" required>
+                                    <option value="">اختر حالة الجلسة</option>
+                                    <option value="مكتملة">مكتملة</option>
+                                    <option value="مجدولة">مجدولة</option>
+                                    <option value="ملغية">ملغية</option>
+                                    <option value="مؤجلة">مؤجلة</option>
+                                    <option value="لم يحضر">لم يحضر</option>
+                                </select>
+                            </div>
                         </div>
+                    </div>
 
-                        <div class="col-md-6">
-                            <label for="sessionTime" class="form-label-custom">
-                                <i class="fa-solid fa-clock"></i>
-                                وقت الجلسة
-                            </label>
-                            <input type="time" class="form-control form-control-custom" id="sessionTime" name="sessionTime">
+                    <!-- Section 2: Therapy Details -->
+                    <div class="ls-form-section">
+                        <div class="ls-form-section-title">
+                            <i class="fa-solid fa-stethoscope"></i>
+                            تفاصيل العلاج
                         </div>
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <label for="sessionTherapyType" class="form-label-custom">
+                                    <i class="fa-solid fa-brain"></i>
+                                    نوع العلاج
+                                </label>
+                                <select class="form-select form-control-custom" id="sessionTherapyType" name="sessionTherapyType">
+                                    <option value="">اختر نوع العلاج</option>
+                                    <option value="CBT - العلاج المعرفي السلوكي">CBT - العلاج المعرفي السلوكي</option>
+                                    <option value="DBT - العلاج الجدلي السلوكي">DBT - العلاج الجدلي السلوكي</option>
+                                    <option value="ACT - علاج القبول والالتزام">ACT - علاج القبول والالتزام</option>
+                                    <option value="تحليلي / دينامي">تحليلي / دينامي</option>
+                                    <option value="دعمي">دعمي</option>
+                                    <option value="أسري">أسري</option>
+                                    <option value="جماعي">جماعي</option>
+                                    <option value="أخرى">أخرى</option>
+                                </select>
+                            </div>
 
-                        <div class="col-md-6">
-                            <label for="sessionDuration" class="form-label-custom">
-                                <i class="fa-solid fa-hourglass-half"></i>
-                                مدة الجلسة (بالدقائق)
-                            </label>
-                            <input type="number" class="form-control form-control-custom" id="sessionDuration" name="sessionDuration" placeholder="مثال: 45" min="1">
+                            <div class="col-md-6">
+                                <label for="sessionFormat" class="form-label-custom">
+                                    <i class="fa-solid fa-users"></i>
+                                    صيغة الجلسة
+                                </label>
+                                <select class="form-select form-control-custom" id="sessionFormat" name="sessionFormat">
+                                    <option value="">اختر الصيغة</option>
+                                    <option value="فردي">فردي</option>
+                                    <option value="ثنائي">ثنائي</option>
+                                    <option value="عائلي">عائلي</option>
+                                    <option value="جماعي">جماعي</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="sessionTherapistName" class="form-label-custom">
+                                    <i class="fa-solid fa-user-doctor"></i>
+                                    المعالج المسؤول
+                                </label>
+                                <input type="text" class="form-control form-control-custom" id="sessionTherapistName" name="sessionTherapistName" placeholder="اسم المعالج (اختياري)">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="sessionLinkedPlan" class="form-label-custom">
+                                    <i class="fa-solid fa-diagram-project"></i>
+                                    مرتبطة بخطة علاجية
+                                </label>
+                                <select class="form-select form-control-custom" id="sessionLinkedPlan" name="sessionLinkedPlan">
+                                    <option value="">بدون خطة محددة</option>
+                                </select>
+                            </div>
                         </div>
+                    </div>
 
-                        <div class="col-md-6">
-                            <label for="sessionType" class="form-label-custom">
-                                <i class="fa-solid fa-tag"></i>
-                                نوع الجلسة
-                            </label>
-                            <select class="form-select form-control-custom" id="sessionType" name="sessionType">
-                                <option value="">اختر نوع الجلسة</option>
-                                <option value="جلسة استماع فردية">جلسة استماع فردية</option>
-                                <option value="جلسة علاج نفسي">جلسة علاج نفسي</option>
-                                <option value="جلسة متابعة">جلسة متابعة</option>
-                                <option value="جلسة طارئة">جلسة طارئة</option>
-                                <option value="جلسة جماعية">جلسة جماعية</option>
-                                <option value="جلسة أسرية">جلسة أسرية</option>
-                            </select>
+                    <!-- Section 3: Mood Tracking -->
+                    <div class="ls-form-section">
+                        <div class="ls-form-section-title">
+                            <i class="fa-solid fa-face-smile"></i>
+                            قياس المزاج
                         </div>
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <label for="sessionMoodBefore" class="form-label-custom">
+                                    <i class="fa-solid fa-face-frown"></i>
+                                    المزاج قبل الجلسة
+                                </label>
+                                <div class="ls-mood-wrap">
+                                    <input type="range" class="form-range" id="sessionMoodBefore" name="sessionMoodBefore" min="0" max="10" value="5" step="1">
+                                    <span class="ls-mood-value ls-mood-before" id="sessionMoodBeforeValue">5 / 10</span>
+                                </div>
+                            </div>
 
-                        <div class="col-md-6">
-                            <label for="sessionStatus" class="form-label-custom">
-                                <i class="fa-solid fa-circle-check"></i>
-                                حالة الجلسة
-                            </label>
-                            <select class="form-select form-control-custom" id="sessionStatus" name="sessionStatus">
-                                <option value="">اختر حالة الجلسة</option>
-                                <option value="مكتملة">مكتملة</option>
-                                <option value="مجدولة">مجدولة</option>
-                                <option value="ملغية">ملغية</option>
-                                <option value="مؤجلة">مؤجلة</option>
-                            </select>
+                            <div class="col-md-6">
+                                <label for="sessionMoodAfter" class="form-label-custom">
+                                    <i class="fa-solid fa-face-smile"></i>
+                                    المزاج بعد الجلسة
+                                </label>
+                                <div class="ls-mood-wrap">
+                                    <input type="range" class="form-range" id="sessionMoodAfter" name="sessionMoodAfter" min="0" max="10" value="5" step="1">
+                                    <span class="ls-mood-value ls-mood-after" id="sessionMoodAfterValue">5 / 10</span>
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <div class="ls-mood-change" id="sessionMoodChange">
+                                    <i class="fa-solid fa-minus"></i>
+                                    <span>التحسن: <strong>0</strong> نقطة</span>
+                                </div>
+                            </div>
                         </div>
+                    </div>
 
-                        <div class="col-12">
-                            <label for="sessionNotes" class="form-label-custom">
-                                <i class="fa-solid fa-note-sticky"></i>
-                                ملخص الجلسة والملاحظات
-                            </label>
-                            <textarea class="form-control form-control-custom" id="sessionNotes" name="sessionNotes" placeholder="اكتب ملخصاً للجلسة..." style="min-height: 140px;"></textarea>
+                    <!-- Section 4: Clinical Content -->
+                    <div class="ls-form-section">
+                        <div class="ls-form-section-title">
+                            <i class="fa-solid fa-notes-medical"></i>
+                            المحتوى السريري
+                        </div>
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <label class="form-label-custom">
+                                    <i class="fa-solid fa-comments"></i>
+                                    الموضوعات المطروحة
+                                </label>
+                                <div class="ls-checkbox-group">
+                                    <label class="ls-checkbox"><input type="checkbox" value="قلق" class="session-topic"><span class="ls-checkbox-mark"></span><span>قلق</span></label>
+                                    <label class="ls-checkbox"><input type="checkbox" value="حزن / اكتئاب" class="session-topic"><span class="ls-checkbox-mark"></span><span>حزن / اكتئاب</span></label>
+                                    <label class="ls-checkbox"><input type="checkbox" value="علاقات" class="session-topic"><span class="ls-checkbox-mark"></span><span>علاقات</span></label>
+                                    <label class="ls-checkbox"><input type="checkbox" value="عمل / دراسة" class="session-topic"><span class="ls-checkbox-mark"></span><span>عمل / دراسة</span></label>
+                                    <label class="ls-checkbox"><input type="checkbox" value="صدمة" class="session-topic"><span class="ls-checkbox-mark"></span><span>صدمة</span></label>
+                                    <label class="ls-checkbox"><input type="checkbox" value="أفكار انتحارية" class="session-topic"><span class="ls-checkbox-mark"></span><span>أفكار انتحارية</span></label>
+                                    <label class="ls-checkbox"><input type="checkbox" value="نوم" class="session-topic"><span class="ls-checkbox-mark"></span><span>نوم</span></label>
+                                    <label class="ls-checkbox"><input type="checkbox" value="شهية / أكل" class="session-topic"><span class="ls-checkbox-mark"></span><span>شهية / أكل</span></label>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label-custom">
+                                    <i class="fa-solid fa-toolbox"></i>
+                                    التقنيات المستخدمة
+                                </label>
+                                <div class="ls-checkbox-group">
+                                    <label class="ls-checkbox"><input type="checkbox" value="إعادة هيكلة معرفية" class="session-technique"><span class="ls-checkbox-mark"></span><span>إعادة هيكلة معرفية</span></label>
+                                    <label class="ls-checkbox"><input type="checkbox" value="تعرض" class="session-technique"><span class="ls-checkbox-mark"></span><span>تعرض</span></label>
+                                    <label class="ls-checkbox"><input type="checkbox" value="تنفس عميق" class="session-technique"><span class="ls-checkbox-mark"></span><span>تنفس عميق</span></label>
+                                    <label class="ls-checkbox"><input type="checkbox" value="استرخاء عضلي" class="session-technique"><span class="ls-checkbox-mark"></span><span>استرخاء عضلي</span></label>
+                                    <label class="ls-checkbox"><input type="checkbox" value="جدول نشاط" class="session-technique"><span class="ls-checkbox-mark"></span><span>جدول نشاط</span></label>
+                                    <label class="ls-checkbox"><input type="checkbox" value="مهارات تحمل الضيق" class="session-technique"><span class="ls-checkbox-mark"></span><span>مهارات تحمل الضيق</span></label>
+                                    <label class="ls-checkbox"><input type="checkbox" value="تدوين أفكار" class="session-technique"><span class="ls-checkbox-mark"></span><span>تدوين أفكار</span></label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 5: Risk & Homework -->
+                    <div class="ls-form-section">
+                        <div class="ls-form-section-title">
+                            <i class="fa-solid fa-shield-halved"></i>
+                            تقييم الخطر والمهام
+                        </div>
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <label for="sessionRiskLevel" class="form-label-custom">
+                                    <i class="fa-solid fa-triangle-exclamation"></i>
+                                    مستوى الخطر
+                                </label>
+                                <select class="form-select form-control-custom" id="sessionRiskLevel" name="sessionRiskLevel">
+                                    <option value="">لم يتم التقييم</option>
+                                    <option value="منخفض">منخفض</option>
+                                    <option value="متوسط">متوسط</option>
+                                    <option value="عالي">عالي</option>
+                                    <option value="حرج">حرج</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label-custom">
+                                    <i class="fa-solid fa-list-check"></i>
+                                    التزام المريض بالمهام السابقة
+                                </label>
+                                <div class="ls-checkbox-group">
+                                    <label class="ls-checkbox"><input type="checkbox" id="sessionHomeworkCompleted" name="sessionHomeworkCompleted"><span class="ls-checkbox-mark"></span><span>أنجز المهام</span></label>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="sessionHomeworkAssigned" class="form-label-custom">
+                                    <i class="fa-solid fa-clipboard-list"></i>
+                                    المهام المنزلية القادمة
+                                </label>
+                                <textarea class="form-control form-control-custom" id="sessionHomeworkAssigned" name="sessionHomeworkAssigned" placeholder="المهام التي يجب أن ينجزها المريض قبل الجلسة القادمة..." style="min-height: 80px;"></textarea>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="sessionNextPlan" class="form-label-custom">
+                                    <i class="fa-solid fa-forward"></i>
+                                    خطة الجلسة القادمة
+                                </label>
+                                <textarea class="form-control form-control-custom" id="sessionNextPlan" name="sessionNextPlan" placeholder="ما الذي سيتم التركيز عليه في الجلسة القادمة؟" style="min-height: 80px;"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 6: Notes -->
+                    <div class="ls-form-section">
+                        <div class="ls-form-section-title">
+                            <i class="fa-solid fa-note-sticky"></i>
+                            ملاحظات
+                        </div>
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <label for="sessionNotes" class="form-label-custom">
+                                    <i class="fa-solid fa-pen"></i>
+                                    ملخص الجلسة
+                                </label>
+                                <textarea class="form-control form-control-custom" id="sessionNotes" name="sessionNotes" placeholder="ملخص عام للجلسة..." style="min-height: 100px;"></textarea>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="sessionClinicalNotes" class="form-label-custom">
+                                    <i class="fa-solid fa-user-doctor"></i>
+                                    ملاحظات سريرية
+                                </label>
+                                <textarea class="form-control form-control-custom" id="sessionClinicalNotes" name="sessionClinicalNotes" placeholder="ملاحظات المتخصص (مشاعر، سلوك، مخاطر)..." style="min-height: 100px;"></textarea>
+                            </div>
                         </div>
                     </div>
 
@@ -135,10 +383,11 @@
                             <th style="width: 50px;">#</th>
                             <th>عنوان الجلسة</th>
                             <th>التاريخ</th>
-                            <th>الوقت</th>
+                            <th>النوع / العلاج</th>
                             <th>المدة</th>
-                            <th>النوع</th>
+                            <th>المزاج (قبل → بعد)</th>
                             <th>الحالة</th>
+                            <th>الخطر</th>
                             <th>ملاحظات</th>
                             <th class="text-center" style="width: 130px;">الإجراءات</th>
                         </tr>

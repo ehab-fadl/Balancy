@@ -17,7 +17,7 @@
                 </div>
                 <div>
                     <h1>ملاحظات المريض</h1>
-                    <p>إدارة الملاحظات الإكلينيكية والسلوكية للمريض</p>
+                    <p>إدارة الملاحظات الإكلينيكية والسلوكية مع التقييم الطبي</p>
                 </div>
             </div>
             <div class="edit-status">
@@ -28,9 +28,19 @@
 
         <div class="personal-form">
 
-            <!-- ====================================================
-                 Form: Add / Edit Note
-            ===================================================== -->
+            <!-- ====================== Critical Alert Banner ====================== -->
+            <div class="pn-critical-alert" id="pnCriticalAlert" style="display: none;">
+                <div class="pn-critical-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                <div class="pn-critical-body">
+                    <div class="pn-critical-title">تنبيه حرج</div>
+                    <div class="pn-critical-message" id="pnCriticalMessage">—</div>
+                </div>
+                <button type="button" class="pn-critical-close" id="pnCriticalClose" aria-label="إغلاق">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- ====================== Form ====================== -->
             <div class="note-form-card">
                 <h3 id="noteFormTitle" class="form-section-title">
                     <i class="fa-solid fa-plus-circle"></i>
@@ -40,57 +50,220 @@
                 <form id="patientNoteForm" novalidate>
                     <input type="hidden" id="noteEditIndex" value="-1">
 
-                    <div class="row g-4">
-                        <div class="col-md-6">
-                            <label for="noteTitle" class="form-label-custom">
-                                <i class="fa-solid fa-heading"></i>
-                                عنوان الملاحظة
-                            </label>
-                            <input type="text" class="form-control form-control-custom" id="noteTitle" name="noteTitle" placeholder="مثال: ملاحظة حول الحالة المزاجية" required>
+                    <!-- Section 1: Basic -->
+                    <div class="pn-form-section">
+                        <div class="pn-form-section-title">
+                            <i class="fa-solid fa-circle-info"></i>
+                            المعلومات الأساسية
                         </div>
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <label for="noteTitle" class="form-label-custom">
+                                    <i class="fa-solid fa-heading"></i>
+                                    عنوان الملاحظة
+                                </label>
+                                <input type="text" class="form-control form-control-custom" id="noteTitle" name="noteTitle" placeholder="مثال: ملاحظة حول الحالة المزاجية" required>
+                            </div>
 
-                        <div class="col-md-6">
-                            <label for="noteDate" class="form-label-custom">
-                                <i class="fa-solid fa-calendar-days"></i>
-                                تاريخ الملاحظة
-                            </label>
-                            <input type="date" class="form-control form-control-custom" id="noteDate" name="noteDate" required>
+                            <div class="col-md-6">
+                                <label for="noteDate" class="form-label-custom">
+                                    <i class="fa-solid fa-calendar-days"></i>
+                                    تاريخ الملاحظة
+                                </label>
+                                <input type="date" class="form-control form-control-custom" id="noteDate" name="noteDate" required>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="noteType" class="form-label-custom">
+                                    <i class="fa-solid fa-file-medical"></i>
+                                    نوع الملاحظة
+                                </label>
+                                <select class="form-select form-control-custom" id="noteType" name="noteType" required>
+                                    <option value="">اختر نوع الملاحظة</option>
+                                    <option value="Progress">Progress Note - ملاحظة تقدم</option>
+                                    <option value="SOAP">SOAP Note - ملاحظة SOAP</option>
+                                    <option value="Incident">Incident Note - حادث طارئ</option>
+                                    <option value="Handoff">Handoff Note - تسليم لزميل</option>
+                                    <option value="Consultation">Consultation - استشارة</option>
+                                    <option value="Discharge">Discharge - ملخص خروج</option>
+                                    <option value="Other">أخرى</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="noteCategory" class="form-label-custom">
+                                    <i class="fa-solid fa-tag"></i>
+                                    تصنيف الملاحظة
+                                </label>
+                                <select class="form-select form-control-custom" id="noteCategory" name="noteCategory">
+                                    <option value="">اختر التصنيف</option>
+                                    <option value="ملاحظة إكلينيكية">ملاحظة إكلينيكية</option>
+                                    <option value="ملاحظة سلوكية">ملاحظة سلوكية</option>
+                                    <option value="ملاحظة دوائية">ملاحظة دوائية</option>
+                                    <option value="ملاحظة اجتماعية">ملاحظة اجتماعية</option>
+                                    <option value="ملاحظة متابعة">ملاحظة متابعة</option>
+                                    <option value="ملاحظة طارئة">ملاحظة طارئة</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="noteAuthor" class="form-label-custom">
+                                    <i class="fa-solid fa-user-pen"></i>
+                                    كاتب الملاحظة
+                                </label>
+                                <input type="text" class="form-control form-control-custom" id="noteAuthor" name="noteAuthor" placeholder="اسم الطبيب / المعالج" required>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="noteAuthorRole" class="form-label-custom">
+                                    <i class="fa-solid fa-id-badge"></i>
+                                    دور الكاتب
+                                </label>
+                                <select class="form-select form-control-custom" id="noteAuthorRole" name="noteAuthorRole" required>
+                                    <option value="">اختر الدور</option>
+                                    <option value="طبيب">طبيب</option>
+                                    <option value="معالج">معالج نفسي</option>
+                                    <option value="ممرض">ممرض</option>
+                                    <option value="إداري">إداري</option>
+                                    <option value="أخرى">أخرى</option>
+                                </select>
+                            </div>
                         </div>
+                    </div>
 
-                        <div class="col-md-6">
-                            <label for="noteCategory" class="form-label-custom">
-                                <i class="fa-solid fa-tag"></i>
-                                تصنيف الملاحظة
-                            </label>
-                            <select class="form-select form-control-custom" id="noteCategory" name="noteCategory">
-                                <option value="">اختر التصنيف</option>
-                                <option value="ملاحظة إكلينيكية">ملاحظة إكلينيكية</option>
-                                <option value="ملاحظة سلوكية">ملاحظة سلوكية</option>
-                                <option value="ملاحظة دوائية">ملاحظة دوائية</option>
-                                <option value="ملاحظة اجتماعية">ملاحظة اجتماعية</option>
-                                <option value="ملاحظة متابعة">ملاحظة متابعة</option>
-                                <option value="ملاحظة طارئة">ملاحظة طارئة</option>
-                            </select>
+                    <!-- Section 2: Medical Assessment -->
+                    <div class="pn-form-section">
+                        <div class="pn-form-section-title">
+                            <i class="fa-solid fa-stethoscope"></i>
+                            التقييم الطبي
                         </div>
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <label for="notePriority" class="form-label-custom">
+                                    <i class="fa-solid fa-flag"></i>
+                                    أولوية الملاحظة
+                                </label>
+                                <select class="form-select form-control-custom" id="notePriority" name="notePriority">
+                                    <option value="عادية">عادية</option>
+                                    <option value="مهمة">مهمة</option>
+                                    <option value="عاجلة">عاجلة</option>
+                                </select>
+                            </div>
 
-                        <div class="col-md-6">
-                            <label for="notePriority" class="form-label-custom">
-                                <i class="fa-solid fa-flag"></i>
-                                أولوية الملاحظة
-                            </label>
-                            <select class="form-select form-control-custom" id="notePriority" name="notePriority">
-                                <option value="عادية">عادية</option>
-                                <option value="مهمة">مهمة</option>
-                                <option value="عاجلة">عاجلة</option>
-                            </select>
+                            <div class="col-md-6">
+                                <label for="noteRiskLevel" class="form-label-custom">
+                                    <i class="fa-solid fa-triangle-exclamation"></i>
+                                    مستوى الخطر
+                                </label>
+                                <select class="form-select form-control-custom" id="noteRiskLevel" name="noteRiskLevel">
+                                    <option value="">لم يتم التقييم</option>
+                                    <option value="لا">لا يوجد</option>
+                                    <option value="منخفض">منخفض</option>
+                                    <option value="متوسط">متوسط</option>
+                                    <option value="عالي">عالي</option>
+                                    <option value="حرج">حرج</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="noteMoodAtNote" class="form-label-custom">
+                                    <i class="fa-solid fa-face-smile"></i>
+                                    المزاج عند الملاحظة
+                                </label>
+                                <div class="pn-mood-wrap">
+                                    <input type="range" class="form-range" id="noteMoodAtNote" name="noteMoodAtNote" min="0" max="10" value="5" step="1">
+                                    <span class="pn-mood-value" id="noteMoodAtNoteValue">5 / 10</span>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="noteVisibility" class="form-label-custom">
+                                    <i class="fa-solid fa-lock"></i>
+                                    مستوى السرية
+                                </label>
+                                <select class="form-select form-control-custom" id="noteVisibility" name="noteVisibility" required>
+                                    <option value="خاص">خاص (للطبيب فقط)</option>
+                                    <option value="للفريق">للفريق الطبي</option>
+                                    <option value="للمريض">قابل للمشاركة مع المريض</option>
+                                </select>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label-custom">
+                                    <i class="fa-solid fa-list-check"></i>
+                                    الأعراض المُلاحظة
+                                </label>
+                                <div class="pn-checkbox-group" id="pnSymptomsGroup">
+                                    <label class="pn-checkbox"><input type="checkbox" value="قلق" class="pn-symptom"><span class="pn-checkbox-mark"></span><span>قلق</span></label>
+                                    <label class="pn-checkbox"><input type="checkbox" value="حزن / اكتئاب" class="pn-symptom"><span class="pn-checkbox-mark"></span><span>حزن / اكتئاب</span></label>
+                                    <label class="pn-checkbox"><input type="checkbox" value="هياج / غضب" class="pn-symptom"><span class="pn-checkbox-mark"></span><span>هياج / غضب</span></label>
+                                    <label class="pn-checkbox"><input type="checkbox" value="ذهان" class="pn-symptom"><span class="pn-checkbox-mark"></span><span>ذهان</span></label>
+                                    <label class="pn-checkbox"><input type="checkbox" value="أفكار انتحارية" class="pn-symptom"><span class="pn-checkbox-mark"></span><span>أفكار انتحارية</span></label>
+                                    <label class="pn-checkbox"><input type="checkbox" value="إيذاء ذاتي" class="pn-symptom"><span class="pn-checkbox-mark"></span><span>إيذاء ذاتي</span></label>
+                                    <label class="pn-checkbox"><input type="checkbox" value="أرق" class="pn-symptom"><span class="pn-checkbox-mark"></span><span>أرق</span></label>
+                                    <label class="pn-checkbox"><input type="checkbox" value="فقدان شهية" class="pn-symptom"><span class="pn-checkbox-mark"></span><span>فقدان شهية</span></label>
+                                    <label class="pn-checkbox"><input type="checkbox" value="عزلة اجتماعية" class="pn-symptom"><span class="pn-checkbox-mark"></span><span>عزلة اجتماعية</span></label>
+                                    <label class="pn-checkbox"><input type="checkbox" value="ضعف تركيز" class="pn-symptom"><span class="pn-checkbox-mark"></span><span>ضعف تركيز</span></label>
+                                </div>
+                            </div>
                         </div>
+                    </div>
 
-                        <div class="col-12">
-                            <label for="noteContent" class="form-label-custom">
-                                <i class="fa-solid fa-align-right"></i>
-                                محتوى الملاحظة
-                            </label>
-                            <textarea class="form-control form-control-custom" id="noteContent" name="noteContent" placeholder="اكتب تفاصيل الملاحظة..." required></textarea>
+                    <!-- Section 3: Context -->
+                    <div class="pn-form-section">
+                        <div class="pn-form-section-title">
+                            <i class="fa-solid fa-link"></i>
+                            الربط السياقي
+                        </div>
+                        <div class="row g-4">
+                            <div class="col-md-4">
+                                <label for="noteLinkType" class="form-label-custom">
+                                    <i class="fa-solid fa-diagram-project"></i>
+                                    نوع الربط
+                                </label>
+                                <select class="form-select form-control-custom" id="noteLinkType" name="noteLinkType">
+                                    <option value="">بدون ربط</option>
+                                    <option value="جلسة">جلسة استماع</option>
+                                    <option value="زيارة">زيارة</option>
+                                    <option value="خطة">خطة علاجية</option>
+                                    <option value="دواء">دواء</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-8">
+                                <label for="noteLinkItem" class="form-label-custom">
+                                    <i class="fa-solid fa-list"></i>
+                                    ربط بعنصر محدد
+                                </label>
+                                <select class="form-select form-control-custom" id="noteLinkItem" name="noteLinkItem" disabled>
+                                    <option value="">اختر نوع الربط أولاً</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 4: Content -->
+                    <div class="pn-form-section">
+                        <div class="pn-form-section-title">
+                            <i class="fa-solid fa-pen"></i>
+                            المحتوى
+                        </div>
+                        <div class="row g-4">
+                            <div class="col-12">
+                                <label for="noteContent" class="form-label-custom">
+                                    <i class="fa-solid fa-align-right"></i>
+                                    محتوى الملاحظة
+                                </label>
+                                <textarea class="form-control form-control-custom" id="noteContent" name="noteContent" placeholder="اكتب تفاصيل الملاحظة..." required></textarea>
+                            </div>
+
+                            <div class="col-12">
+                                <label for="noteNextPlan" class="form-label-custom">
+                                    <i class="fa-solid fa-forward"></i>
+                                    الخطة التالية
+                                </label>
+                                <textarea class="form-control form-control-custom" id="noteNextPlan" name="noteNextPlan" placeholder="ما الذي سيتم فعله بعد هذه الملاحظة؟" style="min-height: 80px;"></textarea>
+                            </div>
                         </div>
                     </div>
 
@@ -107,12 +280,32 @@
                 </form>
             </div>
 
-            <!-- ====================================================
-                 Notes Grid
-            ===================================================== -->
-            <div class="form-section-title">
-                <i class="fa-solid fa-list-check"></i>
-                قائمة الملاحظات المسجلة
+            <!-- ====================== Filters ====================== -->
+            <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                <div class="form-section-title mb-0">
+                    <i class="fa-solid fa-list-check"></i>
+                    قائمة الملاحظات المسجلة
+                </div>
+                <div class="pn-filter-wrap">
+                    <select id="pnFilterType" class="form-select form-control-custom">
+                        <option value="">كل الأنواع</option>
+                        <option value="Progress">Progress Note</option>
+                        <option value="SOAP">SOAP Note</option>
+                        <option value="Incident">Incident Note</option>
+                        <option value="Handoff">Handoff Note</option>
+                        <option value="Consultation">Consultation</option>
+                        <option value="Discharge">Discharge</option>
+                        <option value="Other">أخرى</option>
+                    </select>
+                    <select id="pnFilterRisk" class="form-select form-control-custom">
+                        <option value="">كل مستويات الخطر</option>
+                        <option value="لا">لا يوجد</option>
+                        <option value="منخفض">منخفض</option>
+                        <option value="متوسط">متوسط</option>
+                        <option value="عالي">عالي</option>
+                        <option value="حرج">حرج</option>
+                    </select>
+                </div>
             </div>
 
             <div class="notes-grid" id="notesGrid"></div>
@@ -128,9 +321,7 @@
 
 </div>
 
-<!-- ============================================================
-     Confirm Delete Modal
-============================================================ -->
+<!-- Confirm Delete Modal -->
 <div class="bn-modal-overlay" id="bnConfirmModal" role="dialog" aria-modal="true">
     <div class="bn-modal">
         <div class="bn-modal-header">

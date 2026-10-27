@@ -179,9 +179,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .visits-container *,
-    .visits-container *::before,
-    .visits-container *::after {
+    .visits-container *, .visits-container *::before, .visits-container *::after {
         animation-duration: 0.01ms !important;
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
@@ -189,9 +187,7 @@
     }
 }
 
-/* ============================================================
-   Card (Base)
-============================================================ */
+/* Card (Base) */
 .visits-container .visits-card {
     background: var(--bn-glass);
     backdrop-filter: blur(30px);
@@ -418,9 +414,7 @@
         transform: none;
     }
 
-/* ============================================================
-   Visit Form Card
-============================================================ */
+/* Visit Form Card */
 .visits-container .visit-form-card {
     background: linear-gradient(135deg, var(--bn-surface-soft), var(--bn-surface));
     border: 1px solid var(--bn-border);
@@ -454,10 +448,115 @@
     }
 
 /* ============================================================
-   Visit Table & Badges
+   Visit Table
 ============================================================ */
 .visits-container .visit-table-wrapper {
     overflow-x: auto;
+}
+
+/* ✅ NEW: Visit Type Badges */
+.visits-container .visit-type-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.3rem 0.7rem;
+    border-radius: 50px;
+    font-size: 0.72rem;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+    .visits-container .visit-type-badge.type-first {
+        background: rgba(29, 78, 216, 0.1);
+        color: #1d4ed8;
+    }
+
+    .visits-container .visit-type-badge.type-followup {
+        background: rgba(8, 145, 178, 0.1);
+        color: #0e7490;
+    }
+
+    .visits-container .visit-type-badge.type-emergency {
+        background: rgba(239, 68, 68, 0.1);
+        color: #b91c1c;
+        animation: vs-badgePulse 2s ease-in-out infinite;
+    }
+
+    .visits-container .visit-type-badge.type-consultation {
+        background: rgba(99, 102, 241, 0.1);
+        color: #4338ca;
+    }
+
+[data-theme="dark"] .visits-container .visit-type-badge.type-first {
+    background: rgba(147, 197, 253, 0.15);
+    color: #93c5fd;
+}
+
+[data-theme="dark"] .visits-container .visit-type-badge.type-followup {
+    background: rgba(34, 211, 238, 0.15);
+    color: #67e8f9;
+}
+
+[data-theme="dark"] .visits-container .visit-type-badge.type-emergency {
+    background: rgba(248, 113, 113, 0.15);
+    color: #fca5a5;
+}
+
+[data-theme="dark"] .visits-container .visit-type-badge.type-consultation {
+    background: rgba(165, 180, 252, 0.15);
+    color: #a5b4fc;
+}
+
+/* ✅ NEW: Visit Location Badges */
+.visits-container .visit-location-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.3rem 0.7rem;
+    border-radius: 50px;
+    font-size: 0.72rem;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+    .visits-container .visit-location-badge.loc-clinic {
+        background: rgba(16, 185, 129, 0.1);
+        color: #047857;
+    }
+
+    .visits-container .visit-location-badge.loc-home {
+        background: rgba(245, 158, 11, 0.1);
+        color: #b45309;
+    }
+
+    .visits-container .visit-location-badge.loc-online {
+        background: rgba(139, 92, 246, 0.1);
+        color: #6d28d9;
+    }
+
+    .visits-container .visit-location-badge.loc-hospital {
+        background: rgba(239, 68, 68, 0.1);
+        color: #b91c1c;
+    }
+
+[data-theme="dark"] .visits-container .visit-location-badge.loc-clinic {
+    background: rgba(52, 211, 153, 0.15);
+    color: #6ee7b7;
+}
+
+[data-theme="dark"] .visits-container .visit-location-badge.loc-home {
+    background: rgba(251, 191, 36, 0.15);
+    color: #fcd34d;
+}
+
+[data-theme="dark"] .visits-container .visit-location-badge.loc-online {
+    background: rgba(167, 139, 250, 0.15);
+    color: #c4b5fd;
+}
+
+[data-theme="dark"] .visits-container .visit-location-badge.loc-hospital {
+    background: rgba(248, 113, 113, 0.15);
+    color: #fca5a5;
 }
 
 .visits-container .visit-date-badge {
@@ -548,9 +647,7 @@
         background: #64748b;
     }
 
-/* ============================================================
-   Validation System
-============================================================ */
+/* Validation System */
 .visits-container .form-control-custom,
 .visits-container .bn-modal-input {
     transition: border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
@@ -688,9 +785,7 @@
     color: #fca5a5;
 }
 
-/* ============================================================
-   Confetti
-============================================================ */
+/* Confetti */
 .bn-confetti {
     position: fixed;
     top: 0;
@@ -730,9 +825,7 @@
         height: 14px;
     }
 
-/* ============================================================
-   Custom Modals
-============================================================ */
+/* Modals */
 .visits-container ~ .bn-modal-overlay,
 .bn-modal-overlay {
     position: fixed;
@@ -909,9 +1002,7 @@
         box-shadow: 0 12px 25px -8px rgba(239, 68, 68, 0.65);
     }
 
-/* ============================================================
-   ✅ Book Appointment Button — زر حجز موعد الزيارة القادمة
-============================================================ */
+/* Book Appointment Button */
 .visits-container .btn-book-appointment {
     display: inline-flex;
     align-items: center;
@@ -977,9 +1068,7 @@
         font-size: 0.65rem;
     }
 
-/* ============================================================
-   ✅ Inline Appointment Modal — مودال حجز الموعد
-============================================================ */
+/* Inline Appointment Modal */
 #inlineAppointmentModal .bn-modal {
     max-width: 560px;
     max-height: 90vh;
@@ -1043,9 +1132,7 @@
     }
 }
 
-/* ============================================================
-   Responsive
-============================================================ */
+/* Responsive */
 @media (max-width: 767px) {
     .visits-container .form-card-header {
         align-items: flex-start;
@@ -1136,16 +1223,11 @@
 }
 
 @media print {
-    .visits-container .visit-form-card,
-    .visits-container .btn-save,
-    .visits-container .btn-book-appointment,
-    .visits-container .book-appointment-hint,
-    .visits-container .edit-status,
-    .visits-container .bn-field-message,
-    .visits-container .bn-validation-summary,
+    .visits-container .visit-form-card, .visits-container .btn-save, .visits-container .btn-book-appointment,
+    .visits-container .book-appointment-hint, .visits-container .edit-status,
+    .visits-container .bn-field-message, .visits-container .bn-validation-summary,
     .visits-container .table-mobile-cards td.text-center,
-    .bn-modal-overlay,
-    .bn-confetti {
+    .bn-modal-overlay, .bn-confetti {
         display: none !important;
     }
 
