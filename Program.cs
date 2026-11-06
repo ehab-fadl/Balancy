@@ -26,18 +26,29 @@ builder.Services.AddAuthorization(options =>
 builder.Services.AddTransient<Balancy.Services.IEmailService, Balancy.Services.EmailService>();
 builder.Services.AddMemoryCache(); // لتخزين الرمز مؤقتاً
 
-// 2. تسجيل الـ Handler
+// 2. تسجيل الـ Handlers
 builder.Services.AddTransient<JwtTokenHandler>();
+builder.Services.AddTransient<PatientHeaderHandler>();   // ✅ جديد: يضيف X-Doctor-Id
 
-// 3. إعداد HttpClient مخصص يتضمن التوكن تلقائياً مع كل طلب للباك إند
+// 3. إعداد HttpClient مخصص يتضمن التوكن تلقائياً مع كل طلب للباك إند (الخدمة القديمة - 5000)
 builder.Services.AddHttpClient("BackendApi", client =>
 {
     client.BaseAddress = new Uri("http://192.168.0.16:5000/"); // رابط الباك إند الخاص بك
 })
 .AddHttpMessageHandler<JwtTokenHandler>();
 
+// 4. إضافة HttpClient جديد لخدمة Balancy Patient Service (البورت 5002)
+//    هذه الخدمة تتطلب ترويسة X-Doctor-Id (وليس Bearer JWT)
+builder.Services.AddHttpClient("BalancyPatientApi", client =>
+{
+    client.BaseAddress = new Uri("http://192.168.0.16:5002/");
+    client.Timeout = TimeSpan.FromSeconds(60); // مهلة أطول للـ ETL والتقارير
+})
+.AddHttpMessageHandler<PatientHeaderHandler>();          // ✅ يستخدم X-Doctor-Id
+
 builder.Services.AddSingleton<IAuditLogService, AuditLogService>();
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<IPatientApiClient, PatientApiClient>();
 
 // 3. تطبيق السياسات على مجلدات الـ Areas
 builder.Services.AddRazorPages(options =>

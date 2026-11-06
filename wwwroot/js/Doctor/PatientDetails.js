@@ -370,14 +370,25 @@
        9. Copy Code
     ============================================================ */
     function handleCopyCode() {
-        const code = 'AB123456';
+        // ✅ اقرأ الكود من عناصر .code-char المعروضة في الصفحة
+        const chars = Array.from(document.querySelectorAll('#patientCode .code-char'))
+            .map(el => el.textContent.trim())
+            .join('');
+
+        const code = chars || sessionStorage.getItem('bnCurrentPatientCode') || '';
+
         const button = document.getElementById('copyBtn');
         if (!button) return;
+
+        if (!code || code === '-') {
+            toast('warning', 'لا يوجد كود', 'لم يتم العثور على كود المريض.');
+            return;
+        }
 
         const onSuccess = () => {
             button.classList.add('copied');
             button.innerHTML = '<i class="fa-solid fa-check ms-1"></i> تم النسخ';
-            toast('success', 'تم النسخ', 'تم نسخ كود المريض.');
+            toast('success', 'تم النسخ', `تم نسخ كود المريض: ${code}`);
             setTimeout(() => {
                 button.classList.remove('copied');
                 button.innerHTML = '<i class="fa-regular fa-copy ms-1"></i> نسخ الكود';
@@ -390,7 +401,6 @@
             fallbackCopy(code, onSuccess);
         }
     }
-
     function fallbackCopy(text, onSuccess) {
         const textarea = document.createElement('textarea');
         textarea.value = text;

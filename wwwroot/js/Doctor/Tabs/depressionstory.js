@@ -1,6 +1,8 @@
 ﻿/* ============================================================
-   Depression Story Tab — Standalone Script
-   يعمل مستقلاً AND يتكامل مع bnApp إذا وُجد
+   Depression Story Tab — API-driven (GET/PUT)
+   - يحافظ على: Validation, AutoSave, Confetti, Toast, Char Counter
+   - يحذف: mockDepressionStory + mockPostRequest
+   - يرسل: antiforgery token في header RequestVerificationToken
 ============================================================ */
 
 (function initDepressionStory() {
@@ -40,7 +42,7 @@
     };
 
     /* ============================================================
-       2. Utilities — escapeHtml (مبكّر)
+       2. Utilities
     ============================================================ */
     function escapeHtml(value) {
         const div = document.createElement('div');
@@ -48,8 +50,12 @@
         return div.innerHTML;
     }
 
+    function getAntiForgeryToken() {
+        return document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+    }
+
     /* ============================================================
-       3. Toast — يدعم bnApp أو يعرض Toast مدمج على الشاشة
+       3. Toast
     ============================================================ */
     function ensureToastStyles() {
         if (document.getElementById('bn-ds-toast-styles')) return;
@@ -57,52 +63,29 @@
         style.id = 'bn-ds-toast-styles';
         style.textContent = `
             .bn-ds-toast-overlay {
-                position: fixed;
-                inset: 0;
-                display: none;
-                align-items: center;
-                justify-content: center;
-                z-index: 100000;
-                pointer-events: none;
-                padding: 1rem;
+                position: fixed; inset: 0;
+                display: none; align-items: center; justify-content: center;
+                z-index: 100000; pointer-events: none; padding: 1rem;
             }
             .bn-ds-toast-overlay.show { display: flex; }
             .bn-ds-toast {
-                min-width: 300px;
-                max-width: 92vw;
-                padding: 1.1rem 1.4rem;
-                border-radius: 16px;
-                display: flex;
-                align-items: center;
-                gap: 0.85rem;
-                font-family: 'Tajawal', sans-serif;
-                font-weight: 800;
-                font-size: 0.95rem;
-                color: #fff;
+                min-width: 300px; max-width: 92vw;
+                padding: 1.1rem 1.4rem; border-radius: 16px;
+                display: flex; align-items: center; gap: 0.85rem;
+                font-family: 'Tajawal', sans-serif; font-weight: 800;
+                font-size: 0.95rem; color: #fff;
                 box-shadow: 0 20px 50px -12px rgba(15, 23, 42, 0.55);
                 animation: bnDsToastIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-                pointer-events: auto;
-                direction: rtl;
-                line-height: 1.5;
+                pointer-events: auto; direction: rtl; line-height: 1.5;
             }
             .bn-ds-toast.hide { animation: bnDsToastOut 0.3s ease forwards; }
             .bn-ds-toast-icon {
-                width: 38px;
-                height: 38px;
-                min-width: 38px;
-                border-radius: 50%;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                background: rgba(255, 255, 255, 0.22);
-                font-size: 1.05rem;
+                width: 38px; height: 38px; min-width: 38px;
+                border-radius: 50%; display: flex;
+                align-items: center; justify-content: center;
+                background: rgba(255, 255, 255, 0.22); font-size: 1.05rem;
             }
-            .bn-ds-toast-body {
-                display: flex;
-                flex-direction: column;
-                gap: 0.15rem;
-                text-align: right;
-            }
+            .bn-ds-toast-body { display: flex; flex-direction: column; gap: 0.15rem; text-align: right; }
             .bn-ds-toast-title { font-size: 0.95rem; font-weight: 900; }
             .bn-ds-toast-message { font-size: 0.8rem; font-weight: 600; opacity: 0.95; }
             .bn-ds-toast.error { background: linear-gradient(135deg, #ef4444, #b91c1c); }
@@ -189,9 +172,7 @@
             el.innerHTML = '';
             el.classList.add('active');
 
-            const pieceCount = 60;
-
-            for (let i = 0; i < pieceCount; i++) {
+            for (let i = 0; i < 60; i++) {
                 const piece = document.createElement('div');
                 piece.className = 'confetti-piece';
                 piece.style.left = Math.random() * 100 + '%';
@@ -210,7 +191,7 @@
     };
 
     /* ============================================================
-       5. Validation Engine — نسخة كاملة بأسلوب PersonalInfo
+       5. Validation Engine
     ============================================================ */
     const bnValidation = {
 
@@ -332,7 +313,6 @@
         showSummary(form, errors) {
             const existing = form.querySelector('.bn-validation-summary');
             if (existing) existing.remove();
-
             if (errors.length === 0) return;
 
             const summary = document.createElement('div');
@@ -369,17 +349,13 @@
 
             const watchedFields = errors.map(e => e.field);
             const checkAllFixed = () => {
-                const allFixed = watchedFields.every(f => {
-                    const res = this.validateField(f);
-                    return res.valid;
-                });
+                const allFixed = watchedFields.every(f => this.validateField(f).valid);
                 if (allFixed) {
                     summary.style.transition = 'opacity 0.3s ease';
                     summary.style.opacity = '0';
                     setTimeout(() => summary.remove(), 300);
                 }
             };
-
             watchedFields.forEach(f => {
                 const evt = (f.tagName === 'SELECT' || f.type === 'date') ? 'change' : 'input';
                 f.addEventListener(evt, checkAllFixed);
@@ -391,9 +367,7 @@
             if (!this.rules[name]) return;
 
             const label = document.querySelector(`label[for="${field.id}"]`);
-            if (label && this.rules[name].required) {
-                label.classList.add('required');
-            }
+            if (label && this.rules[name].required) label.classList.add('required');
 
             field.addEventListener('blur', () => {
                 const result = this.validateField(field);
@@ -414,8 +388,7 @@
 
         attachToForm(form) {
             if (!form) return;
-            const fields = form.querySelectorAll('input, select, textarea');
-            fields.forEach(field => this.attachToField(field));
+            form.querySelectorAll('input, select, textarea').forEach(f => this.attachToField(f));
         }
     };
 
@@ -446,50 +419,36 @@
 
         save(form, key) {
             const data = {};
-            const formData = new FormData(form);
-            for (const [k, v] of formData.entries()) data[k] = v;
-
-            storage.set('draft_' + key, {
-                data,
-                savedAt: new Date().toISOString()
-            });
-
+            new FormData(form).forEach((v, k) => data[k] = v);
+            storage.set('draft_' + key, { data, savedAt: new Date().toISOString() });
             this.showIndicator('saved');
         },
 
         restore(form, key) {
             const draft = storage.get('draft_' + key);
             if (!draft || !draft.data) return;
-
             const hasData = Object.values(draft.data).some(v => v && String(v).trim() !== '');
             if (!hasData) return;
-
             Object.entries(draft.data).forEach(([name, value]) => {
                 const field = form.querySelector(`[name="${name}"]`);
                 if (field) field.value = value;
             });
-
             updateCharCounter();
         },
 
-        clearDraft(key) {
-            storage.remove('draft_' + key);
-        },
+        clearDraft(key) { storage.remove('draft_' + key); },
 
         showIndicator(state) {
-            if (!this.indicator) return;
+            if (!this.indicator || !this.indicatorText) return;
             clearTimeout(this.hideTimer);
             this.indicator.classList.add('show');
             this.indicator.classList.remove('saved');
-
             if (state === 'saving') {
                 this.indicatorText.textContent = 'جاري الحفظ التلقائي...';
             } else if (state === 'saved') {
                 this.indicator.classList.add('saved');
                 this.indicatorText.textContent = 'تم الحفظ التلقائي';
-                this.hideTimer = setTimeout(() => {
-                    this.indicator.classList.remove('show');
-                }, 2000);
+                this.hideTimer = setTimeout(() => this.indicator.classList.remove('show'), 2000);
             }
         }
     };
@@ -521,112 +480,247 @@
         const textarea = document.getElementById('depressionStory');
         const counter = document.getElementById('charCount');
         const counterWrap = document.getElementById('charCounter');
-
         if (!textarea || !counter || !counterWrap) return;
 
         const length = textarea.value.length;
         counter.textContent = length;
 
         counterWrap.classList.remove('warning', 'danger');
-
         if (length > MAX_CHARS) {
             counterWrap.classList.add('danger');
-            counter.textContent = length;
         } else if (length > MAX_CHARS * 0.9) {
             counterWrap.classList.add('warning');
         }
     }
 
     /* ============================================================
-       9. Mock Data & Load
+       9. Patient ID & API URLs
     ============================================================ */
-    const mockDepressionStory = {
-        id: 1,
-        story: 'بدأت أعراض الاكتئاب لدى المريض قبل نحو ثلاث سنوات، عقب فقدان وظيفته وتدهور أوضاعه المادية والأسرية. لاحظ المريض في البداية فقداناً تدريجياً للاهتمام بالأنشطة، مع شعور دائم بالحزن والإرهاق واضطراب في النوم والشهية. تمت مراجعة العيادة بعد ستة أشهر، وبدأ العلاج بمضادات الاكتئاب مع جلسات دعم نفسي أسبوعية.'
-    };
-
-    function loadDepressionStory() {
-        const saved = storage.get('depressionStory', mockDepressionStory.story);
-        const textarea = document.getElementById('depressionStory');
-        if (textarea) textarea.value = saved || '';
-        updateCharCounter();
+    function getPatientId() {
+        const form = document.getElementById('depressionStoryForm');
+        const fromData = form?.dataset?.patientId?.trim();
+        const fromHidden = document.getElementById('patientId')?.value?.trim();
+        const fromSession = sessionStorage.getItem('bnCurrentPatientId')?.trim();
+        return fromData || fromHidden || fromSession || '';
     }
 
-    /* ============================================================
-       10. Submit Handler
-    ============================================================ */
-    const form = document.getElementById('depressionStoryForm');
-    if (form) {
-        form.addEventListener('submit', async function (event) {
-            event.preventDefault();
+    function getApiUrls() {
+        const form = document.getElementById('depressionStoryForm');
+        return {
+            get: form?.dataset?.apiGetUrl || '/Doctor?handler=DepressionStory',
+            update: form?.dataset?.apiUpdateUrl || '/Doctor?handler=UpdateDepressionStory'
+        };
+    }
 
-            const { isValid, errors } = bnValidation.validateForm(this);
+    function extractStoryObject(payload) {
+        if (!payload) return null;
+        if (Array.isArray(payload)) return payload[0] || null;
+        if (payload.data && !Array.isArray(payload.data)) return payload.data;
+        if (payload.data && Array.isArray(payload.data)) return payload.data[0] || null;
+        return payload;
+    }
 
-            if (!isValid) {
-                bnValidation.showSummary(this, errors);
-                bnValidation.scrollToFirstError(this);
-                showToast('error', 'فشل التحقق', `يوجد ${errors.length} ${errors.length === 1 ? 'خطأ' : 'أخطاء'} في النموذج.`);
+    /**
+     * يستخرج نص القصة من الـ response (يدعم أشكال مختلفة).
+     */
+    function extractStoryText(patient) {
+        if (!patient) return '';
+        return patient.story
+            ?? patient.Story
+            ?? patient.storyText
+            ?? patient.description
+            ?? patient.content
+            ?? '';
+    }
+
+    async function loadDepressionStory() {
+        const patientId = getPatientId();
+        if (!patientId) {
+            console.warn('⚠️ No patientId — cannot load depression story');
+            showToast('warning', 'لا يوجد مريض', 'لم يتم العثور على معرّف المريض في الصفحة.');
+            return;
+        }
+
+        const urls = getApiUrls();
+        const url = `${urls.get}${urls.get.includes('?') ? '&' : '?'}patientId=${encodeURIComponent(patientId)}`;
+
+        const textarea = document.getElementById('depressionStory');
+
+        try {
+            const res = await fetch(url, {
+                headers: { 'X-Requested-With': 'fetch', 'Accept': 'application/json' },
+                credentials: 'same-origin'
+            });
+
+            if (res.status === 404) {
+                // لا توجد قصة بعد — اترك الحقل فاضي
+                if (textarea) textarea.value = '';
+                updateCharCounter();
+                console.log('ℹ️ No depression story yet for patient:', patientId);
                 return;
             }
 
-            const saveButton = document.getElementById('saveStoryButton');
-            const saveButtonText = document.getElementById('saveStoryButtonText');
-            const saveSpinner = document.getElementById('saveStorySpinner');
-            const storyData = {
-                id: mockDepressionStory.id,
-                story: document.getElementById('depressionStory').value.trim()
-            };
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-            saveButton.disabled = true;
-            saveButtonText.classList.add('d-none');
-            saveSpinner.classList.remove('d-none');
+            const payload = await res.json();
+            const patient = extractStoryObject(payload);
+            const storyText = extractStoryText(patient);
 
-            try {
-                await mockPostRequest(storyData);
-                mockDepressionStory.story = storyData.story;
-                storage.set('depressionStory', storyData.story);
-                bnAutoSave.clearDraft('depressionStoryDraft');
-                bnUnsaved.markClean();
-                bnConfetti.fire();
-                showToast('success', 'تم الحفظ بنجاح', 'تم حفظ قصة مرض الاكتئاب.');
-            } catch (error) {
-                showToast('error', 'فشل الحفظ', 'حدث خطأ أثناء حفظ القصة.');
-            } finally {
-                saveButton.disabled = false;
-                saveSpinner.classList.add('d-none');
-                saveButtonText.classList.remove('d-none');
-            }
-        });
+            if (textarea) textarea.value = storyText || '';
+            updateCharCounter();
 
-        form.addEventListener('input', () => bnUnsaved.markDirty());
+            storage.set('depressionStory_' + patientId, storyText);
+            console.log('✅ Loaded depression story for:', patientId);
+        } catch (err) {
+            console.error('❌ فشل تحميل قصة الاكتئاب:', err);
+            showToast('error', 'فشل التحميل', 'تعذر تحميل قصة الاكتئاب من الخدمة.');
+        }
     }
 
-    async function mockPostRequest(data) {
-        console.log('POST Depression Story:', data);
-        return new Promise(resolve => setTimeout(() => resolve({ success: true }), 800));
+    async function saveDepressionStory(form) {
+        const patientId = getPatientId();
+        if (!patientId) {
+            showToast('error', 'خطأ', 'معرّف المريض مفقود.');
+            return;
+        }
+
+        const urls = getApiUrls();
+        const textarea = document.getElementById('depressionStory');
+        const storyText = (textarea?.value || '').trim();
+
+        const payload = {
+            patientId: patientId,
+            story: storyText
+        };
+
+        const antiforgeryToken = getAntiForgeryToken();
+
+        console.log('📤 PUT', urls.update);
+        console.log('📤 Payload:', JSON.stringify(payload, null, 2));
+        console.log('📤 Token:', antiforgeryToken ? '(موجود)' : '(مفقود!)');
+
+        const saveButton = document.getElementById('saveStoryButton');
+        const saveButtonText = document.getElementById('saveStoryButtonText');
+        const saveSpinner = document.getElementById('saveStorySpinner');
+
+        if (saveButton) saveButton.disabled = true;
+        if (saveButtonText) saveButtonText.classList.add('d-none');
+        if (saveSpinner) saveSpinner.classList.remove('d-none');
+
+        try {
+            const res = await fetch(urls.update, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'fetch',
+                    'Accept': 'application/json',
+                    'RequestVerificationToken': antiforgeryToken
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify(payload)
+            });
+
+            const responseText = await res.text();
+            console.log('📥 Response status:', res.status);
+            console.log('📥 Response body:', responseText);
+
+            if (!res.ok) {
+                throw new Error(`HTTP ${res.status} — ${responseText}`);
+            }
+
+            let result = null;
+            try { result = responseText ? JSON.parse(responseText) : null; } catch { /* ... */ }
+
+            storage.set('depressionStory_' + patientId, storyText);
+            bnAutoSave.clearDraft('depressionStoryDraft');
+            bnUnsaved.markClean();
+            bnConfetti.fire();
+            showToast('success', 'تم الحفظ بنجاح', 'تم حفظ قصة مرض الاكتئاب.');
+            console.log('✅ Story updated:', result);
+        } catch (err) {
+            console.error('❌ فشل حفظ قصة الاكتئاب:', err);
+            showToast('error', 'فشل الحفظ', err.message || 'حدث خطأ أثناء حفظ القصة.');
+        } finally {
+            if (saveButton) saveButton.disabled = false;
+            if (saveSpinner) saveSpinner.classList.add('d-none');
+            if (saveButtonText) saveButtonText.classList.remove('d-none');
+        }
     }
 
     /* ============================================================
-       11. Init
+       10. Form Binding
     ============================================================ */
-    function doInit() {
+    function waitForFormThenInit(attempt = 0) {
+        const form = document.getElementById('depressionStoryForm');
+        if (!form) {
+            if (attempt < 20) {
+                setTimeout(() => waitForFormThenInit(attempt + 1), 100);
+            } else {
+                console.warn('⚠️ DepressionStoryForm not found after 2s');
+            }
+            return;
+        }
+        console.log('✅ DepressionStoryForm found — binding...');
+        initForm(form);
+    }
+
+    function initForm(form) {
+        if (form.dataset.bnBound === '1') {
+            console.log('ℹ️ Form already bound — skipping');
+            return;
+        }
+        form.dataset.bnBound = '1';
+
+        // 1. تحميل القصة من الـ API
         loadDepressionStory();
 
+        // 2. Auto-save
+        bnAutoSave.init();
+
+        // 3. Validation
+        bnValidation.attachToForm(form);
+
+        // 4. Submit
+        form.addEventListener('submit', async function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            const { isValid, errors } = bnValidation.validateForm(this);
+            if (!isValid) {
+                bnValidation.showSummary(this, errors);
+                bnValidation.scrollToFirstError(this);
+                showToast('error', 'فشل التحقق',
+                    `يوجد ${errors.length} ${errors.length === 1 ? 'خطأ' : 'أخطاء'} في النموذج.`);
+                return false;
+            }
+
+            await saveDepressionStory(this);
+            return false;
+        });
+
+        // 5. تتبع التغييرات
+        form.addEventListener('input', () => bnUnsaved.markDirty());
+
+        // 6. عداد الأحرف
         const textarea = document.getElementById('depressionStory');
-        if (textarea) {
+        if (textarea && !textarea.dataset.bnCounterBound) {
+            textarea.dataset.bnCounterBound = '1';
             textarea.addEventListener('input', updateCharCounter);
         }
+        updateCharCounter();
 
-        bnAutoSave.init();
-        bnValidation.attachToForm(document.getElementById('depressionStoryForm'));
-
+        // 7. إشعار ترحيبي
         setTimeout(() => {
-            showToast('info', 'قصة مرض الاكتئاب', 'يمكنك قراءة وتعديل وحفظ القصة المرضية الكاملة للمريض هنا. يتم الحفظ تلقائياً أثناء الكتابة.', 5000);
+            showToast('info', 'قصة مرض الاكتئاب',
+                'يمكنك قراءة وتعديل وحفظ القصة المرضية الكاملة للمريض هنا. يتم الحفظ تلقائياً أثناء الكتابة.',
+                5000);
         }, 1000);
 
-        console.log('%c✅ Depression Story Tab Loaded',
+        console.log('%c✅ Depression Story Tab Loaded & Bound',
             'background:#0891b2;color:#fff;padding:6px 16px;border-radius:6px;font-weight:bold;font-size:12px;');
     }
+
+    function doInit() { waitForFormThenInit(); }
 
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', doInit);

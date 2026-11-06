@@ -480,24 +480,30 @@ window.addEventListener('beforeunload', (e) => {
 });
 
 /* ============================================================
-   7. Mock Patient Data & Load
+   7. Load / Fill Patient Data
 ============================================================ */
-const mockPatientData = {
-    id: 1,
-    firstName: 'أحمد',
-    lastName: 'محمد علي',
-    dateOfBirth: '1994-05-15',
-    gender: 'male',
-    phone: '+49 151 12345678',
-    email: 'ahmed.patient@example.com',
-    address: 'شارع المثال 25، الطابق الثاني',
-    city: 'برلين',
-    maritalStatus: 'married'
-};
+function isEditMode() {
+    const hidden = document.getElementById('patientId');
+    return !!(hidden && hidden.value);
+}
 
 function loadPatientData() {
-    const saved = bnStorage.get('patientData', mockPatientData);
-    fillPatientForm(saved);
+    const hidden = document.getElementById('patientId');
+    const patientId = hidden?.value || '';
+
+    if (patientId) {
+        // وضع تعديل: اقرأ بيانات المريض من sessionStorage
+        const cached = bnStorage.get('patientData_' + patientId) || {};
+        fillPatientForm(cached);
+        return;
+    }
+
+    // وضع إضافة: امسح أي draft قديم (لتجنب ملء حقول من مريض سابق)
+    // (لو المستخدم سبق وكتب ومشي، هنستعيد الـ draft)
+    const draft = bnStorage.get('draft_patientData');
+    if (!draft) {
+        fillPatientForm({});
+    }
 }
 
 function fillPatientForm(patient) {
@@ -509,7 +515,7 @@ function fillPatientForm(patient) {
 }
 
 /* ============================================================
-   8. Save Handler (زر الحفظ)
+   8. Save Handler (زر الحفظ — إضافة أو تعديل)
 ============================================================ */
 async function handleSave() {
     const form = document.getElementById('personalInfoForm');
@@ -524,27 +530,89 @@ async function handleSave() {
         return;
     }
 
+    const patientId = document.getElementById('patientId')?.value || '';
+    const editing = !!patientId;
+
     const saveButton = document.getElementById('saveButton');
     const saveButtonText = document.getElementById('saveButtonText');
     const saveSpinner = document.getElementById('saveSpinner');
-    const formData = new FormData(form);
-    const patientData = Object.fromEntries(formData.entries());
-    patientData.id = mockPatientData.id;
 
     if (saveButton) saveButton.disabled = true;
     if (saveButtonText) saveButtonText.classList.add('d-none');
     if (saveSpinner) saveSpinner.classList.remove('d-none');
 
     try {
-        await mockPostRequest(patientData);
-        bnStorage.set('patientData', patientData);
+        const formData = new FormData(form);
+        const payload = Object.fromEntries(formData.entries());
+        delete payload.patientId;    // مش جزء من الـ body
+
+        // ✅ إضافة فقط — الـ API الحالي بيولّد الكود ويربط الطبيب تلقائياً
+        const url = '/Doctor?handler=CreatePatient';
+
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'fetch',
+                'Accept': 'application/json',
+                'RequestVerificationToken': getAntiForgeryToken()
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+            const errText = await res.text().catch(() => '');
+            throw new Error(`HTTP ${res.status} — ${errText}`);
+        }
+
+        const created = await res.json().catch(() => null);
+
+        // ✅ استخراج الكود من الـ response (يدعم الشكلين: object أو data wrapper)
+        const createdId =
+            created?.id ??
+            created?.patientId ??
+            created?.data?.id ??
+            created?.data?.patientId ??
+            '';
+
+        const createdCode =
+            created?.patientCode?.code ??
+            created?.patientCode ??
+            created?.code ??
+            created?.data?.patientCode?.code ??
+            created?.data?.patientCode ??
+            created?.data?.code ??
+            '';
+
+        // ✅ حفظ بيانات المريض محلياً للتبويبات القادمة
+        if (createdId) {
+            bnStorage.set('patientData_' + createdId, payload);
+            sessionStorage.setItem('bnCurrentPatientId', createdId);
+            sessionStorage.setItem('bnCurrentPatientCode', createdCode || '');
+            sessionStorage.setItem('bnCurrentPatientName',
+                `${payload.firstName || ''} ${payload.lastName || ''}`.trim());
+        }
+
+        // ✅ مسح draft + unsaved
         bnAutoSave.clearDraft('patientData');
-        Object.assign(mockPatientData, patientData);
         bnUnsaved.markClean();
+
+        // ✅ احتفال + toast
         bnConfetti.fire();
-        showToast('success', 'تم الحفظ بنجاح', 'تم تحديث البيانات الشخصية للمريض.');
-    } catch (error) {
-        showToast('error', 'فشل الحفظ', 'حدث خطأ أثناء حفظ البيانات.');
+        const codeMsg = createdCode ? ` — الكود: ${createdCode}` : '';
+        showToast('success', 'تم الحفظ بنجاح', `تم إضافة المريض${codeMsg}`);
+
+        // ✅ الانتقال لصفحة تفاصيل المريض الجديد بعد لحظات
+        if (createdId) {
+            sessionStorage.setItem('bnReturnToDoctor', 'true');
+            setTimeout(() => {
+                window.location.href = `/Doctor?patientId=${encodeURIComponent(createdId)}`;
+            }, 1400);
+        }
+    } catch (err) {
+        console.error('❌ فشل حفظ البيانات:', err);
+        showToast('error', 'فشل الحفظ', err.message || 'حدث خطأ أثناء حفظ البيانات.');
     } finally {
         if (saveButton) saveButton.disabled = false;
         if (saveSpinner) saveSpinner.classList.add('d-none');
@@ -552,9 +620,8 @@ async function handleSave() {
     }
 }
 
-async function mockPostRequest(data) {
-    console.log('POST Patient Data:', data);
-    return new Promise(resolve => setTimeout(() => resolve({ success: true }), 800));
+function getAntiForgeryToken() {
+    return document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
 }
 
 /* ============================================================
@@ -570,7 +637,6 @@ window.addEventListener('DOMContentLoaded', () => {
         form.addEventListener('input', () => bnUnsaved.markDirty());
     }
 
-    // ربط زر الحفظ بـ click
     const saveButton = document.getElementById('saveButton');
     if (saveButton) {
         saveButton.addEventListener('click', function (e) {

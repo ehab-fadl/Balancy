@@ -34,7 +34,7 @@
                     <i class="fa-solid fa-users"></i>
                     قائمة المرضى
                 </h2>
-                <span class="patients-count" id="patientsCount">6</span>
+                <span class="patients-count" id="patientsCount">0</span>
             </div>
 
             <div class="search-box">
@@ -44,6 +44,7 @@
                        aria-label="بحث عن مريض">
             </div>
 
+            <!-- ✅ قائمة المرضى (الـ JS بيملأها) -->
             <ul class="patients-list" id="patientsList" role="listbox" aria-label="قائمة المرضى"></ul>
 
             <div class="patients-empty-state" id="patientsEmptyState">
@@ -53,14 +54,14 @@
 
             <div class="patients-footer">
                 <span><i class="fa-solid fa-database ms-1"></i> الإجمالي</span>
-                <span id="footerCount">6</span>
+                <span id="footerCount">0</span>
             </div>
 
         </div>
     </aside>
 
     <!-- Main Content Area (Details will be injected here) -->
-    <main class="main-content-area">
+    <main class="main-content-area" data-patients-url="/Doctor?handler=Patients">
 
         <div class="content-placeholder" id="mainContentPlaceholder">
             <div class="content-placeholder-icon">

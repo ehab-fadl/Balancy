@@ -1,11 +1,14 @@
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
-namespace Balancy.Areas.Doctor.Pages.Tabs
+namespace Balancy.Areas.Doctor.Pages.Tabs;
+
+public class PersonalInfoModel : PageModel
 {
-    public class PersonalInfoModel : PageModel
+    /// <summary>معرّف المريض (GUID) القادم من الرابط.</summary>
+    public string? PatientId { get; set; }
+
+    public void OnGet(string? patientId = null)
     {
-        public void OnGet()
-        {
-        }
+        PatientId = patientId;
     }
 }

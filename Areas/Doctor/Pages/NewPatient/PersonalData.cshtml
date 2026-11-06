@@ -1,7 +1,8 @@
 ﻿@page
 @model Balancy.Areas.Doctor.Pages.NewPatient.PersonalDataModel
 @{
-    ViewData["Title"] = "البيانات الشخصية";
+    var isEdit = Model.IsEdit;
+    ViewData["Title"] = isEdit ? "تعديل بيانات المريض" : "إضافة مريض جديد";
 }
 
 <!-- Auto-save Indicator -->
@@ -22,17 +23,19 @@
                 <i class="fa-solid fa-user"></i>
             </div>
             <div>
-                <h1>البيانات الشخصية</h1>
-                <p>عرض وتعديل المعلومات الشخصية للمريض</p>
+                <h1>@(isEdit ? "تعديل بيانات المريض" : "إضافة مريض جديد")</h1>
+                <p>@(isEdit ? "عرض وتعديل المعلومات الشخصية للمريض" : "أدخل المعلومات الشخصية للمريض الجديد")</p>
             </div>
         </div>
         <div class="edit-status">
             <i class="fa-solid fa-circle-check"></i>
-            جميع الحقول قابلة للتعديل
+            @(isEdit ? "جميع الحقول قابلة للتعديل" : "الحقول المميزة بـ * مطلوبة")
         </div>
     </div>
 
     <form id="personalInfoForm" class="personal-form" data-autosave="patientData" novalidate>
+        <!-- ✅ hidden patientId: فاضي = إضافة جديدة، مليان = تعديل -->
+        <input type="hidden" id="patientId" name="patientId" value="@Model.PatientId" />
 
         <div class="form-section-title">
             <i class="fa-solid fa-id-card"></i>
@@ -71,8 +74,8 @@
                 </label>
                 <select class="form-select form-control-custom" id="gender" name="gender" required>
                     <option value="">اختر الجنس</option>
-                    <option value="male">ذكر</option>
-                    <option value="female">أنثى</option>
+                    <option value="ذكر">ذكر</option>
+                    <option value="أنثى">أنثى</option>
                 </select>
             </div>
         </div>
@@ -133,10 +136,10 @@
                 </label>
                 <select class="form-select form-control-custom" id="maritalStatus" name="maritalStatus">
                     <option value="">اختر الحالة الاجتماعية</option>
-                    <option value="single">أعزب</option>
-                    <option value="married">متزوج</option>
-                    <option value="widowed">أرمل</option>
-                    <option value="divorced">مطلق</option>
+                    <option value="أعزب">أعزب</option>
+                    <option value="متزوج">متزوج</option>
+                    <option value="أرمل">أرمل</option>
+                    <option value="مطلق">مطلق</option>
                 </select>
             </div>
         </div>
@@ -152,7 +155,7 @@
             <button type="button" class="btn-save" id="saveButton">
                 <span id="saveButtonText">
                     <i class="fa-solid fa-floppy-disk"></i>
-                    حفظ التغييرات
+                    @(isEdit ? "حفظ التعديلات" : "إضافة المريض")
                 </span>
                 <span id="saveSpinner" class="d-none">
                     <span class="spinner-border spinner-border-sm" role="status"></span>

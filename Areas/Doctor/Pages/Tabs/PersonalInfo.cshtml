@@ -36,7 +36,19 @@
         </div>
     </div>
 
-    <form id="personalInfoForm" class="personal-form" data-autosave="patientData" novalidate>
+    <form id="personalInfoForm"
+          class="personal-form"
+          data-autosave="patientData"
+          data-patient-id="@Model.PatientId"
+          data-api-get-url="/Doctor?handler=Patient"
+          data-api-update-url="/Doctor?handler=UpdatePatient"
+          novalidate>
+
+        <!-- ✅ antiforgery token — يُرسل مع كل PUT عبر header -->
+        @Html.AntiForgeryToken()
+
+        <!-- ✅ hidden patientId -->
+        <input type="hidden" id="patientId" name="patientId" value="@Model.PatientId" />
 
         <div class="form-section-title">
             <i class="fa-solid fa-id-card"></i>
@@ -75,8 +87,8 @@
                 </label>
                 <select class="form-select form-control-custom" id="gender" name="gender" required>
                     <option value="">اختر الجنس</option>
-                    <option value="male">ذكر</option>
-                    <option value="female">أنثى</option>
+                    <option value="ذكر">ذكر</option>
+                    <option value="أنثى">أنثى</option>
                 </select>
             </div>
         </div>
@@ -137,10 +149,10 @@
                 </label>
                 <select class="form-select form-control-custom" id="maritalStatus" name="maritalStatus">
                     <option value="">اختر الحالة الاجتماعية</option>
-                    <option value="single">أعزب</option>
-                    <option value="married">متزوج</option>
-                    <option value="widowed">أرمل</option>
-                    <option value="divorced">مطلق</option>
+                    <option value="أعزب">أعزب</option>
+                    <option value="متزوج">متزوج</option>
+                    <option value="أرمل">أرمل</option>
+                    <option value="مطلق">مطلق</option>
                 </select>
             </div>
         </div>

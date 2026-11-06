@@ -36,7 +36,19 @@
         </div>
     </div>
 
-    <form id="depressionStoryForm" class="personal-form" data-autosave="depressionStoryDraft" novalidate>
+    <form id="depressionStoryForm"
+          class="personal-form"
+          data-autosave="depressionStoryDraft"
+          data-patient-id="@Model.PatientId"
+          data-api-get-url="/Doctor?handler=DepressionStory"
+          data-api-update-url="/Doctor?handler=UpdateDepressionStory"
+          novalidate>
+
+        <!-- ✅ antiforgery token -->
+        @Html.AntiForgeryToken()
+
+        <!-- ✅ hidden patientId -->
+        <input type="hidden" id="patientId" name="patientId" value="@Model.PatientId" />
 
         <div class="form-section-title">
             <i class="fa-solid fa-book-open"></i>

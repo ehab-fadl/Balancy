@@ -1,6 +1,9 @@
 ﻿/* ============================================================
-   Personal Info Tab — Standalone Script (Fixed Submit Binding)
-   يعمل مستقلاً AND يتكامل مع bnApp إذا وُجد
+   Personal Info Tab — API-driven (GET/PUT Patient)
+   - يحافظ على: Validation, AutoSave, Confetti, Toast, Unsaved tracker
+   - يحذف: mockPatientData + mockPostRequest
+   - يرسل: antiforgery token في header RequestVerificationToken
+   - يستخدم: قيم عربية للـ gender/maritalStatus (يطابق الباك إند)
 ============================================================ */
 
 (function initPersonalInfo() {
@@ -40,7 +43,7 @@
     };
 
     /* ============================================================
-       2. Utilities — escapeHtml (مبكّر، لاستخدامه في Toast)
+       2. Utilities
     ============================================================ */
     function escapeHtml(value) {
         const div = document.createElement('div');
@@ -48,8 +51,12 @@
         return div.innerHTML;
     }
 
+    function getAntiForgeryToken() {
+        return document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+    }
+
     /* ============================================================
-       3. Toast — يدعم bnApp أو يعرض Toast مدمج على الشاشة
+       3. Toast
     ============================================================ */
     function ensureToastStyles() {
         if (document.getElementById('bn-pi-toast-styles')) return;
@@ -57,52 +64,29 @@
         style.id = 'bn-pi-toast-styles';
         style.textContent = `
             .bn-pi-toast-overlay {
-                position: fixed;
-                inset: 0;
-                display: none;
-                align-items: center;
-                justify-content: center;
-                z-index: 100000;
-                pointer-events: none;
-                padding: 1rem;
+                position: fixed; inset: 0;
+                display: none; align-items: center; justify-content: center;
+                z-index: 100000; pointer-events: none; padding: 1rem;
             }
             .bn-pi-toast-overlay.show { display: flex; }
             .bn-pi-toast {
-                min-width: 300px;
-                max-width: 92vw;
-                padding: 1.1rem 1.4rem;
-                border-radius: 16px;
-                display: flex;
-                align-items: center;
-                gap: 0.85rem;
-                font-family: 'Tajawal', sans-serif;
-                font-weight: 800;
-                font-size: 0.95rem;
-                color: #fff;
+                min-width: 300px; max-width: 92vw;
+                padding: 1.1rem 1.4rem; border-radius: 16px;
+                display: flex; align-items: center; gap: 0.85rem;
+                font-family: 'Tajawal', sans-serif; font-weight: 800;
+                font-size: 0.95rem; color: #fff;
                 box-shadow: 0 20px 50px -12px rgba(15, 23, 42, 0.55);
                 animation: bnPiToastIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-                pointer-events: auto;
-                direction: rtl;
-                line-height: 1.5;
+                pointer-events: auto; direction: rtl; line-height: 1.5;
             }
             .bn-pi-toast.hide { animation: bnPiToastOut 0.3s ease forwards; }
             .bn-pi-toast-icon {
-                width: 38px;
-                height: 38px;
-                min-width: 38px;
-                border-radius: 50%;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                background: rgba(255, 255, 255, 0.22);
-                font-size: 1.05rem;
+                width: 38px; height: 38px; min-width: 38px;
+                border-radius: 50%; display: flex;
+                align-items: center; justify-content: center;
+                background: rgba(255, 255, 255, 0.22); font-size: 1.05rem;
             }
-            .bn-pi-toast-body {
-                display: flex;
-                flex-direction: column;
-                gap: 0.15rem;
-                text-align: right;
-            }
+            .bn-pi-toast-body { display: flex; flex-direction: column; gap: 0.15rem; text-align: right; }
             .bn-pi-toast-title { font-size: 0.95rem; font-weight: 900; }
             .bn-pi-toast-message { font-size: 0.8rem; font-weight: 600; opacity: 0.95; }
             .bn-pi-toast.error { background: linear-gradient(135deg, #ef4444, #b91c1c); }
@@ -189,8 +173,7 @@
             el.innerHTML = '';
             el.classList.add('active');
 
-            const pieceCount = 60;
-            for (let i = 0; i < pieceCount; i++) {
+            for (let i = 0; i < 60; i++) {
                 const piece = document.createElement('div');
                 piece.className = 'confetti-piece';
                 piece.style.left = Math.random() * 100 + '%';
@@ -209,7 +192,7 @@
     };
 
     /* ============================================================
-       5. Validation Engine (موحّد)
+       5. Validation Engine
     ============================================================ */
     const bnValidation = {
 
@@ -392,7 +375,6 @@
         showSummary(form, errors) {
             const existing = form.querySelector('.bn-validation-summary');
             if (existing) existing.remove();
-
             if (errors.length === 0) return;
 
             const summary = document.createElement('div');
@@ -406,9 +388,7 @@
                     ${errors.map((e, i) => `<li data-error-index="${i}">${e.label}: ${e.message}</li>`).join('')}
                 </ul>
             `;
-
             form.insertBefore(summary, form.firstChild);
-
             summary.querySelectorAll('li').forEach((li, i) => {
                 li.addEventListener('click', () => {
                     const field = errors[i].field;
@@ -416,7 +396,6 @@
                     setTimeout(() => field.focus({ preventScroll: true }), 400);
                 });
             });
-
             setTimeout(() => {
                 if (summary.parentNode) {
                     summary.style.transition = 'opacity 0.4s ease';
@@ -431,17 +410,13 @@
             if (!this.rules[name]) return;
 
             const label = document.querySelector(`label[for="${field.id}"]`);
-            if (label && this.rules[name].required) {
-                label.classList.add('required');
-            }
+            if (label && this.rules[name].required) label.classList.add('required');
 
             const eventType = (field.tagName === 'SELECT' || field.type === 'date') ? 'change' : 'blur';
-
             field.addEventListener(eventType, () => {
                 const result = this.validateField(field);
                 this.updateFieldUI(field, result);
             });
-
             field.addEventListener('input', () => {
                 if (field.classList.contains('is-invalid')) {
                     const result = this.validateField(field);
@@ -456,8 +431,7 @@
 
         attachToForm(form) {
             if (!form) return;
-            const fields = form.querySelectorAll('input, select, textarea');
-            fields.forEach(field => this.attachToField(field));
+            form.querySelectorAll('input, select, textarea').forEach(f => this.attachToField(f));
         }
     };
 
@@ -486,51 +460,37 @@
 
         save(form, key) {
             const data = {};
-            const formData = new FormData(form);
-            for (const [k, v] of formData.entries()) data[k] = v;
-
-            storage.set('draft_' + key, {
-                data,
-                savedAt: new Date().toISOString()
-            });
-
+            new FormData(form).forEach((v, k) => data[k] = v);
+            storage.set('draft_' + key, { data, savedAt: new Date().toISOString() });
             this.showIndicator('saved');
         },
 
         restore(form, key) {
             const draft = storage.get('draft_' + key);
             if (!draft || !draft.data) return;
-
             const hasData = Object.values(draft.data).some(v => v && String(v).trim() !== '');
             if (!hasData) return;
-
             Object.entries(draft.data).forEach(([name, value]) => {
                 const field = form.querySelector(`[name="${name}"]`);
                 if (field) field.value = value;
             });
         },
 
-        clearDraft(key) {
-            storage.remove('draft_' + key);
-        },
+        clearDraft(key) { storage.remove('draft_' + key); },
 
         showIndicator(state) {
             const indicator = document.getElementById('saveIndicator');
             const indicatorText = document.getElementById('saveIndicatorText');
             if (!indicator || !indicatorText) return;
-
             clearTimeout(this.hideTimer);
             indicator.classList.add('show');
             indicator.classList.remove('saved');
-
             if (state === 'saving') {
                 indicatorText.textContent = 'جاري الحفظ التلقائي...';
             } else if (state === 'saved') {
                 indicator.classList.add('saved');
                 indicatorText.textContent = 'تم الحفظ التلقائي';
-                this.hideTimer = setTimeout(() => {
-                    indicator.classList.remove('show');
-                }, 2000);
+                this.hideTimer = setTimeout(() => indicator.classList.remove('show'), 2000);
             }
         }
     };
@@ -553,49 +513,204 @@
     });
 
     /* ============================================================
-       8. Mock Patient Data & Load
+       8. Patient Data — API integration
     ============================================================ */
-    const mockPatientData = {
-        id: 1,
-        firstName: 'أحمد',
-        lastName: 'محمد علي',
-        dateOfBirth: '1994-05-15',
-        gender: 'male',
-        phone: '+49 151 12345678',
-        email: 'ahmed.patient@example.com',
-        address: 'شارع المثال 25، الطابق الثاني',
-        city: 'برلين',
-        maritalStatus: 'married'
-    };
 
-    function loadPatientData() {
-        const saved = storage.get('patientData', mockPatientData);
-        fillPatientForm(saved);
+    function getPatientId() {
+        const form = document.getElementById('personalInfoForm');
+        const fromData = form?.dataset?.patientId?.trim();
+        const fromHidden = document.getElementById('patientId')?.value?.trim();
+        const fromSession = sessionStorage.getItem('bnCurrentPatientId')?.trim();
+        return fromData || fromHidden || fromSession || '';
+    }
+
+    function getApiUrls() {
+        const form = document.getElementById('personalInfoForm');
+        return {
+            get: form?.dataset?.apiGetUrl || '/Doctor?handler=Patient',
+            update: form?.dataset?.apiUpdateUrl || '/Doctor?handler=UpdatePatient'
+        };
+    }
+
+    /**
+     * يرجع القيمة العربية لـ gender (يطابق الباك إند).
+     * يقبل: "Male"/"Female", "male"/"female", "ذكر"/"أنثى", "1"/"2".
+     */
+    function normalizeGender(value) {
+        if (!value) return '';
+        const v = String(value).trim().toLowerCase();
+        if (v === 'male' || v === 'm' || v === 'ذكر' || v === '1') return 'ذكر';
+        if (v === 'female' || v === 'f' || v === 'أنثى' || v === '2') return 'أنثى';
+        return '';
+    }
+
+    function normalizeMaritalStatus(value) {
+        if (!value) return '';
+        const v = String(value).trim().toLowerCase();
+        if (v === 'single' || v === 'أعزب') return 'أعزب';
+        if (v === 'married' || v === 'متزوج') return 'متزوج';
+        if (v === 'widowed' || v === 'أرمل') return 'أرمل';
+        if (v === 'divorced' || v === 'مطلق') return 'مطلق';
+        return '';
+    }
+
+    function normalizeDateForInput(value) {
+        if (!value) return '';
+        try {
+            const d = new Date(value);
+            if (isNaN(d.getTime())) return '';
+            const yyyy = d.getFullYear();
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const dd = String(d.getDate()).padStart(2, '0');
+            return `${yyyy}-${mm}-${dd}`;
+        } catch { return ''; }
+    }
+
+    function extractPatientObject(payload) {
+        if (!payload) return null;
+        if (Array.isArray(payload)) return payload[0] || null;
+        if (payload.data && !Array.isArray(payload.data)) return payload.data;
+        if (payload.data && Array.isArray(payload.data)) return payload.data[0] || null;
+        return payload;
     }
 
     function fillPatientForm(patient) {
         const set = (id, val) => {
             const el = document.getElementById(id);
-            if (el) el.value = val || '';
+            if (el) el.value = val ?? '';
         };
         set('firstName', patient.firstName);
         set('lastName', patient.lastName);
-        set('dateOfBirth', patient.dateOfBirth);
-        set('gender', patient.gender);
+        set('dateOfBirth', normalizeDateForInput(patient.dateOfBirth));
+        set('gender', normalizeGender(patient.gender));
         set('phone', patient.phone);
         set('email', patient.email);
         set('address', patient.address);
         set('city', patient.city);
-        set('maritalStatus', patient.maritalStatus);
+        set('maritalStatus', normalizeMaritalStatus(patient.maritalStatus));
     }
 
-    async function mockPostRequest(data) {
-        console.log('POST Patient Data:', data);
-        return new Promise(resolve => setTimeout(() => resolve({ success: true }), 800));
+    async function loadPatientData() {
+        const patientId = getPatientId();
+        if (!patientId) {
+            console.warn('⚠️ No patientId — cannot load patient data');
+            showToast('warning', 'لا يوجد مريض', 'لم يتم العثور على معرّف المريض في الصفحة.');
+            return;
+        }
+
+        const urls = getApiUrls();
+        const url = `${urls.get}${urls.get.includes('?') ? '&' : '?'}id=${encodeURIComponent(patientId)}`;
+
+        try {
+            const res = await fetch(url, {
+                headers: { 'X-Requested-With': 'fetch', 'Accept': 'application/json' },
+                credentials: 'same-origin'
+            });
+
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+            const payload = await res.json();
+            const patient = extractPatientObject(payload);
+            if (!patient) throw new Error('استجابة فارغة');
+
+            fillPatientForm(patient);
+            storage.set('patientData_' + patientId, patient);
+
+            console.log('✅ Loaded patient:', patientId);
+        } catch (err) {
+            console.error('❌ فشل تحميل بيانات المريض:', err);
+            showToast('error', 'فشل التحميل', 'تعذر تحميل بيانات المريض من الخدمة.');
+        }
+    }
+
+    function buildUpdatePayload(form) {
+        const formData = new FormData(form);
+        const patientId = getPatientId();
+
+        // ✅ القيم تُرسل كما هي من الـ select (عربي: "ذكر"، "أعزب"، ...)
+        const payload = {
+            id: patientId,
+            firstName: (formData.get('firstName') || '').trim(),
+            lastName: (formData.get('lastName') || '').trim(),
+            dateOfBirth: formData.get('dateOfBirth') || null,
+            gender: formData.get('gender') || '',
+            phone: formData.get('phone') || null,
+            email: formData.get('email') || null,
+            address: formData.get('address') || null,
+            city: formData.get('city') || null,
+            maritalStatus: formData.get('maritalStatus') || null
+        };
+
+        return payload;
+    }
+
+    async function savePatient(form) {
+        const patientId = getPatientId();
+        if (!patientId) {
+            showToast('error', 'خطأ', 'معرّف المريض مفقود.');
+            return;
+        }
+
+        const urls = getApiUrls();
+        const payload = buildUpdatePayload(form);
+
+        // ✅ جلب antiforgery token من الصفحة
+        const antiforgeryToken = getAntiForgeryToken();
+
+        console.log('📤 PUT', urls.update);
+        console.log('📤 Payload:', JSON.stringify(payload, null, 2));
+        console.log('📤 Token:', antiforgeryToken ? '(موجود)' : '(مفقود!)');
+
+        const saveButton = document.getElementById('saveButton');
+        const saveButtonText = document.getElementById('saveButtonText');
+        const saveSpinner = document.getElementById('saveSpinner');
+
+        if (saveButton) saveButton.disabled = true;
+        if (saveButtonText) saveButtonText.classList.add('d-none');
+        if (saveSpinner) saveSpinner.classList.remove('d-none');
+
+        try {
+            const res = await fetch(urls.update, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'fetch',
+                    'Accept': 'application/json',
+                    'RequestVerificationToken': antiforgeryToken
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify(payload)
+            });
+
+            const responseText = await res.text();
+            console.log('📥 Response status:', res.status);
+            console.log('📥 Response body:', responseText);
+
+            if (!res.ok) {
+                throw new Error(`HTTP ${res.status} — ${responseText}`);
+            }
+
+            let result = null;
+            try { result = responseText ? JSON.parse(responseText) : null; } catch { /* ... */ }
+
+            storage.set('patientData_' + patientId, payload);
+            bnAutoSave.clearDraft('patientData');
+            bnUnsaved.markClean();
+            bnConfetti.fire();
+            showToast('success', 'تم الحفظ بنجاح', 'تم تحديث البيانات الشخصية للمريض.');
+            console.log('✅ Patient updated:', result);
+        } catch (err) {
+            console.error('❌ فشل حفظ البيانات:', err);
+            showToast('error', 'فشل الحفظ', err.message || 'حدث خطأ أثناء حفظ البيانات.');
+        } finally {
+            if (saveButton) saveButton.disabled = false;
+            if (saveSpinner) saveSpinner.classList.add('d-none');
+            if (saveButtonText) saveButtonText.classList.remove('d-none');
+        }
     }
 
     /* ============================================================
-       9. ✅ Wait for form + Bind (الإصلاح الأساسي)
+       9. Form Binding
     ============================================================ */
     function waitForFormThenInit(attempt = 0) {
         const form = document.getElementById('personalInfoForm');
@@ -614,14 +729,13 @@
     }
 
     function initForm(form) {
-        // منع الربط المزدوج
         if (form.dataset.bnBound === '1') {
             console.log('ℹ️ Form already bound — skipping');
             return;
         }
         form.dataset.bnBound = '1';
 
-        // 1. تحميل البيانات
+        // 1. تحميل البيانات من الـ API
         loadPatientData();
 
         // 2. Auto-save
@@ -630,15 +744,12 @@
         // 3. Validation
         bnValidation.attachToForm(form);
 
-        // 4. ✅ ربط submit — مع preventDefault
+        // 4. Submit
         form.addEventListener('submit', async function (event) {
             event.preventDefault();
             event.stopPropagation();
 
-            console.log('📤 Form submitted — validating...');
-
             const { isValid, errors } = bnValidation.validateForm(this);
-
             if (!isValid) {
                 bnValidation.showSummary(this, errors);
                 bnValidation.scrollToFirstError(this);
@@ -647,34 +758,7 @@
                 return false;
             }
 
-            const saveButton = document.getElementById('saveButton');
-            const saveButtonText = document.getElementById('saveButtonText');
-            const saveSpinner = document.getElementById('saveSpinner');
-
-            const formData = new FormData(this);
-            const patientData = Object.fromEntries(formData.entries());
-            patientData.id = mockPatientData.id;
-
-            if (saveButton) saveButton.disabled = true;
-            if (saveButtonText) saveButtonText.classList.add('d-none');
-            if (saveSpinner) saveSpinner.classList.remove('d-none');
-
-            try {
-                await mockPostRequest(patientData);
-                storage.set('patientData', patientData);
-                bnAutoSave.clearDraft('patientData');
-                Object.assign(mockPatientData, patientData);
-                bnUnsaved.markClean();
-                bnConfetti.fire();
-                showToast('success', 'تم الحفظ بنجاح', 'تم تحديث البيانات الشخصية للمريض.');
-            } catch (error) {
-                showToast('error', 'فشل الحفظ', 'حدث خطأ أثناء حفظ البيانات.');
-            } finally {
-                if (saveButton) saveButton.disabled = false;
-                if (saveSpinner) saveSpinner.classList.add('d-none');
-                if (saveButtonText) saveButtonText.classList.remove('d-none');
-            }
-
+            await savePatient(this);
             return false;
         });
 
@@ -695,9 +779,7 @@
     /* ============================================================
        10. Start
     ============================================================ */
-    function doInit() {
-        waitForFormThenInit();
-    }
+    function doInit() { waitForFormThenInit(); }
 
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', doInit);
