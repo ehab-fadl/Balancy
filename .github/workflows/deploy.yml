@@ -1,4 +1,4 @@
-name: Deploy Balancy to Home Server
+name: Deploy Balancy Frontend
 
 on:
   push:
@@ -9,8 +9,12 @@ jobs:
     runs-on: self-hosted
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Run Docker Compose
-      run: docker compose up -d --build
+      - name: Rebuild Frontend Container
+        run: |
+          # الانتقال لمسار العمل الخاص بالـ Runner وتحديث الحاوية
+          cd ~/Schreibtisch/actions-runner-frontend/_work/Balancy/Balancy || true
+          docker compose down
+          docker compose up -d --build --force-recreate

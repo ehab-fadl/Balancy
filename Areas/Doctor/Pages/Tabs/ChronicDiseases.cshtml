@@ -27,8 +27,20 @@
         </div>
     </div>
 
-    <form id="chronicForm" class="personal-form" novalidate>
+    <form id="chronicForm"
+          class="personal-form"
+          data-patient-id="@Model.PatientId"
+          data-api-list-url="/Doctor?handler=ChronicDiseases"
+          data-api-create-url="/Doctor?handler=CreateChronicDisease"
+          data-api-update-url="/Doctor?handler=UpdateChronicDisease"
+          data-api-delete-url="/Doctor?handler=ChronicDisease"
+          novalidate>
+
+        @Html.AntiForgeryToken()
+
         <input type="hidden" id="chronicEditIndex" value="-1">
+        <input type="hidden" id="chronicEditId" value="">
+        <input type="hidden" id="patientId" name="patientId" value="@Model.PatientId">
 
         <div class="form-section-title">
             <i class="fa-solid fa-file-medical"></i>

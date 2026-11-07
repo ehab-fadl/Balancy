@@ -28,8 +28,6 @@
 
         <div class="personal-form">
 
-          
-
             <!-- Add Vital Form -->
             <div class="add-vital-card">
                 <h3 id="formTitle" class="form-section-title">
@@ -37,8 +35,19 @@
                     إضافة قراءة حيوية جديدة
                 </h3>
 
-                <form id="vitalForm" novalidate>
+                <form id="vitalForm"
+                      novalidate
+                      data-patient-id="@Model.PatientId"
+                      data-api-list-url="/Doctor?handler=VitalSigns"
+                      data-api-create-url="/Doctor?handler=CreateVitalSign"
+                      data-api-update-url="/Doctor?handler=UpdateVitalSign"
+                      data-api-delete-url="/Doctor?handler=VitalSign">
+
+                    @Html.AntiForgeryToken()
+
                     <input type="hidden" id="editIndex" value="-1">
+                    <input type="hidden" id="editId" value="">
+                    <input type="hidden" id="patientId" name="patientId" value="@Model.PatientId">
 
                     <div class="row g-4">
 

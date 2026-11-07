@@ -1,7 +1,10 @@
 ﻿/* ============================================================
-   Family Medical History — Tab Script (Standalone + Integrated)
-   ✅ الإشعارات تعمل بشكل مضمون — نظام Toast مدمج بالكامل
+   Family Medical History — API-driven (GET/POST/PUT/DELETE)
+   - يطابق DTOs الباك إند (Create/Update/Response)
+   - يحافظ على: Toast, Modal, Validation, Confetti, Badges, Stats
+   - يحذف: mock + localStorage
 ============================================================ */
+
 (function initFamilyHistoryTab() {
     'use strict';
 
@@ -16,8 +19,35 @@
         return div.innerHTML;
     }
 
+    function getAntiForgeryToken() {
+        return document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+    }
+
+    function getPatientId() {
+        const form = document.getElementById('relativeForm');
+        return form?.dataset?.patientId?.trim()
+            || document.getElementById('patientId')?.value?.trim()
+            || sessionStorage.getItem('bnCurrentPatientId')?.trim()
+            || '';
+    }
+
+    function getApiUrls() {
+        const form = document.getElementById('relativeForm');
+        return {
+            list: form?.dataset?.apiListUrl || '/Doctor?handler=FamilyHistory',
+            create: form?.dataset?.apiCreateUrl || '/Doctor?handler=CreateFamilyHistory',
+            update: form?.dataset?.apiUpdateUrl || '/Doctor?handler=UpdateFamilyHistory',
+            del: form?.dataset?.apiDeleteUrl || '/Doctor?handler=FamilyHistory'
+        };
+    }
+
+    function isValidGuid(value) {
+        if (!value) return false;
+        return /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(String(value).trim());
+    }
+
     /* ============================================================
-       1. Toast مدمج — يعمل دائماً، لا يعتمد على أي شيء خارجي
+       1. Toast
     ============================================================ */
     function ensureToastStyles() {
         if (document.getElementById('bn-fh-toast-styles')) return;
@@ -25,84 +55,47 @@
         style.id = 'bn-fh-toast-styles';
         style.textContent = `
             .bn-fh-toast-overlay {
-                position: fixed !important;
-                top: 0 !important;
-                left: 0 !important;
-                right: 0 !important;
-                bottom: 0 !important;
-                display: none;
-                align-items: center;
-                justify-content: center;
-                z-index: 2147483647 !important;
-                pointer-events: none;
-                padding: 1rem;
-                margin: 0 !important;
+                position: fixed !important; inset: 0 !important;
+                display: none; align-items: center; justify-content: center;
+                z-index: 2147483647 !important; pointer-events: none; padding: 1rem; margin: 0 !important;
             }
             .bn-fh-toast-overlay.show { display: flex !important; }
             .bn-fh-toast {
-                min-width: 300px;
-                max-width: 92vw;
-                padding: 1.1rem 1.4rem;
-                border-radius: 16px;
-                display: flex;
-                align-items: center;
-                gap: 0.85rem;
-                font-family: 'Tajawal', 'Segoe UI', Tahoma, sans-serif;
-                font-weight: 800;
-                font-size: 0.95rem;
-                color: #fff;
+                min-width: 300px; max-width: 92vw;
+                padding: 1.1rem 1.4rem; border-radius: 16px;
+                display: flex; align-items: center; gap: 0.85rem;
+                font-family: 'Tajawal', sans-serif; font-weight: 800;
+                font-size: 0.95rem; color: #fff;
                 box-shadow: 0 20px 50px -12px rgba(15, 23, 42, 0.55);
                 animation: bnFhToastIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-                pointer-events: auto;
-                direction: rtl;
-                line-height: 1.5;
-                position: relative;
+                pointer-events: auto; direction: rtl; line-height: 1.5; position: relative;
             }
             .bn-fh-toast.hide { animation: bnFhToastOut 0.3s ease forwards; }
             .bn-fh-toast-icon {
-                width: 38px;
-                height: 38px;
-                min-width: 38px;
-                border-radius: 50%;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                background: rgba(255, 255, 255, 0.22);
-                font-size: 1.05rem;
+                width: 38px; height: 38px; min-width: 38px;
+                border-radius: 50%; display: flex;
+                align-items: center; justify-content: center;
+                background: rgba(255, 255, 255, 0.22); font-size: 1.05rem;
             }
-            .bn-fh-toast-body {
-                display: flex;
-                flex-direction: column;
-                gap: 0.15rem;
-                text-align: right;
-            }
+            .bn-fh-toast-body { display: flex; flex-direction: column; gap: 0.15rem; text-align: right; }
             .bn-fh-toast-title { font-size: 0.95rem; font-weight: 900; }
             .bn-fh-toast-message { font-size: 0.8rem; font-weight: 600; opacity: 0.95; }
             .bn-fh-toast.error { background: linear-gradient(135deg, #ef4444, #b91c1c); }
             .bn-fh-toast.success { background: linear-gradient(135deg, #10b981, #047857); }
             .bn-fh-toast.warning { background: linear-gradient(135deg, #f59e0b, #b45309); }
             .bn-fh-toast.info { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
-            @keyframes bnFhToastIn {
-                from { opacity: 0; transform: translateY(20px) scale(0.92); }
-                to { opacity: 1; transform: translateY(0) scale(1); }
-            }
-            @keyframes bnFhToastOut {
-                from { opacity: 1; transform: translateY(0) scale(1); }
-                to { opacity: 0; transform: translateY(-20px) scale(0.92); }
-            }
+            @keyframes bnFhToastIn { from { opacity: 0; transform: translateY(20px) scale(0.92); } to { opacity: 1; transform: translateY(0) scale(1); } }
+            @keyframes bnFhToastOut { from { opacity: 1; transform: translateY(0) scale(1); } to { opacity: 0; transform: translateY(-20px) scale(0.92); } }
         `;
         document.head.appendChild(style);
     }
 
     function showBuiltInToast(type, title, message, duration = 3200) {
         ensureToastStyles();
-
-        // تأكد أن document.body موجود
         if (!document.body) {
             document.addEventListener('DOMContentLoaded', () => showBuiltInToast(type, title, message, duration), { once: true });
             return;
         }
-
         let overlay = document.getElementById('bnFhToastOverlay');
         if (!overlay) {
             overlay = document.createElement('div');
@@ -110,16 +103,8 @@
             overlay.className = 'bn-fh-toast-overlay';
             document.body.appendChild(overlay);
         }
-
         overlay.innerHTML = '';
-
-        const iconMap = {
-            error: 'fa-circle-exclamation',
-            success: 'fa-circle-check',
-            warning: 'fa-triangle-exclamation',
-            info: 'fa-circle-info'
-        };
-
+        const iconMap = { error: 'fa-circle-exclamation', success: 'fa-circle-check', warning: 'fa-triangle-exclamation', info: 'fa-circle-info' };
         const toast = document.createElement('div');
         toast.className = `bn-fh-toast ${type}`;
         toast.innerHTML = `
@@ -129,13 +114,10 @@
                 <div class="bn-fh-toast-message">${escapeHtml(message || '')}</div>
             </div>
         `;
-
         overlay.appendChild(toast);
         overlay.classList.add('show');
-
         clearTimeout(overlay._hideTimer);
         clearTimeout(overlay._removeTimer);
-
         overlay._hideTimer = setTimeout(() => {
             toast.classList.add('hide');
             overlay._removeTimer = setTimeout(() => {
@@ -143,82 +125,21 @@
                 overlay.innerHTML = '';
             }, 320);
         }, duration);
-
         return toast;
     }
 
-    /**
-     * toast() — نستخدم المدمج أولاً لأنه مضمون العمل.
-     * نلجأ إلى bnApp/window.showToast فقط إن كان المدمج غير متاح (لن يحدث).
-     */
     function toast(type, title, message, duration = 3500) {
-        // النظام المدمج مضمون — استخدمه مباشرة
         return showBuiltInToast(type, title, message, duration);
     }
 
-    // Expose globally للاستخدام من أي مكان
     window.bnFamilyHistoryToast = toast;
 
     /* ============================================================
-       2. Storage Layer
-    ============================================================ */
-    const bnStorage = {
-        prefix: 'balancy_',
-        isAvailable() {
-            try {
-                const test = '__bn_fh_test__';
-                localStorage.setItem(test, test);
-                localStorage.removeItem(test);
-                return true;
-            } catch (e) { return false; }
-        },
-        get(key, defaultValue = null) {
-            if (!this.isAvailable()) return defaultValue;
-            try {
-                const raw = localStorage.getItem(this.prefix + key);
-                return raw ? JSON.parse(raw) : defaultValue;
-            } catch (e) { return defaultValue; }
-        },
-        set(key, value) {
-            if (!this.isAvailable()) return false;
-            try {
-                localStorage.setItem(this.prefix + key, JSON.stringify(value));
-                return true;
-            } catch (e) { return false; }
-        },
-        remove(key) {
-            if (!this.isAvailable()) return;
-            try { localStorage.removeItem(this.prefix + key); } catch (e) { }
-        }
-    };
-
-    /* ============================================================
-       3. Loading Bar
-    ============================================================ */
-    const bnLoading = {
-        el: document.getElementById('bnLoadingBar'),
-        counter: 0,
-        start() {
-            if (!this.el) return;
-            this.counter++;
-            this.el.classList.add('active');
-        },
-        stop() {
-            if (!this.el) return;
-            this.counter = Math.max(0, this.counter - 1);
-            if (this.counter === 0) {
-                setTimeout(() => this.el.classList.remove('active'), 200);
-            }
-        }
-    };
-
-    /* ============================================================
-       4. Confetti
+       2. Confetti
     ============================================================ */
     const bnConfetti = {
         el: null,
         colors: ['#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#ef4444', '#0891b2'],
-
         ensureEl() {
             if (this.el && document.body.contains(this.el)) return this.el;
             let existing = document.getElementById('bnConfetti');
@@ -232,15 +153,12 @@
             this.el = existing;
             return existing;
         },
-
         fire(duration = 2000) {
             const el = this.ensureEl();
             if (!el) return;
             el.innerHTML = '';
             el.classList.add('active');
-
-            const pieceCount = 60;
-            for (let i = 0; i < pieceCount; i++) {
+            for (let i = 0; i < 60; i++) {
                 const piece = document.createElement('div');
                 piece.className = 'confetti-piece';
                 piece.style.left = Math.random() * 100 + '%';
@@ -250,7 +168,6 @@
                 piece.style.transform = `rotate(${Math.random() * 360}deg)`;
                 el.appendChild(piece);
             }
-
             setTimeout(() => {
                 el.classList.remove('active');
                 el.innerHTML = '';
@@ -259,51 +176,38 @@
     };
 
     /* ============================================================
-       5. Focus Trap
+       3. Focus Trap
     ============================================================ */
     const bnFocusTrap = {
         activeTrap: null,
-
         activate(modalEl) {
             if (!modalEl) return;
-
             const focusableSelector = [
                 'a[href]', 'button:not([disabled])',
                 'input:not([disabled])', 'select:not([disabled])',
                 'textarea:not([disabled])', '[tabindex]:not([tabindex="-1"])'
             ].join(',');
-
             const previousActive = document.activeElement;
-
             const trap = {
-                modalEl,
-                previousActive,
-                getFocusable: () => Array.from(modalEl.querySelectorAll(focusableSelector))
-                    .filter(el => el.offsetParent !== null),
+                modalEl, previousActive,
+                getFocusable: () => Array.from(modalEl.querySelectorAll(focusableSelector)).filter(el => el.offsetParent !== null),
                 handleKeydown: (e) => {
                     if (e.key !== 'Tab') return;
                     const focusables = trap.getFocusable();
                     if (focusables.length === 0) { e.preventDefault(); return; }
                     const first = focusables[0];
                     const last = focusables[focusables.length - 1];
-
-                    if (e.shiftKey && document.activeElement === first) {
-                        e.preventDefault(); last.focus();
-                    } else if (!e.shiftKey && document.activeElement === last) {
-                        e.preventDefault(); first.focus();
-                    }
+                    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+                    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
                 }
             };
-
             modalEl.addEventListener('keydown', trap.handleKeydown);
             this.activeTrap = trap;
-
             setTimeout(() => {
                 const focusables = trap.getFocusable();
                 if (focusables.length > 0) focusables[0].focus();
             }, 100);
         },
-
         deactivate() {
             if (!this.activeTrap) return;
             this.activeTrap.modalEl.removeEventListener('keydown', this.activeTrap.handleKeydown);
@@ -315,32 +219,22 @@
     };
 
     /* ============================================================
-       6. Validation Engine
+       4. Validation Engine
     ============================================================ */
     const bnValidation = {
         rules: {
-            relativeRelation: {
-                required: true,
-                messages: { required: 'صلة القرابة مطلوبة' }
-            },
+            relativeRelation: { required: true, messages: { required: 'صلة القرابة مطلوبة' } },
             relativeConditions: {
                 required: true, minLength: 2, maxLength: 500,
-                messages: {
-                    required: 'الأمراض / الحالات مطلوبة',
-                    minLength: 'يجب كتابة حالة واحدة على الأقل'
-                }
+                messages: { required: 'الأمراض / الحالات مطلوبة', minLength: 'يجب كتابة حالة واحدة على الأقل' }
             },
             relativeName: {
                 required: false, minLength: 2, maxLength: 60,
                 pattern: /^[\u0600-\u06FFa-zA-Z\s'.-]*$/,
                 messages: { pattern: 'الاسم يحتوي على رموز غير مسموحة' }
             },
-            relativeAge: {
-                required: false, numberRange: { min: 0, max: 120 },
-                messages: { numberRange: 'العمر يجب أن يكون بين 0 و 120' }
-            }
+            relativeAge: { required: false, numberRange: { min: 0, max: 120 }, messages: { numberRange: 'العمر يجب أن يكون بين 0 و 120' } }
         },
-
         validators: {
             required: (value) => {
                 if (value === null || value === undefined) return false;
@@ -356,46 +250,33 @@
                 return num >= range.min && num <= range.max;
             }
         },
-
         validateField(field) {
             const name = field.name || field.id;
             const rule = this.rules[name];
             if (!rule) return { valid: true };
-
             const value = field.value;
-
-            if (rule.required && !this.validators.required(value)) {
+            if (rule.required && !this.validators.required(value))
                 return { valid: false, type: 'error', message: rule.messages?.required || 'هذا الحقل مطلوب' };
-            }
-            if (!value || String(value).trim() === '') {
-                return { valid: true };
-            }
-            if (rule.minLength && !this.validators.minLength(value, rule.minLength)) {
+            if (!value || String(value).trim() === '') return { valid: true };
+            if (rule.minLength && !this.validators.minLength(value, rule.minLength))
                 return { valid: false, type: 'error', message: rule.messages?.minLength || `يجب أن يكون ${rule.minLength} أحرف على الأقل` };
-            }
-            if (rule.maxLength && !this.validators.maxLength(value, rule.maxLength)) {
+            if (rule.maxLength && !this.validators.maxLength(value, rule.maxLength))
                 return { valid: false, type: 'error', message: rule.messages?.maxLength || `الحد الأقصى ${rule.maxLength} حرف` };
-            }
-            if (rule.pattern && !this.validators.pattern(value, rule.pattern)) {
+            if (rule.pattern && !this.validators.pattern(value, rule.pattern))
                 return { valid: false, type: 'error', message: rule.messages?.pattern || 'صيغة غير صحيحة' };
-            }
-            if (rule.numberRange && !this.validators.numberRange(value, rule.numberRange)) {
+            if (rule.numberRange && !this.validators.numberRange(value, rule.numberRange))
                 return { valid: false, type: 'error', message: rule.messages?.numberRange || `القيمة يجب أن تكون بين ${rule.numberRange.min} و ${rule.numberRange.max}` };
-            }
             return { valid: true, type: 'success', message: 'صحيح' };
         },
-
         updateFieldUI(field, result) {
             const wrapper = field.closest('.col-md-6, .col-md-12, .col-12') || field.parentElement;
             field.classList.remove('is-valid', 'is-invalid');
-
             let messageEl = wrapper.querySelector('.bn-field-message');
             if (!messageEl) {
                 messageEl = document.createElement('div');
                 messageEl.className = 'bn-field-message';
                 field.parentNode.insertBefore(messageEl, field.nextSibling);
             }
-
             if (result.valid && result.type === 'success' && field.value.trim() !== '') {
                 field.classList.add('is-valid');
                 messageEl.className = 'bn-field-message success show';
@@ -409,19 +290,15 @@
                 messageEl.innerHTML = '';
             }
         },
-
         validateForm(form) {
             const fields = form.querySelectorAll('input, select, textarea');
             let isValid = true;
             const errors = [];
-
             fields.forEach(field => {
                 if (field.type === 'hidden' || field.type === 'radio' || field.type === 'checkbox') return;
                 if (!field.name && !field.id) return;
-
                 const result = this.validateField(field);
                 this.updateFieldUI(field, result);
-
                 if (!result.valid) {
                     isValid = false;
                     const label = form.querySelector(`label[for="${field.id}"]`);
@@ -429,22 +306,18 @@
                     errors.push({ field, label: labelText, message: result.message });
                 }
             });
-
             return { isValid, errors };
         },
-
         scrollToFirstError(form) {
             const firstInvalid = form.querySelector('.is-invalid');
             if (!firstInvalid) return;
             firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
             setTimeout(() => firstInvalid.focus({ preventScroll: true }), 400);
         },
-
         showSummary(form, errors) {
             const existing = form.querySelector('.bn-validation-summary');
             if (existing) existing.remove();
             if (errors.length === 0) return;
-
             const summary = document.createElement('div');
             summary.className = 'bn-validation-summary show';
             summary.innerHTML = `
@@ -456,9 +329,7 @@
                     ${errors.map((e, i) => `<li data-error-index="${i}">${e.label}: ${e.message}</li>`).join('')}
                 </ul>
             `;
-
             form.insertBefore(summary, form.firstChild);
-
             summary.querySelectorAll('li').forEach((li, i) => {
                 li.addEventListener('click', () => {
                     const field = errors[i].field;
@@ -466,7 +337,6 @@
                     setTimeout(() => field.focus({ preventScroll: true }), 400);
                 });
             });
-
             setTimeout(() => {
                 if (summary.parentNode) {
                     summary.style.transition = 'opacity 0.4s ease';
@@ -475,23 +345,16 @@
                 }
             }, 8000);
         },
-
         attachToField(field) {
             const name = field.name || field.id;
             if (!this.rules[name]) return;
-
             const label = document.querySelector(`label[for="${field.id}"]`);
-            if (label && this.rules[name].required) {
-                label.classList.add('required');
-            }
-
+            if (label && this.rules[name].required) label.classList.add('required');
             const eventType = (field.tagName === 'SELECT' || field.type === 'date' || field.type === 'number') ? 'change' : 'blur';
-
             field.addEventListener(eventType, () => {
                 const result = this.validateField(field);
                 this.updateFieldUI(field, result);
             });
-
             field.addEventListener('input', () => {
                 if (field.classList.contains('is-invalid')) {
                     const result = this.validateField(field);
@@ -503,143 +366,18 @@
                 }
             });
         },
-
         attachToForm(form) {
             if (!form) return;
-            const fields = form.querySelectorAll('input, select, textarea');
-            fields.forEach(field => this.attachToField(field));
+            form.querySelectorAll('input, select, textarea').forEach(field => this.attachToField(field));
         }
     };
 
     /* ============================================================
-       7. Auto-Save System
+       5. Confirm Modal
     ============================================================ */
-    const bnAutoSave = {
-        timers: {},
-        delay: 1500,
-        indicator: null,
-        indicatorText: null,
-        hideTimer: null,
-
-        ensureIndicator() {
-            this.indicator = document.getElementById('saveIndicator');
-            this.indicatorText = document.getElementById('saveIndicatorText');
-        },
-
-        init() {
-            this.ensureIndicator();
-            document.querySelectorAll('[data-autosave]').forEach(form => {
-                const key = form.dataset.autosave;
-                this.restore(form, key);
-                form.addEventListener('input', () => this.scheduleSave(form, key));
-                form.addEventListener('change', () => this.scheduleSave(form, key));
-            });
-        },
-
-        scheduleSave(form, key) {
-            clearTimeout(this.timers[key]);
-            this.showIndicator('saving');
-            this.timers[key] = setTimeout(() => this.save(form, key), this.delay);
-        },
-
-        save(form, key) {
-            const data = {};
-            const formData = new FormData(form);
-            for (const [k, v] of formData.entries()) data[k] = v;
-
-            bnStorage.set('draft_' + key, {
-                data,
-                savedAt: new Date().toISOString()
-            });
-
-            this.showIndicator('saved');
-        },
-
-        restore(form, key) {
-            const draft = bnStorage.get('draft_' + key);
-            if (!draft || !draft.data) return;
-
-            const hasData = Object.values(draft.data).some(v => v && String(v).trim() !== '');
-            if (!hasData) return;
-
-            Object.entries(draft.data).forEach(([name, value]) => {
-                const field = form.querySelector(`[name="${name}"]`);
-                if (field) field.value = value;
-            });
-        },
-
-        clearDraft(key) {
-            bnStorage.remove('draft_' + key);
-        },
-
-        showIndicator(state) {
-            this.ensureIndicator();
-            if (!this.indicator || !this.indicatorText) return;
-
-            clearTimeout(this.hideTimer);
-            this.indicator.classList.add('show');
-            this.indicator.classList.remove('saved');
-
-            if (state === 'saving') {
-                this.indicatorText.textContent = 'جاري الحفظ التلقائي...';
-            } else if (state === 'saved') {
-                this.indicator.classList.add('saved');
-                this.indicatorText.textContent = 'تم الحفظ التلقائي';
-                this.hideTimer = setTimeout(() => {
-                    this.indicator.classList.remove('show');
-                }, 2000);
-            }
-        }
-    };
-
-    /* ============================================================
-       8. Modals (Edit + Confirm)
-    ============================================================ */
-    function ensureEditModal() {
-        let modal = document.getElementById('bnEditModal');
-        if (modal) return modal;
-
-        modal = document.createElement('div');
-        modal.className = 'bn-modal-overlay';
-        modal.id = 'bnEditModal';
-        modal.setAttribute('role', 'dialog');
-        modal.setAttribute('aria-modal', 'true');
-        modal.innerHTML = `
-            <div class="bn-modal">
-                <div class="bn-modal-header">
-                    <div class="bn-modal-header-icon">
-                        <i class="fa-solid fa-pen-to-square"></i>
-                    </div>
-                    <div class="bn-modal-header-text">
-                        <h3 id="bnEditModalTitle">تعديل</h3>
-                        <p id="bnEditModalSubtitle">قم بتعديل النص ثم اضغط حفظ</p>
-                    </div>
-                </div>
-                <div class="bn-modal-body">
-                    <label for="bnEditModalInput">
-                        <i class="fa-solid fa-keyboard"></i>
-                        <span id="bnEditModalLabel">النص</span>
-                    </label>
-                    <input type="text" id="bnEditModalInput" class="bn-modal-input" autocomplete="off">
-                </div>
-                <div class="bn-modal-footer">
-                    <button type="button" class="bn-btn bn-btn-ghost" id="bnEditModalCancel">
-                        <i class="fa-solid fa-xmark"></i> إلغاء
-                    </button>
-                    <button type="button" class="bn-btn bn-btn-primary" id="bnEditModalSave">
-                        <i class="fa-solid fa-floppy-disk"></i> حفظ التعديل
-                    </button>
-                </div>
-            </div>
-        `;
-        document.body.appendChild(modal);
-        return modal;
-    }
-
     function ensureConfirmModal() {
         let modal = document.getElementById('bnConfirmModal');
         if (modal) return modal;
-
         modal = document.createElement('div');
         modal.className = 'bn-modal-overlay';
         modal.id = 'bnConfirmModal';
@@ -648,9 +386,7 @@
         modal.innerHTML = `
             <div class="bn-modal bn-modal-danger">
                 <div class="bn-modal-header">
-                    <div class="bn-modal-header-icon">
-                        <i class="fa-solid fa-triangle-exclamation"></i>
-                    </div>
+                    <div class="bn-modal-header-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
                     <div class="bn-modal-header-text">
                         <h3 id="bnConfirmModalTitle">تأكيد الحذف</h3>
                         <p id="bnConfirmModalSubtitle">لا يمكن التراجع عن هذه العملية</p>
@@ -680,15 +416,12 @@
         const messageEl = document.getElementById('bnConfirmModalMessage');
         const confirmBtn = document.getElementById('bnConfirmModalConfirm');
         const cancelBtn = document.getElementById('bnConfirmModalCancel');
-
         titleEl.textContent = title || 'تأكيد الحذف';
         subtitleEl.textContent = subtitle || 'لا يمكن التراجع عن هذه العملية';
         messageEl.innerHTML = message || 'هل أنت متأكد؟';
         confirmBtn.innerHTML = `<i class="fa-solid fa-trash"></i> ${confirmText || 'نعم، احذف'}`;
-
         modal.classList.add('show');
         bnFocusTrap.activate(modal);
-
         const cleanup = () => {
             modal.classList.remove('show');
             bnFocusTrap.deactivate();
@@ -697,7 +430,6 @@
             modal.removeEventListener('click', onOverlayClick);
             document.removeEventListener('keydown', onKeyHandler);
         };
-
         const onConfirmHandler = () => { cleanup(); if (typeof onConfirm === 'function') onConfirm(); };
         const onCancelHandler = () => cleanup();
         const onOverlayClick = (e) => { if (e.target === modal) onCancelHandler(); };
@@ -705,7 +437,6 @@
             if (e.key === 'Escape') onCancelHandler();
             else if (e.key === 'Enter') { e.preventDefault(); onConfirmHandler(); }
         };
-
         confirmBtn.addEventListener('click', onConfirmHandler);
         cancelBtn.addEventListener('click', onCancelHandler);
         modal.addEventListener('click', onOverlayClick);
@@ -713,20 +444,15 @@
     }
 
     /* ============================================================
-       9. Helpers
+       6. Helpers
     ============================================================ */
     function getRelationIcon(relation) {
         const icons = {
-            'أب': 'fa-mars',
-            'أم': 'fa-venus',
-            'جد': 'fa-person-cane',
-            'جدة': 'fa-person-cane',
-            'أخ': 'fa-mars',
-            'أخت': 'fa-venus',
-            'عم': 'fa-mars',
-            'عمة': 'fa-venus',
-            'خال': 'fa-mars',
-            'خالة': 'fa-venus'
+            'أب': 'fa-mars', 'أم': 'fa-venus',
+            'جد': 'fa-person-cane', 'جدة': 'fa-person-cane',
+            'أخ': 'fa-mars', 'أخت': 'fa-venus',
+            'عم': 'fa-mars', 'عمة': 'fa-venus',
+            'خال': 'fa-mars', 'خالة': 'fa-venus'
         };
         return icons[relation] || 'fa-user';
     }
@@ -737,12 +463,7 @@
     }
 
     function getSeverityIcon(severity) {
-        const map = {
-            low: 'fa-circle-check',
-            medium: 'fa-triangle-exclamation',
-            high: 'fa-circle-exclamation',
-            unknown: 'fa-circle-question'
-        };
+        const map = { low: 'fa-circle-check', medium: 'fa-triangle-exclamation', high: 'fa-circle-exclamation', unknown: 'fa-circle-question' };
         return map[severity] || 'fa-circle-question';
     }
 
@@ -751,18 +472,50 @@
     }
 
     /* ============================================================
-       10. Relatives CRUD
+       7. State
     ============================================================ */
-    let relativesList = bnStorage.get('familyHistory', []);
+    let relativesList = [];
+    let isLoadingList = false;
 
+    /* ============================================================
+       8. Extract / mapping
+    ============================================================ */
+    function extractArray(payload) {
+        if (payload == null) return [];
+        if (Array.isArray(payload)) return payload;
+        const candidates = [payload.data, payload.items, payload.result, payload.$values, payload.data?.$values, payload.data?.items];
+        for (const c of candidates) if (Array.isArray(c)) return c;
+        for (const key of Object.keys(payload)) {
+            if (Array.isArray(payload[key])) return payload[key];
+        }
+        return [];
+    }
+
+    function mapRelativeDto(dto) {
+        return {
+            id: dto.id ?? dto.Id ?? '',
+            patientId: dto.patientId ?? dto.PatientId ?? '',
+            relation: dto.relation ?? dto.Relation ?? '',
+            name: dto.relativeName ?? dto.RelativeName ?? '',
+            age: dto.age ?? dto.Age ?? '',
+            status: dto.status ?? dto.Status ?? '',
+            severity: dto.severity ?? dto.Severity ?? 'unknown',
+            conditionType: dto.conditionType ?? dto.ConditionType ?? 'other',
+            conditions: dto.conditions ?? dto.Conditions ?? '',
+            notes: dto.notes ?? dto.Notes ?? ''
+        };
+    }
+
+    /* ============================================================
+       9. Render
+    ============================================================ */
     function updateRelativesCount() {
         const badge = document.getElementById('relativesCountBadge');
         if (!badge) return;
         const count = relativesList.length;
         badge.textContent = count === 0 ? '0 أفراد' :
             count === 1 ? 'فرد واحد' :
-                count === 2 ? 'فردان' :
-                    `${count} أفراد`;
+                count === 2 ? 'فردان' : `${count} أفراد`;
     }
 
     function render() {
@@ -771,37 +524,10 @@
 
         updateRelativesCount();
 
-        const statTotal = document.getElementById('statTotal');
-        const statGenetic = document.getElementById('statGenetic');
-        const statPsych = document.getElementById('statPsych');
-        const statChronic = document.getElementById('statChronic');
-
-        if (statTotal) statTotal.textContent = relativesList.length;
-
-        const geneticCount = relativesList.reduce((acc, r) => {
-            const conds = (r.conditions || '').toLowerCase();
-            return acc + (conds.includes('وراث') || conds.includes('جين') ? 1 : 0);
-        }, 0);
-        if (statGenetic) statGenetic.textContent = geneticCount;
-
-        const psychCount = relativesList.reduce((acc, r) => {
-            const conds = (r.conditions || '').toLowerCase();
-            return acc + (conds.includes('اكتئاب') || conds.includes('قلق') || conds.includes('نفس') || conds.includes('فصام') || conds.includes('توحد') ? 1 : 0);
-        }, 0);
-        if (statPsych) statPsych.textContent = psychCount;
-
-        const chronicCount = relativesList.reduce((acc, r) => {
-            const conds = (r.conditions || '').toLowerCase();
-            return acc + (conds.includes('سكر') || conds.includes('ضغط') || conds.includes('قلب') || conds.includes('سرطان') || conds.includes('ربو') ? 1 : 0);
-        }, 0);
-        if (statChronic) statChronic.textContent = chronicCount;
-
         if (relativesList.length === 0) {
             grid.innerHTML = `
                 <div class="empty-state">
-                    <div class="empty-icon">
-                        <i class="fa-solid fa-people-roof"></i>
-                    </div>
+                    <div class="empty-icon"><i class="fa-solid fa-people-roof"></i></div>
                     <h3>لا يوجد أفراد مسجّلون</h3>
                     <p>ابدأ بإضافة أفراد العائلة مع تاريخهم الطبي</p>
                 </div>
@@ -816,7 +542,6 @@
             card.style.animationDelay = `${index * 0.05}s`;
 
             const conditions = (item.conditions || '').split(',').map(c => c.trim()).filter(Boolean);
-
             let conditionsHtml = '';
             conditions.forEach((cond, i) => {
                 const cls = getConditionClass(item.conditionType);
@@ -846,7 +571,6 @@
                         ${getSeverityText(item.severity)}
                     </span>
                 </div>
-
                 <div class="conditions-section">
                     <div class="conditions-label">
                         <i class="fa-solid fa-notes-medical"></i>
@@ -856,14 +580,7 @@
                         ${conditionsHtml || '<span class="text-muted" style="font-size: 0.75rem;">لا توجد أمراض مسجّلة</span>'}
                     </div>
                 </div>
-
-                ${item.notes ? `
-                    <div class="relative-notes">
-                        <i class="fa-solid fa-note-sticky ms-1"></i>
-                        ${escapeHtml(item.notes)}
-                    </div>
-                ` : ''}
-
+                ${item.notes ? `<div class="relative-notes"><i class="fa-solid fa-note-sticky ms-1"></i>${escapeHtml(item.notes)}</div>` : ''}
                 <div class="relative-actions">
                     <button type="button" class="action-btn edit" data-action="edit" data-index="${index}" title="تعديل">
                         <i class="fa-solid fa-pen"></i>
@@ -873,7 +590,6 @@
                     </button>
                 </div>
             `;
-
             grid.appendChild(card);
         });
 
@@ -886,11 +602,145 @@
     }
 
     /* ============================================================
-       11. Form Submit
+       10. Load from API
+    ============================================================ */
+    async function loadFamilyHistory() {
+        if (isLoadingList) return;
+        isLoadingList = true;
+
+        const patientId = getPatientId();
+        if (!patientId) {
+            relativesList = [];
+            render();
+            isLoadingList = false;
+            return;
+        }
+
+        const urls = getApiUrls();
+        const url = `${urls.list}${urls.list.includes('?') ? '&' : '?'}patientId=${encodeURIComponent(patientId)}`;
+
+        try {
+            const res = await fetch(url, {
+                headers: { 'X-Requested-With': 'fetch', 'Accept': 'application/json' },
+                credentials: 'same-origin'
+            });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+            const payload = await res.json();
+            const arr = extractArray(payload);
+            relativesList = arr.map(mapRelativeDto);
+            console.log('✅ Loaded family history:', relativesList);
+            render();
+        } catch (err) {
+            console.error('❌ فشل تحميل التاريخ العائلي:', err);
+            relativesList = [];
+            render();
+            toast('error', 'فشل التحميل', 'تعذر تحميل التاريخ العائلي من الخدمة.');
+        } finally {
+            isLoadingList = false;
+        }
+    }
+
+    /* ============================================================
+       11. Build payload
+    ============================================================ */
+    function buildCreatePayload() {
+        const patientId = getPatientId();
+        const ageRaw = document.getElementById('relativeAge').value;
+        return {
+            patientId: patientId,
+            relation: document.getElementById('relativeRelation').value,
+            relativeName: document.getElementById('relativeName').value.trim() || null,
+            age: ageRaw ? parseInt(ageRaw, 10) : null,
+            status: document.getElementById('relativeStatus').value || null,
+            severity: document.getElementById('relativeSeverity').value || 'unknown',
+            conditionType: document.getElementById('relativeConditionType').value || 'other',
+            conditions: document.getElementById('relativeConditions').value.trim(),
+            notes: document.getElementById('relativeNotes').value.trim() || null
+        };
+    }
+
+    function buildUpdatePayload() {
+        const editId = document.getElementById('editId').value.trim();
+        const ageRaw = document.getElementById('relativeAge').value;
+        return {
+            id: editId,
+            relation: document.getElementById('relativeRelation').value,
+            relativeName: document.getElementById('relativeName').value.trim() || null,
+            age: ageRaw ? parseInt(ageRaw, 10) : null,
+            status: document.getElementById('relativeStatus').value || null,
+            severity: document.getElementById('relativeSeverity').value || 'unknown',
+            conditionType: document.getElementById('relativeConditionType').value || 'other',
+            conditions: document.getElementById('relativeConditions').value.trim(),
+            notes: document.getElementById('relativeNotes').value.trim() || null
+        };
+    }
+
+    /* ============================================================
+       12. API CRUD
+    ============================================================ */
+    async function createRelative(payload) {
+        const urls = getApiUrls();
+        const res = await fetch(urls.create, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'fetch',
+                'Accept': 'application/json',
+                'RequestVerificationToken': getAntiForgeryToken()
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify(payload)
+        });
+        const text = await res.text();
+        if (!res.ok) throw new Error(`HTTP ${res.status} — ${text}`);
+        return text ? JSON.parse(text) : null;
+    }
+
+    async function updateRelative(id, payload) {
+        if (!isValidGuid(id)) throw new Error(`معرّف السجل غير صالح: "${id}"`);
+        const urls = getApiUrls();
+        const url = `${urls.update}${urls.update.includes('?') ? '&' : '?'}id=${encodeURIComponent(id)}`;
+        const res = await fetch(url, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'fetch',
+                'Accept': 'application/json',
+                'RequestVerificationToken': getAntiForgeryToken()
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify(payload)
+        });
+        const text = await res.text();
+        if (!res.ok) throw new Error(`HTTP ${res.status} — ${text}`);
+        return text ? JSON.parse(text) : null;
+    }
+
+    async function deleteRelativeApi(id) {
+        if (!isValidGuid(id)) throw new Error(`معرّف السجل غير صالح: "${id}"`);
+        const urls = getApiUrls();
+        const url = `${urls.del}${urls.del.includes('?') ? '&' : '?'}id=${encodeURIComponent(id)}`;
+        const res = await fetch(url, {
+            method: 'DELETE',
+            headers: {
+                'X-Requested-With': 'fetch',
+                'Accept': 'application/json',
+                'RequestVerificationToken': getAntiForgeryToken()
+            },
+            credentials: 'same-origin'
+        });
+        const text = await res.text();
+        if (!res.ok) throw new Error(`HTTP ${res.status} — ${text}`);
+        return text ? JSON.parse(text) : null;
+    }
+
+    /* ============================================================
+       13. Form Submit
     ============================================================ */
     const relativeForm = document.getElementById('relativeForm');
     if (relativeForm) {
-        relativeForm.addEventListener('submit', function (event) {
+        relativeForm.addEventListener('submit', async function (event) {
             event.preventDefault();
 
             const { isValid, errors } = bnValidation.validateForm(this);
@@ -901,49 +751,63 @@
                 return;
             }
 
-            const editIndex = parseInt(document.getElementById('editIndex').value, 10);
-            const item = {
-                relation: document.getElementById('relativeRelation').value,
-                name: document.getElementById('relativeName').value.trim(),
-                age: document.getElementById('relativeAge').value,
-                status: document.getElementById('relativeStatus').value,
-                severity: document.getElementById('relativeSeverity').value,
-                conditionType: document.getElementById('relativeConditionType').value,
-                conditions: document.getElementById('relativeConditions').value.trim(),
-                notes: document.getElementById('relativeNotes').value.trim()
-            };
+            const editId = document.getElementById('editId').value.trim();
+            const isEdit = !!editId;
 
-            if (editIndex >= 0) {
-                item.createdAt = relativesList[editIndex].createdAt;
-                relativesList[editIndex] = item;
-                toast('success', 'تم التعديل', 'تم تحديث بيانات الفرد بنجاح.');
-            } else {
-                item.createdAt = new Date().toISOString();
-                relativesList.push(item);
-                toast('success', 'تمت الإضافة', 'تمت إضافة الفرد إلى التاريخ الطبي العائلي.');
+            if (isEdit && !isValidGuid(editId)) {
+                toast('error', 'خطأ', `معرّف السجل غير صالح: "${editId}"`);
+                return;
             }
 
-            bnStorage.set('familyHistory', relativesList);
-            render();
-            resetRelativeForm();
-            bnConfetti.fire();
+            const payload = isEdit ? buildUpdatePayload() : buildCreatePayload();
+            console.log(`📤 ${isEdit ? 'PUT' : 'POST'} payload:`, payload);
+
+            const submitBtn = document.getElementById('submitBtn');
+            const originalHtml = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span> جاري الحفظ...';
+
+            try {
+                if (isEdit) {
+                    await updateRelative(editId, payload);
+                    toast('success', 'تم التعديل', 'تم تحديث بيانات الفرد بنجاح.');
+                } else {
+                    await createRelative(payload);
+                    toast('success', 'تمت الإضافة', 'تمت إضافة الفرد إلى التاريخ الطبي العائلي.');
+                }
+                bnConfetti.fire();
+                resetRelativeForm();
+                await loadFamilyHistory();
+            } catch (err) {
+                console.error('❌ فشل حفظ السجل:', err);
+                toast('error', 'فشل الحفظ', err.message || 'حدث خطأ أثناء حفظ السجل.');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalHtml;
+            }
         });
     }
 
     /* ============================================================
-       12. Edit / Delete / Reset
+       14. Edit / Delete / Reset
     ============================================================ */
     function editRelative(index) {
         const item = relativesList[index];
         if (!item) return;
 
+        if (!item.id || !isValidGuid(item.id)) {
+            toast('error', 'خطأ', 'هذا السجل لا يحتوي على معرّف (id) صالح — لا يمكن تعديله.');
+            return;
+        }
+
+        document.getElementById('editId').value = item.id;
         document.getElementById('editIndex').value = index;
         document.getElementById('relativeRelation').value = item.relation || '';
         document.getElementById('relativeName').value = item.name || '';
         document.getElementById('relativeAge').value = item.age || '';
         document.getElementById('relativeStatus').value = item.status || '';
         document.getElementById('relativeSeverity').value = item.severity || 'unknown';
-        document.getElementById('relativeConditionType').value = item.conditionType || 'genetic';
+        document.getElementById('relativeConditionType').value = item.conditionType || 'other';
         document.getElementById('relativeConditions').value = item.conditions || '';
         document.getElementById('relativeNotes').value = item.notes || '';
 
@@ -958,21 +822,30 @@
     }
 
     function deleteRelative(index) {
-        if (index < 0 || index >= relativesList.length) return;
         const item = relativesList[index];
-        const name = item.name || item.relation;
+        if (!item) return;
 
+        if (!item.id || !isValidGuid(item.id)) {
+            toast('error', 'خطأ', 'هذا السجل لا يحتوي على معرّف (id) صالح — لا يمكن حذفه.');
+            return;
+        }
+
+        const name = item.name || item.relation;
         showConfirmModal({
             title: 'تأكيد حذف الفرد',
             subtitle: 'لن تتمكن من استرجاع بيانات الفرد',
             message: `هل أنت متأكد من حذف <strong>${escapeHtml(name)}</strong> من التاريخ الطبي العائلي؟`,
             confirmText: 'نعم، احذف',
-            onConfirm: () => {
-                relativesList.splice(index, 1);
-                bnStorage.set('familyHistory', relativesList);
-                render();
-                resetRelativeForm();
-                toast('success', 'تم الحذف', 'تم حذف الفرد من السجل بنجاح.');
+            onConfirm: async () => {
+                try {
+                    await deleteRelativeApi(item.id);
+                    toast('success', 'تم الحذف', 'تم حذف الفرد من السجل بنجاح.');
+                    resetRelativeForm();
+                    await loadFamilyHistory();
+                } catch (err) {
+                    console.error('❌ فشل حذف السجل:', err);
+                    toast('error', 'فشل الحذف', err.message || 'حدث خطأ أثناء حذف السجل.');
+                }
             }
         });
     }
@@ -982,12 +855,11 @@
         if (!form) return;
         form.reset();
         document.getElementById('editIndex').value = '-1';
+        document.getElementById('editId').value = '';
         document.getElementById('formTitle').innerHTML = '<i class="fa-solid fa-plus-circle"></i> إضافة فرد من العائلة';
         document.getElementById('submitBtn').innerHTML = '<i class="fa-solid fa-plus ms-1"></i> إضافة الفرد';
         document.getElementById('cancelBtn').classList.add('d-none');
-        document.querySelectorAll('#relativeForm .is-valid, #relativeForm .is-invalid').forEach(el => {
-            el.classList.remove('is-valid', 'is-invalid');
-        });
+        document.querySelectorAll('#relativeForm .is-valid, #relativeForm .is-invalid').forEach(el => el.classList.remove('is-valid', 'is-invalid'));
         document.querySelectorAll('#relativeForm .bn-field-message').forEach(el => {
             el.className = 'bn-field-message';
             el.innerHTML = '';
@@ -995,22 +867,17 @@
     }
 
     /* ============================================================
-       13. Bind Buttons (Cancel)
+       15. Bind Cancel
     ============================================================ */
     const cancelBtn = document.getElementById('cancelBtn');
-    if (cancelBtn) {
-        cancelBtn.addEventListener('click', resetRelativeForm);
-    }
+    if (cancelBtn) cancelBtn.addEventListener('click', resetRelativeForm);
 
     /* ============================================================
-       14. Init
+       16. Init
     ============================================================ */
     function doInit() {
-        console.log('🎯 تهيئة تبويب التاريخ الطبي العائلي...');
-
-        bnAutoSave.init();
         bnValidation.attachToForm(relativeForm);
-        render();
+        loadFamilyHistory();
 
         setTimeout(() => {
             toast('info', 'التاريخ الطبي العائلي', 'سجّل الأمراض الوراثية والمزمنة في عائلة المريض.', 5000);

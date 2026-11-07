@@ -27,8 +27,20 @@
         </div>
     </div>
 
-    <form id="chronicPsychForm" class="personal-form" novalidate>
+    <form id="chronicPsychForm"
+          class="personal-form"
+          data-patient-id="@Model.PatientId"
+          data-api-list-url="/Doctor?handler=ChronicPsychDiseases"
+          data-api-create-url="/Doctor?handler=CreateChronicPsychDisease"
+          data-api-update-url="/Doctor?handler=UpdateChronicPsychDisease"
+          data-api-delete-url="/Doctor?handler=ChronicPsychDisease"
+          novalidate>
+
+        @Html.AntiForgeryToken()
+
         <input type="hidden" id="cpEditIndex" value="-1">
+        <input type="hidden" id="cpEditId" value="">
+        <input type="hidden" id="patientId" name="patientId" value="@Model.PatientId">
 
         <div class="form-section-title">
             <i class="fa-solid fa-file-medical"></i>
