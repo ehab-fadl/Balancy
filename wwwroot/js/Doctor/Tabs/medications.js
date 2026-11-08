@@ -1,46 +1,81 @@
 ﻿/* ============================================================
-   Prescribed Medications Tab — Standalone Script
-   يعمل مستقلاً AND يتكامل مع bnApp إذا وُجد
+   Prescribed Medications Tab — API-driven (GET/POST/PUT/DELETE)
+   - يطابق MedicationCreateDto/UpdateDto/ResponseDto
+   - PDF يقرأ من البيانات المحمّلة من الـ API
+   - يحذف: localStorage للمرضى
 ============================================================ */
 
 (function initMedications() {
     console.log('🚀 Medications.js initialized');
 
     /* ============================================================
-       1. Storage Layer (fallback)
+       0. Utilities
     ============================================================ */
-    const storage = (window.bnApp && window.bnApp.bnStorage) ? window.bnApp.bnStorage : {
-        prefix: 'balancy_',
-        isAvailable() {
-            try {
-                const test = '__bn_test__';
-                localStorage.setItem(test, test);
-                localStorage.removeItem(test);
-                return true;
-            } catch (e) { return false; }
-        },
-        get(key, defaultValue = null) {
-            if (!this.isAvailable()) return defaultValue;
-            try {
-                const raw = localStorage.getItem(this.prefix + key);
-                return raw ? JSON.parse(raw) : defaultValue;
-            } catch (e) { return defaultValue; }
-        },
-        set(key, value) {
-            if (!this.isAvailable()) return false;
-            try {
-                localStorage.setItem(this.prefix + key, JSON.stringify(value));
-                return true;
-            } catch (e) { return false; }
-        },
-        remove(key) {
-            if (!this.isAvailable()) return;
-            try { localStorage.removeItem(this.prefix + key); } catch (e) { }
+    function escapeHtml(value) {
+        const div = document.createElement('div');
+        div.textContent = value ?? '';
+        return div.innerHTML;
+    }
+
+    function getAntiForgeryToken() {
+        return document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+    }
+
+    function getPatientId() {
+        const form = document.getElementById('medicationForm');
+        return form?.dataset?.patientId?.trim()
+            || document.getElementById('patientId')?.value?.trim()
+            || sessionStorage.getItem('bnCurrentPatientId')?.trim()
+            || '';
+    }
+
+    function getApiUrls() {
+        const form = document.getElementById('medicationForm');
+        return {
+            list: form?.dataset?.apiListUrl || '/Doctor?handler=Medications',
+            create: form?.dataset?.apiCreateUrl || '/Doctor?handler=CreateMedication',
+            update: form?.dataset?.apiUpdateUrl || '/Doctor?handler=UpdateMedication',
+            del: form?.dataset?.apiDeleteUrl || '/Doctor?handler=Medication'
+        };
+    }
+
+    function isValidGuid(value) {
+        if (!value) return false;
+        return /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(String(value).trim());
+    }
+
+    function toIsoDateTime(dateInputValue) {
+        if (!dateInputValue) return null;
+        const d = new Date(dateInputValue + 'T00:00:00Z');
+        if (isNaN(d.getTime())) return null;
+        return d.toISOString();
+    }
+
+    function normalizeDateForInput(value) {
+        if (!value) return '';
+        try {
+            const d = new Date(value);
+            if (isNaN(d.getTime())) return '';
+            const yyyy = d.getFullYear();
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const dd = String(d.getDate()).padStart(2, '0');
+            return `${yyyy}-${mm}-${dd}`;
+        } catch { return ''; }
+    }
+
+    function formatDateArabic(dateStr) {
+        if (!dateStr) return '—';
+        try {
+            const d = new Date(dateStr + 'T00:00:00');
+            if (isNaN(d.getTime())) return dateStr;
+            return d.toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' });
+        } catch (e) {
+            return dateStr;
         }
-    };
+    }
 
     /* ============================================================
-       2. Toast — يدعم bnApp أو يعرض Toast مدمج على الشاشة
+       1. Toast
     ============================================================ */
     function ensureToastStyles() {
         if (document.getElementById('bn-med-toast-styles')) return;
@@ -48,72 +83,49 @@
         style.id = 'bn-med-toast-styles';
         style.textContent = `
             .bn-med-toast-overlay {
-                position: fixed;
-                inset: 0;
-                display: none;
-                align-items: center;
-                justify-content: center;
-                z-index: 100000;
-                pointer-events: none;
-                padding: 1rem;
+                position: fixed !important; inset: 0 !important;
+                display: none; align-items: center; justify-content: center;
+                z-index: 2147483647 !important; pointer-events: none; padding: 1rem; margin: 0 !important;
             }
-            .bn-med-toast-overlay.show { display: flex; }
+            .bn-med-toast-overlay.show { display: flex !important; }
             .bn-med-toast {
-                min-width: 300px;
-                max-width: 92vw;
-                padding: 1.1rem 1.4rem;
-                border-radius: 16px;
-                display: flex;
-                align-items: center;
-                gap: 0.85rem;
-                font-family: 'Tajawal', sans-serif;
-                font-weight: 800;
-                font-size: 0.95rem;
-                color: #fff;
+                min-width: 300px; max-width: 92vw;
+                padding: 1.1rem 1.4rem; border-radius: 16px;
+                display: flex; align-items: center; gap: 0.85rem;
+                font-family: 'Tajawal', sans-serif; font-weight: 800;
+                font-size: 0.95rem; color: #fff;
                 box-shadow: 0 20px 50px -12px rgba(15, 23, 42, 0.55);
                 animation: bnMedToastIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-                pointer-events: auto;
-                direction: rtl;
-                line-height: 1.5;
+                pointer-events: auto; direction: rtl; line-height: 1.5; position: relative;
             }
             .bn-med-toast.hide { animation: bnMedToastOut 0.3s ease forwards; }
             .bn-med-toast-icon {
-                width: 38px;
-                height: 38px;
-                min-width: 38px;
-                border-radius: 50%;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                background: rgba(255, 255, 255, 0.22);
-                font-size: 1.05rem;
+                width: 38px; height: 38px; min-width: 38px;
+                border-radius: 50%; display: flex;
+                align-items: center; justify-content: center;
+                background: rgba(255, 255, 255, 0.22); font-size: 1.05rem;
             }
-            .bn-med-toast-body {
-                display: flex;
-                flex-direction: column;
-                gap: 0.15rem;
-                text-align: right;
-            }
+            .bn-med-toast-body { display: flex; flex-direction: column; gap: 0.15rem; text-align: right; }
             .bn-med-toast-title { font-size: 0.95rem; font-weight: 900; }
             .bn-med-toast-message { font-size: 0.8rem; font-weight: 600; opacity: 0.95; }
             .bn-med-toast.error { background: linear-gradient(135deg, #ef4444, #b91c1c); }
             .bn-med-toast.success { background: linear-gradient(135deg, #10b981, #047857); }
             .bn-med-toast.warning { background: linear-gradient(135deg, #f59e0b, #b45309); }
             .bn-med-toast.info { background: linear-gradient(135deg, #0891b2, #0e7490); }
-            @keyframes bnMedToastIn {
-                from { opacity: 0; transform: translateY(20px) scale(0.92); }
-                to { opacity: 1; transform: translateY(0) scale(1); }
-            }
-            @keyframes bnMedToastOut {
-                from { opacity: 1; transform: translateY(0) scale(1); }
-                to { opacity: 0; transform: translateY(-20px) scale(0.92); }
-            }
+            @keyframes bnMedToastIn { from { opacity: 0; transform: translateY(20px) scale(0.92); } to { opacity: 1; transform: translateY(0) scale(1); } }
+            @keyframes bnMedToastOut { from { opacity: 1; transform: translateY(0) scale(1); } to { opacity: 0; transform: translateY(-20px) scale(0.92); } }
         `;
         document.head.appendChild(style);
     }
 
     function showBuiltInToast(type, title, message, duration = 3200) {
         ensureToastStyles();
+        if (!document.body) {
+            document.addEventListener('DOMContentLoaded',
+                () => showBuiltInToast(type, title, message, duration),
+                { once: true });
+            return;
+        }
         let overlay = document.getElementById('bnMedToastOverlay');
         if (!overlay) {
             overlay = document.createElement('div');
@@ -150,28 +162,32 @@
         }, duration);
     }
 
-    const showToast = (window.bnApp && typeof window.bnApp.showToast === 'function')
-        ? window.bnApp.showToast
-        : showBuiltInToast;
+    const showToast = showBuiltInToast;
 
     /* ============================================================
-       3. Confetti
+       2. Confetti
     ============================================================ */
     const bnConfetti = {
-        el: document.getElementById('bnConfetti'),
+        el: null,
         colors: ['#0891b2', '#6366f1', '#f59e0b', '#10b981', '#ef4444', '#ec4899', '#8b5cf6'],
-        fire(duration = 2000) {
-            if (!this.el) {
-                const confettiEl = document.createElement('div');
-                confettiEl.className = 'bn-confetti';
-                confettiEl.id = 'bnConfetti';
-                document.body.appendChild(confettiEl);
-                this.el = confettiEl;
+        ensureEl() {
+            if (this.el && document.body.contains(this.el)) return this.el;
+            let existing = document.getElementById('bnConfetti');
+            if (!existing) {
+                existing = document.createElement('div');
+                existing.className = 'bn-confetti';
+                existing.id = 'bnConfetti';
+                document.body.appendChild(existing);
             }
-            this.el.innerHTML = '';
-            this.el.classList.add('active');
-            const pieceCount = 60;
-            for (let i = 0; i < pieceCount; i++) {
+            this.el = existing;
+            return existing;
+        },
+        fire(duration = 2000) {
+            const el = this.ensureEl();
+            if (!el) return;
+            el.innerHTML = '';
+            el.classList.add('active');
+            for (let i = 0; i < 60; i++) {
                 const piece = document.createElement('div');
                 piece.className = 'confetti-piece';
                 piece.style.left = Math.random() * 100 + '%';
@@ -179,17 +195,17 @@
                 piece.style.animationDuration = (1.5 + Math.random() * 1.5) + 's';
                 piece.style.background = this.colors[Math.floor(Math.random() * this.colors.length)];
                 piece.style.transform = `rotate(${Math.random() * 360}deg)`;
-                this.el.appendChild(piece);
+                el.appendChild(piece);
             }
             setTimeout(() => {
-                this.el.classList.remove('active');
-                this.el.innerHTML = '';
+                el.classList.remove('active');
+                el.innerHTML = '';
             }, duration);
         }
     };
 
     /* ============================================================
-       4. Focus Trap Utility
+       3. Focus Trap
     ============================================================ */
     const bnFocusTrap = {
         activeTrap: null,
@@ -228,7 +244,7 @@
     };
 
     /* ============================================================
-       5. Validation Engine
+       4. Validation Engine
     ============================================================ */
     const bnValidation = {
         rules: {
@@ -366,89 +382,35 @@
     };
 
     /* ============================================================
-       6. Utilities
+       5. Confirm Modal
     ============================================================ */
-    function escapeHtml(value) {
-        const div = document.createElement('div');
-        div.textContent = value ?? '';
-        return div.innerHTML;
-    }
-
-    function formatDateArabic(dateStr) {
-        if (!dateStr) return '—';
-        try {
-            const d = new Date(dateStr + 'T00:00:00');
-            if (isNaN(d.getTime())) return dateStr;
-            return d.toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' });
-        } catch (e) {
-            return dateStr;
-        }
-    }
-
-    /* ============================================================
-       7. Modals
-    ============================================================ */
-    function showEditModal({ title, subtitle, label, value, onSave, placeholder }) {
-        const modal = document.getElementById('bnEditModal');
-        const titleEl = document.getElementById('bnEditModalTitle');
-        const subtitleEl = document.getElementById('bnEditModalSubtitle');
-        const labelEl = document.getElementById('bnEditModalLabel');
-        const inputEl = document.getElementById('bnEditModalInput');
-        titleEl.textContent = title || 'تعديل';
-        subtitleEl.textContent = subtitle || 'قم بتعديل النص ثم اضغط حفظ';
-        labelEl.textContent = label || 'النص';
-        inputEl.value = value || '';
-        inputEl.placeholder = placeholder || '';
-        modal.classList.add('show');
-        bnFocusTrap.activate(modal);
-        const cleanup = () => {
-            modal.classList.remove('show');
-            bnFocusTrap.deactivate();
-            document.getElementById('bnEditModalSave').removeEventListener('click', onSaveHandler);
-            document.getElementById('bnEditModalCancel').removeEventListener('click', onCancelHandler);
-            inputEl.removeEventListener('keydown', onKeyHandler);
-            modal.removeEventListener('click', onOverlayClick);
-        };
-        const onSaveHandler = () => {
-            const newValue = inputEl.value.trim();
-            if (!newValue) {
-                inputEl.style.borderColor = '#ef4444';
-                setTimeout(() => { inputEl.style.borderColor = ''; }, 1200);
-                return;
-            }
-            cleanup();
-            onSave(newValue);
-        };
-        const onCancelHandler = () => cleanup();
-        const onKeyHandler = (e) => {
-            if (e.key === 'Enter') { e.preventDefault(); onSaveHandler(); }
-            else if (e.key === 'Escape') { e.preventDefault(); onCancelHandler(); }
-        };
-        const onOverlayClick = (e) => { if (e.target === modal) onCancelHandler(); };
-        document.getElementById('bnEditModalSave').addEventListener('click', onSaveHandler);
-        document.getElementById('bnEditModalCancel').addEventListener('click', onCancelHandler);
-        inputEl.addEventListener('keydown', onKeyHandler);
-        modal.addEventListener('click', onOverlayClick);
-        setTimeout(() => { inputEl.focus(); inputEl.select(); }, 120);
-    }
-
     function showConfirmModal({ title, subtitle, message, confirmText, onConfirm }) {
         const modal = document.getElementById('bnConfirmModal');
+        if (!modal) {
+            if (window.confirm(message?.replace(/<[^>]*>/g, '') || 'هل أنت متأكد؟')) {
+                if (typeof onConfirm === 'function') onConfirm();
+            }
+            return;
+        }
         const titleEl = document.getElementById('bnConfirmModalTitle');
         const subtitleEl = document.getElementById('bnConfirmModalSubtitle');
         const messageEl = document.getElementById('bnConfirmModalMessage');
         const confirmBtn = document.getElementById('bnConfirmModalConfirm');
+        const cancelBtn = document.getElementById('bnConfirmModalCancel');
+
         titleEl.textContent = title || 'تأكيد الحذف';
         subtitleEl.textContent = subtitle || 'لا يمكن التراجع عن هذه العملية';
         messageEl.innerHTML = message || 'هل أنت متأكد؟';
         confirmBtn.innerHTML = `<i class="fa-solid fa-trash"></i> ${confirmText || 'نعم، احذف'}`;
+
         modal.classList.add('show');
         bnFocusTrap.activate(modal);
+
         const cleanup = () => {
             modal.classList.remove('show');
             bnFocusTrap.deactivate();
             confirmBtn.removeEventListener('click', onConfirmHandler);
-            document.getElementById('bnConfirmModalCancel').removeEventListener('click', onCancelHandler);
+            cancelBtn.removeEventListener('click', onCancelHandler);
             modal.removeEventListener('click', onOverlayClick);
             document.removeEventListener('keydown', onKeyHandler);
         };
@@ -460,28 +422,14 @@
             else if (e.key === 'Enter') { e.preventDefault(); onConfirmHandler(); }
         };
         confirmBtn.addEventListener('click', onConfirmHandler);
-        document.getElementById('bnConfirmModalCancel').addEventListener('click', onCancelHandler);
+        cancelBtn.addEventListener('click', onCancelHandler);
         modal.addEventListener('click', onOverlayClick);
         document.addEventListener('keydown', onKeyHandler);
     }
 
     /* ============================================================
-       8. Prescribed Medications CRUD
+       6. Status Badge helper
     ============================================================ */
-    let medicationsList = storage.get('medications', [
-        {
-            name: 'سيرترالين',
-            dose: '50 مغ',
-            frequency: 'مرة واحدة يومياً',
-            intakePeriod: 'صباحاً',
-            route: 'فموي (أقراص)',
-            startDate: '2023-06-20',
-            endDate: '2024-06-20',
-            status: 'نشط',
-            notes: 'يتم تناوله صباحاً مع الطعام.'
-        }
-    ]);
-
     function getMedicationStatusBadge(status) {
         switch (status) {
             case 'نشط': return 'med-status-active';
@@ -492,14 +440,55 @@
         }
     }
 
+    /* ============================================================
+       7. State
+    ============================================================ */
+    let medicationsList = [];
+    let isLoadingList = false;
+
+    /* ============================================================
+       8. Extract / mapping
+    ============================================================ */
+    function extractArray(payload) {
+        if (payload == null) return [];
+        if (Array.isArray(payload)) return payload;
+        const candidates = [payload.data, payload.items, payload.result, payload.$values, payload.data?.$values, payload.data?.items];
+        for (const c of candidates) if (Array.isArray(c)) return c;
+        for (const key of Object.keys(payload)) {
+            if (Array.isArray(payload[key])) return payload[key];
+        }
+        return [];
+    }
+
+    function mapMedicationDto(dto) {
+        return {
+            id: dto.id ?? dto.Id ?? '',
+            patientId: dto.patientId ?? dto.PatientId ?? '',
+            name: dto.name ?? dto.Name ?? '',
+            dose: dto.dose ?? dto.Dose ?? '',
+            frequency: dto.frequency ?? dto.Frequency ?? '',
+            intakePeriod: dto.intakePeriod ?? dto.IntakePeriod ?? '',
+            route: dto.route ?? dto.Route ?? '',
+            startDate: normalizeDateForInput(dto.startDate ?? dto.StartDate),
+            endDate: dto.endDate || dto.EndDate ? normalizeDateForInput(dto.endDate ?? dto.EndDate) : '',
+            status: dto.status ?? dto.Status ?? '',
+            notes: dto.notes ?? dto.Notes ?? '',
+            createdAt: dto.createdAt ?? dto.CreatedAt ?? null,
+            updatedAt: dto.updatedAt ?? dto.UpdatedAt ?? null
+        };
+    }
+
+    /* ============================================================
+       9. Render table
+    ============================================================ */
     function updateMedicationsCount() {
         const badge = document.getElementById('medicationsCountBadge');
         if (!badge) return;
         const count = medicationsList.length;
         badge.textContent = count === 0 ? '0 دواء' :
             count === 1 ? 'دواء واحد' :
-            count === 2 ? 'دواءان' :
-            count <= 10 ? `${count} أدوية` : `${count} دواء`;
+                count === 2 ? 'دواءان' :
+                    count <= 10 ? `${count} أدوية` : `${count} دواء`;
     }
 
     function renderMedicationsTable() {
@@ -527,18 +516,157 @@
                 <td data-label="الحالة"><span class="med-status-badge ${getMedicationStatusBadge(item.status)}">${escapeHtml(item.status)}</span></td>
                 <td data-label="ملاحظات" style="max-width: 200px; white-space: normal;">${item.notes ? escapeHtml(item.notes) : '-'}</td>
                 <td class="text-center">
-                    <button type="button" class="btn btn-sm btn-outline-primary me-1" onclick="editMedicationItem(${index})" aria-label="تعديل"><i class="fa-solid fa-pen"></i></button>
-                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteMedicationItem(${index})" aria-label="حذف"><i class="fa-solid fa-trash"></i></button>
+                    <button type="button" class="btn btn-sm btn-outline-primary me-1" data-edit-index="${index}" aria-label="تعديل"><i class="fa-solid fa-pen"></i></button>
+                    <button type="button" class="btn btn-sm btn-outline-danger" data-delete-index="${index}" aria-label="حذف"><i class="fa-solid fa-trash"></i></button>
                 </td>
             `;
             tbody.appendChild(tr);
         });
+        tbody.querySelectorAll('[data-edit-index]').forEach(btn => {
+            btn.addEventListener('click', () => editMedicationItem(parseInt(btn.dataset.editIndex, 10)));
+        });
+        tbody.querySelectorAll('[data-delete-index]').forEach(btn => {
+            btn.addEventListener('click', () => deleteMedicationItem(parseInt(btn.dataset.deleteIndex, 10)));
+        });
         updateMedicationsCount();
     }
 
+    /* ============================================================
+       10. Load from API
+    ============================================================ */
+    async function loadMedications() {
+        if (isLoadingList) return;
+        isLoadingList = true;
+        const patientId = getPatientId();
+        if (!patientId) {
+            medicationsList = [];
+            renderMedicationsTable();
+            isLoadingList = false;
+            return;
+        }
+        const urls = getApiUrls();
+        const url = `${urls.list}${urls.list.includes('?') ? '&' : '?'}patientId=${encodeURIComponent(patientId)}`;
+        try {
+            const res = await fetch(url, {
+                headers: { 'X-Requested-With': 'fetch', 'Accept': 'application/json' },
+                credentials: 'same-origin'
+            });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const payload = await res.json();
+            const arr = extractArray(payload);
+            medicationsList = arr.map(mapMedicationDto);
+            console.log('✅ Loaded medications:', medicationsList);
+            renderMedicationsTable();
+        } catch (err) {
+            console.error('❌ فشل تحميل الأدوية:', err);
+            medicationsList = [];
+            renderMedicationsTable();
+            showToast('error', 'فشل التحميل', 'تعذر تحميل الأدوية من الخدمة.');
+        } finally {
+            isLoadingList = false;
+        }
+    }
+
+    /* ============================================================
+       11. Build payloads
+    ============================================================ */
+    function buildCreatePayload() {
+        const patientId = getPatientId();
+        return {
+            patientId: patientId,
+            name: document.getElementById('medicationName').value.trim(),
+            dose: document.getElementById('medicationDose').value.trim(),
+            frequency: document.getElementById('medicationFrequency').value,
+            intakePeriod: document.getElementById('medicationIntakePeriod').value,
+            route: document.getElementById('medicationRoute').value,
+            startDate: toIsoDateTime(document.getElementById('medicationStartDate').value),
+            endDate: toIsoDateTime(document.getElementById('medicationEndDate').value),
+            status: document.getElementById('medicationStatus').value,
+            notes: document.getElementById('medicationNotes').value.trim() || null
+        };
+    }
+
+    function buildUpdatePayload() {
+        const editId = document.getElementById('medicationEditId').value.trim();
+        return {
+            id: editId,
+            name: document.getElementById('medicationName').value.trim(),
+            dose: document.getElementById('medicationDose').value.trim(),
+            frequency: document.getElementById('medicationFrequency').value,
+            intakePeriod: document.getElementById('medicationIntakePeriod').value,
+            route: document.getElementById('medicationRoute').value,
+            startDate: toIsoDateTime(document.getElementById('medicationStartDate').value),
+            endDate: toIsoDateTime(document.getElementById('medicationEndDate').value),
+            status: document.getElementById('medicationStatus').value,
+            notes: document.getElementById('medicationNotes').value.trim() || null
+        };
+    }
+
+    /* ============================================================
+       12. API CRUD
+    ============================================================ */
+    async function createMedicationApi(payload) {
+        const urls = getApiUrls();
+        const res = await fetch(urls.create, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'fetch',
+                'Accept': 'application/json',
+                'RequestVerificationToken': getAntiForgeryToken()
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify(payload)
+        });
+        const text = await res.text();
+        if (!res.ok) throw new Error(`HTTP ${res.status} — ${text}`);
+        return text ? JSON.parse(text) : null;
+    }
+
+    async function updateMedicationApi(id, payload) {
+        if (!isValidGuid(id)) throw new Error(`معرّف الدواء غير صالح: "${id}"`);
+        const urls = getApiUrls();
+        const url = `${urls.update}${urls.update.includes('?') ? '&' : '?'}id=${encodeURIComponent(id)}`;
+        const res = await fetch(url, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'fetch',
+                'Accept': 'application/json',
+                'RequestVerificationToken': getAntiForgeryToken()
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify(payload)
+        });
+        const text = await res.text();
+        if (!res.ok) throw new Error(`HTTP ${res.status} — ${text}`);
+        return text ? JSON.parse(text) : null;
+    }
+
+    async function deleteMedicationApi(id) {
+        if (!isValidGuid(id)) throw new Error(`معرّف الدواء غير صالح: "${id}"`);
+        const urls = getApiUrls();
+        const url = `${urls.del}${urls.del.includes('?') ? '&' : '?'}id=${encodeURIComponent(id)}`;
+        const res = await fetch(url, {
+            method: 'DELETE',
+            headers: {
+                'X-Requested-With': 'fetch',
+                'Accept': 'application/json',
+                'RequestVerificationToken': getAntiForgeryToken()
+            },
+            credentials: 'same-origin'
+        });
+        const text = await res.text();
+        if (!res.ok) throw new Error(`HTTP ${res.status} — ${text}`);
+        return text ? JSON.parse(text) : null;
+    }
+
+    /* ============================================================
+       13. Form Submit
+    ============================================================ */
     const medicationForm = document.getElementById('medicationForm');
     if (medicationForm) {
-        medicationForm.addEventListener('submit', function (event) {
+        medicationForm.addEventListener('submit', async function (event) {
             event.preventDefault();
             const { isValid, errors } = bnValidation.validateForm(this);
             if (!isValid) {
@@ -547,35 +675,52 @@
                 showToast('error', 'فشل التحقق', `يوجد ${errors.length} أخطاء في النموذج.`);
                 return;
             }
-            const editIndex = parseInt(document.getElementById('medicationEditIndex').value, 10);
-            const item = {
-                name: document.getElementById('medicationName').value.trim(),
-                dose: document.getElementById('medicationDose').value.trim(),
-                frequency: document.getElementById('medicationFrequency').value,
-                intakePeriod: document.getElementById('medicationIntakePeriod').value,
-                route: document.getElementById('medicationRoute').value,
-                startDate: document.getElementById('medicationStartDate').value,
-                endDate: document.getElementById('medicationEndDate').value,
-                status: document.getElementById('medicationStatus').value,
-                notes: document.getElementById('medicationNotes').value.trim()
-            };
-            if (editIndex >= 0) {
-                medicationsList[editIndex] = item;
-                showToast('success', 'تم التعديل', 'تم تعديل الدواء.');
-            } else {
-                medicationsList.push(item);
-                showToast('success', 'تمت الإضافة', 'تمت إضافة الدواء.');
+            const editId = document.getElementById('medicationEditId').value.trim();
+            const isEdit = !!editId;
+            if (isEdit && !isValidGuid(editId)) {
+                showToast('error', 'خطأ', `معرّف الدواء غير صالح: "${editId}"`);
+                return;
             }
-            storage.set('medications', medicationsList);
-            renderMedicationsTable();
-            resetMedicationForm();
-            bnConfetti.fire();
+            const payload = isEdit ? buildUpdatePayload() : buildCreatePayload();
+            console.log(`📤 ${isEdit ? 'PUT' : 'POST'} payload:`, payload);
+
+            const submitBtn = document.getElementById('medicationSubmitBtn');
+            const originalHtml = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span> جاري الحفظ...';
+
+            try {
+                if (isEdit) {
+                    await updateMedicationApi(editId, payload);
+                    showToast('success', 'تم التعديل', 'تم تعديل الدواء.');
+                } else {
+                    await createMedicationApi(payload);
+                    showToast('success', 'تمت الإضافة', 'تمت إضافة الدواء.');
+                }
+                bnConfetti.fire();
+                resetMedicationForm();
+                await loadMedications();
+            } catch (err) {
+                console.error('❌ فشل حفظ الدواء:', err);
+                showToast('error', 'فشل الحفظ', err.message || 'حدث خطأ أثناء حفظ الدواء.');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalHtml;
+            }
         });
     }
 
-    window.editMedicationItem = function (index) {
+    /* ============================================================
+       14. Edit / Delete / Reset
+    ============================================================ */
+    function editMedicationItem(index) {
         const item = medicationsList[index];
         if (!item) return;
+        if (!item.id || !isValidGuid(item.id)) {
+            showToast('error', 'خطأ', 'هذا الدواء لا يحتوي على معرّف (id) صالح — لا يمكن تعديله.');
+            return;
+        }
+        document.getElementById('medicationEditId').value = item.id;
         document.getElementById('medicationEditIndex').value = index;
         document.getElementById('medicationName').value = item.name;
         document.getElementById('medicationDose').value = item.dose;
@@ -589,32 +734,41 @@
         document.getElementById('medicationFormTitle').innerHTML = '<i class="fa-solid fa-pen-to-square"></i> تعديل الدواء';
         document.getElementById('medicationSubmitBtn').innerHTML = '<i class="fa-solid fa-floppy-disk ms-1"></i> حفظ التعديلات';
         document.getElementById('medicationCancelBtn').classList.remove('d-none');
-        document.getElementById('medicationForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
-    };
+        medicationForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
 
-    window.deleteMedicationItem = function (index) {
-        if (index < 0 || index >= medicationsList.length) return;
+    function deleteMedicationItem(index) {
         const item = medicationsList[index];
+        if (!item) return;
+        if (!item.id || !isValidGuid(item.id)) {
+            showToast('error', 'خطأ', 'هذا الدواء لا يحتوي على معرّف (id) صالح — لا يمكن حذفه.');
+            return;
+        }
         showConfirmModal({
             title: 'تأكيد حذف الدواء',
             subtitle: 'لن تتمكن من استرجاع الدواء بعد الحذف',
             message: `هل أنت متأكد من حذف الدواء <strong>${escapeHtml(item.name)}</strong>؟`,
             confirmText: 'نعم، احذف الدواء',
-            onConfirm: () => {
-                medicationsList.splice(index, 1);
-                storage.set('medications', medicationsList);
-                renderMedicationsTable();
-                resetMedicationForm();
-                showToast('success', 'تم الحذف', 'تم حذف الدواء.');
+            onConfirm: async () => {
+                try {
+                    await deleteMedicationApi(item.id);
+                    showToast('success', 'تم الحذف', 'تم حذف الدواء.');
+                    resetMedicationForm();
+                    await loadMedications();
+                } catch (err) {
+                    console.error('❌ فشل حذف الدواء:', err);
+                    showToast('error', 'فشل الحذف', err.message || 'حدث خطأ أثناء حذف الدواء.');
+                }
             }
         });
-    };
+    }
 
     window.resetMedicationForm = function () {
         const form = document.getElementById('medicationForm');
         if (!form) return;
         form.reset();
         document.getElementById('medicationEditIndex').value = '-1';
+        document.getElementById('medicationEditId').value = '';
         document.getElementById('medicationFormTitle').innerHTML = '<i class="fa-solid fa-plus-circle"></i> إضافة دواء موصوف جديد';
         document.getElementById('medicationSubmitBtn').innerHTML = '<i class="fa-solid fa-plus ms-1"></i> إضافة الدواء';
         document.getElementById('medicationCancelBtn').classList.add('d-none');
@@ -628,12 +782,8 @@
     };
 
     /* ============================================================
-       9. PDF — نسخة مُعاد كتابتها بالكامل (jsPDF + canvas مباشر)
-       ✅ لا نستخدم iframe ولا html2canvas للعنصر (تفادي مشاكل الخط العربي)
-       ✅ نرسم كل شيء على canvas بدقة عالية ثم نحوله إلى PDF
-       ✅ نضمن أن الخط العربي محمّل عبر document.fonts
+       15. PDF Generation (قراءة من medicationsList المحمّل من DB)
     ============================================================ */
-
     function getPatientInfo() {
         let patient = null;
         try {
@@ -641,8 +791,16 @@
                 patient = window.bnApp.getPatientInfo();
             }
         } catch (e) { }
-        if (!patient) patient = storage.get('currentPatient', null);
-        if (!patient) patient = { name: 'مريض تجريبي', age: '—', fileNumber: '—' };
+        if (!patient) {
+            // جرّب sessionStorage
+            const name = sessionStorage.getItem('bnCurrentPatientName');
+            const age = sessionStorage.getItem('bnCurrentPatientAge');
+            const code = sessionStorage.getItem('bnCurrentPatientCode');
+            if (name || age || code) {
+                patient = { name: name || '—', age: age || '—', fileNumber: code || '—' };
+            }
+        }
+        if (!patient) patient = { name: 'مريض', age: '—', fileNumber: '—' };
         return {
             name: patient.name || patient.fullName || 'غير محدد',
             age: patient.age || patient.patientAge || '—',
@@ -650,23 +808,15 @@
         };
     }
 
-    /**
-     * يرسم التقرير بالكامل على <canvas> بدقة عالية ثم يحوّله إلى PDF.
-     * هذه الطريقة تضمن أن الخط العربي يُرسم بشكل صحيح لأننا نستخدم
-     * canvas API مباشرة مع document.fonts.ready.
-     */
     async function renderPlanToCanvas(activeMeds, patient) {
-        // انتظر تحميل الخطوط
         if (document.fonts && document.fonts.ready) {
             try { await document.fonts.ready; } catch (e) { }
         }
-        // انتظار إضافي بسيط
         await new Promise(r => setTimeout(r, 250));
 
-        // دقة عالية (A4 عند 200 DPI تقريباً)
-        const A4_W = 794;   // px @ 96dpi
+        const A4_W = 794;
         const A4_H = 1123;
-        const SCALE = 2.5;  // 2.5x → ~240 DPI
+        const SCALE = 2.5;
         const W = A4_W;
         const H = A4_H;
 
@@ -679,11 +829,9 @@
         ctx.textAlign = 'right';
         ctx.textBaseline = 'middle';
 
-        // ===== خلفية =====
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, W, H);
 
-        // ===== دالة رسم نص عربي =====
         function drawText(text, x, y, opts = {}) {
             const {
                 font = '600 11px Tajawal, "Segoe UI", Tahoma, sans-serif',
@@ -693,14 +841,11 @@
                 wrapWidth = null,
                 lineHeight = 16
             } = opts;
-
             ctx.font = font;
             ctx.fillStyle = color;
             ctx.textAlign = align;
             ctx.direction = 'rtl';
-
             if (wrapWidth) {
-                // لف النص على عدة أسطر
                 const words = String(text).split(' ');
                 const lines = [];
                 let current = '';
@@ -719,12 +864,10 @@
                 });
                 return lines.length * lineHeight;
             }
-
             ctx.fillText(String(text), x, y, maxWidth || undefined);
             return lineHeight;
         }
 
-        // ===== دالة رسم مستطيل مستدير =====
         function roundRect(x, y, w, h, r, fill, stroke) {
             ctx.beginPath();
             ctx.moveTo(x + r, y);
@@ -741,16 +884,13 @@
             if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = 1; ctx.stroke(); }
         }
 
-        // ===== الهيدر =====
         const HEADER_H = 90;
-        // شريط علوي ملون
         const grad = ctx.createLinearGradient(0, 0, W, HEADER_H);
         grad.addColorStop(0, '#0891b2');
         grad.addColorStop(1, '#0e7490');
         ctx.fillStyle = grad;
         ctx.fillRect(0, 0, W, HEADER_H);
 
-        // شعار دائري
         ctx.save();
         ctx.beginPath();
         ctx.arc(60, HEADER_H / 2, 26, 0, Math.PI * 2);
@@ -759,7 +899,6 @@
         ctx.lineWidth = 2;
         ctx.strokeStyle = 'rgba(255,255,255,0.4)';
         ctx.stroke();
-        // علامة +
         ctx.fillStyle = '#ffffff';
         ctx.font = '900 26px Tajawal, sans-serif';
         ctx.textAlign = 'center';
@@ -767,7 +906,6 @@
         ctx.fillText('+', 60, HEADER_H / 2 + 1);
         ctx.restore();
 
-        // اسم العيادة (بالإنجليزية يسار)
         ctx.save();
         ctx.direction = 'ltr';
         ctx.textAlign = 'left';
@@ -779,7 +917,8 @@
         ctx.fillText('Medical Prescription Plan', 100, 52);
         ctx.restore();
 
-        // عنوان عربي (يمين)
+        const todayStr = new Date().toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' });
+
         ctx.save();
         ctx.direction = 'rtl';
         ctx.textAlign = 'right';
@@ -788,24 +927,20 @@
         ctx.fillText('الخطة الدوائية للمريض', W - 30, 32);
         ctx.font = '600 11px Tajawal, "Segoe UI", sans-serif';
         ctx.fillStyle = 'rgba(255,255,255,0.85)';
-        const todayStr = new Date().toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' });
         ctx.fillText(todayStr, W - 30, 52);
         ctx.restore();
 
-        // ===== بطاقة المريض =====
         let y = HEADER_H + 22;
         const PAD = 24;
         const CARD_W = W - PAD * 2;
         roundRect(PAD, y, CARD_W, 70, 12, '#f0fdfa', '#a7f3d0');
 
-        // 3 أعمدة
         const colW = CARD_W / 3;
         const labels = ['اسم المريض', 'العمر', 'عنوان الخطة'];
         const values = [patient.name, String(patient.age), 'خطة الأدوية النشطة'];
 
         labels.forEach((label, i) => {
             const colX = PAD + CARD_W - (i + 1) * colW;
-            // فاصل
             if (i > 0) {
                 ctx.beginPath();
                 ctx.moveTo(colX + colW, y + 12);
@@ -827,10 +962,8 @@
             });
         });
 
-        // ===== مقدمة =====
         y += 88;
         roundRect(PAD, y, CARD_W, 44, 8, '#f8fafc', '#e2e8f0');
-        // شريط جانبي
         ctx.fillStyle = '#0891b2';
         ctx.fillRect(W - PAD, y + 8, 3, 28);
         drawText(
@@ -839,14 +972,12 @@
             { font: '600 10.5px Tajawal, sans-serif', color: '#475569', align: 'right', wrapWidth: CARD_W - 28, lineHeight: 15 }
         );
 
-        // ===== الجدول =====
         y += 60;
         const tableX = PAD;
         const tableW = CARD_W;
         const rowH = 30;
         const headerH = 30;
 
-        // أعمدة الجدول (من اليمين إلى اليسار لأن الاتجاه RTL)
         const cols = [
             { key: 'num', label: '#', w: 30, align: 'center' },
             { key: 'name', label: 'اسم الدواء', w: 130, align: 'right' },
@@ -858,19 +989,16 @@
             { key: 'notes', label: 'ملاحظات', w: 0, align: 'right' }
         ];
 
-        // احسب عرض عمود الملاحظات = المتبقي
         const fixedW = cols.reduce((s, c) => s + (c.w || 0), 0);
         cols[cols.length - 1].w = tableW - fixedW;
 
-        // رأس الجدول
         const gradTable = ctx.createLinearGradient(tableX, y, tableX + tableW, y);
         gradTable.addColorStop(0, '#0891b2');
         gradTable.addColorStop(1, '#0e7490');
         ctx.fillStyle = gradTable;
         ctx.fillRect(tableX, y, tableW, headerH);
 
-        // نص الرأس
-        let colX = tableX + tableW; // نبدأ من اليمين
+        let colX = tableX + tableW;
         cols.forEach((col) => {
             colX -= col.w;
             drawText(col.label, colX + col.w - 8, y + headerH / 2, {
@@ -879,7 +1007,6 @@
                 align: col.align === 'center' ? 'center' : 'right'
             });
             if (col.align === 'center') {
-                // إعادة الرسم في المنتصف
                 const cx = colX + col.w / 2;
                 drawText(col.label, cx, y + headerH / 2, {
                     font: '900 10px Tajawal, sans-serif',
@@ -889,13 +1016,10 @@
             }
         });
 
-        // صفوف البيانات
         let rowY = y + headerH;
         activeMeds.forEach((med, i) => {
-            // خلفية متناوبة
             ctx.fillStyle = i % 2 === 0 ? '#ffffff' : '#f8fafc';
             ctx.fillRect(tableX, rowY, tableW, rowH);
-            // خطوط أفقية
             ctx.strokeStyle = '#e2e8f0';
             ctx.lineWidth = 1;
             ctx.beginPath();
@@ -903,7 +1027,6 @@
             ctx.lineTo(tableX + tableW, rowY + rowH);
             ctx.stroke();
 
-            // بيانات الصف
             const rowValues = {
                 num: String(i + 1),
                 name: med.name || '—',
@@ -935,16 +1058,13 @@
                     });
                 }
             });
-
             rowY += rowH;
         });
 
-        // إطار الجدول
         ctx.strokeStyle = '#0891b2';
         ctx.lineWidth = 1.2;
         ctx.strokeRect(tableX, y, tableW, headerH + activeMeds.length * rowH);
 
-        // خطوط رأسية
         let lineX = tableX + tableW;
         cols.forEach((col, idx) => {
             lineX -= col.w;
@@ -958,12 +1078,10 @@
             }
         });
 
-        // ===== تعليمات هامة =====
         y = rowY + 20;
         const notesH = 90;
         roundRect(PAD, y, CARD_W, notesH, 10, '#fffbeb', '#fde68a');
 
-        // عنوان
         ctx.fillStyle = '#f59e0b';
         ctx.beginPath();
         ctx.arc(W - PAD - 14, y + 20, 4, 0, Math.PI * 2);
@@ -994,10 +1112,8 @@
             });
         });
 
-        // ===== التوقيعات =====
         y += notesH + 30;
         const sigW = 160;
-        // الطبيب (يمين)
         ctx.strokeStyle = '#94a3b8';
         ctx.lineWidth = 1;
         ctx.setLineDash([4, 4]);
@@ -1012,7 +1128,6 @@
             align: 'center'
         });
 
-        // الختم (يسار)
         ctx.setLineDash([4, 4]);
         ctx.beginPath();
         ctx.moveTo(PAD + 20 + sigW, y + 30);
@@ -1025,7 +1140,6 @@
             align: 'center'
         });
 
-        // ===== الفوتر =====
         const footerY = H - 30;
         ctx.strokeStyle = '#e2e8f0';
         ctx.lineWidth = 1;
@@ -1065,7 +1179,6 @@
             return;
         }
 
-        // تحقق من jsPDF
         if (typeof window.jspdf === 'undefined' && typeof window.jsPDF === 'undefined') {
             showToast('error', 'خطأ', 'مكتبة jsPDF لم تُحمّل بعد. تحقق من اتصال الإنترنت.');
             return;
@@ -1078,7 +1191,6 @@
             const patient = getPatientInfo();
             const canvas = await renderPlanToCanvas(activeMeds, patient);
 
-            // تحويل canvas إلى PDF
             const jsPDFCtor = window.jspdf ? window.jspdf.jsPDF : window.jsPDF;
             const pdf = new jsPDFCtor({
                 orientation: 'portrait',
@@ -1114,11 +1226,11 @@
     }
 
     /* ============================================================
-       10. Init
+       16. Init
     ============================================================ */
     function doInit() {
-        renderMedicationsTable();
         bnValidation.attachToForm(document.getElementById('medicationForm'));
+        loadMedications();
         setTimeout(() => {
             showToast('info', 'الأدوية الموصوفة', 'يمكنك إضافة وتعديل وحذف الأدوية الموصوفة للمريض هنا.', 5000);
         }, 1000);

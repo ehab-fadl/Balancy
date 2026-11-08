@@ -42,7 +42,16 @@
          Questions Card
     ============================================================ -->
     <section class="questions-card">
-        <form id="sdsForm" data-autosave="sdsDraft" novalidate>
+        <form id="sdsForm"
+              data-autosave="sdsDraft"
+              data-patient-id="@Model.PatientId"
+              data-api-latest-url="/Doctor?handler=LatestSds"
+              data-api-create-url="/Doctor?handler=CreateSds"
+              novalidate>
+
+            @Html.AntiForgeryToken()
+
+            <input type="hidden" id="patientId" name="patientId" value="@Model.PatientId">
 
             <div id="sdsQuestionsContainer"></div>
 

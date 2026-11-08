@@ -1,11 +1,13 @@
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
-namespace Balancy.Areas.Doctor.Pages.Tabs
+namespace Balancy.Areas.Doctor.Pages.Tabs;
+
+public class DiagnosisModel : PageModel
 {
-    public class DiagnosisModel : PageModel
+    public string? PatientId { get; set; }
+
+    public void OnGet(string? patientId = null)
     {
-        public void OnGet()
-        {
-        }
+        PatientId = patientId;
     }
 }

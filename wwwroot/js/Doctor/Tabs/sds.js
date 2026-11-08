@@ -1,13 +1,44 @@
 ﻿/* ============================================================
-   SDS Sheehan Disability Scale Tab — Standalone Script
-   يعمل مستقلاً AND يتكامل مع bnApp إذا وُجد
+   SDS Sheehan Disability Scale Tab — API-driven
+   - GET: يجلب آخر تقييم SDS للمريض عند فتح الصفحة
+   - POST: كل حفظ = سجل جديد (assessment جديد في DB)
+   - Severity: minimal / mild / moderate / severe (مطابق للـ entity)
 ============================================================ */
 
 (function initSds() {
     console.log('🚀 SDS.js initialized');
 
     /* ============================================================
-       1. Storage Layer (fallback)
+       0. Utilities
+    ============================================================ */
+    function escapeHtml(value) {
+        const div = document.createElement('div');
+        div.textContent = value ?? '';
+        return div.innerHTML;
+    }
+
+    function getAntiForgeryToken() {
+        return document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+    }
+
+    function getPatientId() {
+        const form = document.getElementById('sdsForm');
+        return form?.dataset?.patientId?.trim()
+            || document.getElementById('patientId')?.value?.trim()
+            || sessionStorage.getItem('bnCurrentPatientId')?.trim()
+            || '';
+    }
+
+    function getApiUrls() {
+        const form = document.getElementById('sdsForm');
+        return {
+            latest: form?.dataset?.apiLatestUrl || '/Doctor?handler=LatestSds',
+            create: form?.dataset?.apiCreateUrl || '/Doctor?handler=CreateSds'
+        };
+    }
+
+    /* ============================================================
+       1. Storage Layer
     ============================================================ */
     const storage = (window.bnApp && window.bnApp.bnStorage) ? window.bnApp.bnStorage : {
         prefix: 'balancy_',
@@ -40,16 +71,7 @@
     };
 
     /* ============================================================
-       2. Utilities — escapeHtml (مبكّر)
-    ============================================================ */
-    function escapeHtml(value) {
-        const div = document.createElement('div');
-        div.textContent = value ?? '';
-        return div.innerHTML;
-    }
-
-    /* ============================================================
-       3. Toast — نظام مدمج مضمون العمل
+       2. Toast
     ============================================================ */
     function ensureToastStyles() {
         if (document.getElementById('bn-sds-toast-styles')) return;
@@ -57,85 +79,49 @@
         style.id = 'bn-sds-toast-styles';
         style.textContent = `
             .bn-sds-toast-overlay {
-                position: fixed !important;
-                top: 0 !important;
-                left: 0 !important;
-                right: 0 !important;
-                bottom: 0 !important;
-                display: none;
-                align-items: center;
-                justify-content: center;
-                z-index: 2147483647 !important;
-                pointer-events: none;
-                padding: 1rem;
-                margin: 0 !important;
+                position: fixed !important; inset: 0 !important;
+                display: none; align-items: center; justify-content: center;
+                z-index: 2147483647 !important; pointer-events: none; padding: 1rem; margin: 0 !important;
             }
             .bn-sds-toast-overlay.show { display: flex !important; }
             .bn-sds-toast {
-                min-width: 300px;
-                max-width: 92vw;
-                padding: 1.1rem 1.4rem;
-                border-radius: 16px;
-                display: flex;
-                align-items: center;
-                gap: 0.85rem;
-                font-family: 'Tajawal', 'Segoe UI', Tahoma, sans-serif;
-                font-weight: 800;
-                font-size: 0.95rem;
-                color: #fff;
+                min-width: 300px; max-width: 92vw;
+                padding: 1.1rem 1.4rem; border-radius: 16px;
+                display: flex; align-items: center; gap: 0.85rem;
+                font-family: 'Tajawal', sans-serif; font-weight: 800;
+                font-size: 0.95rem; color: #fff;
                 box-shadow: 0 20px 50px -12px rgba(15, 23, 42, 0.55);
                 animation: bnSdsToastIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-                pointer-events: auto;
-                direction: rtl;
-                line-height: 1.5;
-                position: relative;
+                pointer-events: auto; direction: rtl; line-height: 1.5; position: relative;
             }
             .bn-sds-toast.hide { animation: bnSdsToastOut 0.3s ease forwards; }
             .bn-sds-toast-icon {
-                width: 38px;
-                height: 38px;
-                min-width: 38px;
-                border-radius: 50%;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                background: rgba(255, 255, 255, 0.22);
-                font-size: 1.05rem;
+                width: 38px; height: 38px; min-width: 38px;
+                border-radius: 50%; display: flex;
+                align-items: center; justify-content: center;
+                background: rgba(255, 255, 255, 0.22); font-size: 1.05rem;
             }
-            .bn-sds-toast-body {
-                display: flex;
-                flex-direction: column;
-                gap: 0.15rem;
-                text-align: right;
-            }
+            .bn-sds-toast-body { display: flex; flex-direction: column; gap: 0.15rem; text-align: right; }
             .bn-sds-toast-title { font-size: 0.95rem; font-weight: 900; }
             .bn-sds-toast-message { font-size: 0.8rem; font-weight: 600; opacity: 0.95; }
             .bn-sds-toast.error { background: linear-gradient(135deg, #ef4444, #b91c1c); }
             .bn-sds-toast.success { background: linear-gradient(135deg, #10b981, #047857); }
             .bn-sds-toast.warning { background: linear-gradient(135deg, #f59e0b, #b45309); }
             .bn-sds-toast.info { background: linear-gradient(135deg, #db2777, #be185d); }
-            @keyframes bnSdsToastIn {
-                from { opacity: 0; transform: translateY(20px) scale(0.92); }
-                to { opacity: 1; transform: translateY(0) scale(1); }
-            }
-            @keyframes bnSdsToastOut {
-                from { opacity: 1; transform: translateY(0) scale(1); }
-                to { opacity: 0; transform: translateY(-20px) scale(0.92); }
-            }
+            @keyframes bnSdsToastIn { from { opacity: 0; transform: translateY(20px) scale(0.92); } to { opacity: 1; transform: translateY(0) scale(1); } }
+            @keyframes bnSdsToastOut { from { opacity: 1; transform: translateY(0) scale(1); } to { opacity: 0; transform: translateY(-20px) scale(0.92); } }
         `;
         document.head.appendChild(style);
     }
 
     function showBuiltInToast(type, title, message, duration = 3200) {
         ensureToastStyles();
-
         if (!document.body) {
             document.addEventListener('DOMContentLoaded',
                 () => showBuiltInToast(type, title, message, duration),
                 { once: true });
             return;
         }
-
         let overlay = document.getElementById('bnSdsToastOverlay');
         if (!overlay) {
             overlay = document.createElement('div');
@@ -144,7 +130,6 @@
             document.body.appendChild(overlay);
         }
         overlay.innerHTML = '';
-
         const iconMap = {
             error: 'fa-circle-exclamation',
             success: 'fa-circle-check',
@@ -173,18 +158,14 @@
         }, duration);
     }
 
-    /**
-     * showToast — يستخدم النظام المدمج مباشرة (مضمون)
-     */
     const showToast = showBuiltInToast;
 
     /* ============================================================
-       4. Confetti
+       3. Confetti
     ============================================================ */
     const bnConfetti = {
         el: null,
         colors: ['#db2777', '#e11d48', '#f43f5e', '#10b981', '#f59e0b', '#6366f1', '#8b5cf6'],
-
         ensureEl() {
             if (this.el && document.body.contains(this.el)) return this.el;
             let existing = document.getElementById('bnConfetti');
@@ -197,16 +178,12 @@
             this.el = existing;
             return existing;
         },
-
         fire(duration = 2000) {
             const el = this.ensureEl();
             if (!el) return;
             el.innerHTML = '';
             el.classList.add('active');
-
-            const pieceCount = 60;
-
-            for (let i = 0; i < pieceCount; i++) {
+            for (let i = 0; i < 60; i++) {
                 const piece = document.createElement('div');
                 piece.className = 'confetti-piece';
                 piece.style.left = Math.random() * 100 + '%';
@@ -216,7 +193,6 @@
                 piece.style.transform = `rotate(${Math.random() * 360}deg)`;
                 el.appendChild(piece);
             }
-
             setTimeout(() => {
                 el.classList.remove('active');
                 el.innerHTML = '';
@@ -225,7 +201,7 @@
     };
 
     /* ============================================================
-       5. SDS Data
+       4. SDS Data
     ============================================================ */
     const sdsQuestions = [
         {
@@ -245,7 +221,7 @@
     let currentSdsResult = null;
 
     /* ============================================================
-       6. Render Questions
+       5. Render Questions
     ============================================================ */
     function renderSdsQuestions() {
         const container = document.getElementById('sdsQuestionsContainer');
@@ -302,7 +278,7 @@
     }
 
     /* ============================================================
-       7. Score Calculation
+       6. Score Calculation
     ============================================================ */
     function calculateSdsScore(forceDisplay = true) {
         let totalScore = 0, answeredQuestions = 0;
@@ -332,8 +308,8 @@
         const severity = getSdsSeverity(totalScore);
         currentSdsResult = {
             totalScore,
-            severity: severity.name,
-            severityKey: severity.key,
+            severity: severity.name,           // عرض بالعربي
+            severityKey: severity.key,         // minimal / mild / moderate / severe
             description: severity.description,
             answers,
             testType: 'SDS',
@@ -404,7 +380,7 @@
     }
 
     /* ============================================================
-       8. Draft Auto-Save
+       7. Draft Auto-Save
     ============================================================ */
     function saveSdsDraft() {
         const draft = {};
@@ -435,27 +411,151 @@
     }
 
     /* ============================================================
-       9. Init + Submit Handler
+       8. Apply server assessment to UI
+    ============================================================ */
+    function applyAssessmentToUI(assessment) {
+        if (!assessment) return;
+
+        const totalScore = typeof assessment.totalScore === 'number' ? assessment.totalScore
+            : typeof assessment.TotalScore === 'number' ? assessment.TotalScore : 0;
+        const severityRaw = assessment.severity ?? assessment.Severity ?? '';
+        const answersJson = assessment.answersJson ?? assessment.AnswersJson ?? '';
+
+        const severityKey = mapSeverityNameToKey(severityRaw);
+        const severityInfo = getSdsSeverity(totalScore);
+
+        const result = {
+            totalScore,
+            severity: severityInfo.name,
+            severityKey,
+            description: severityInfo.description,
+            answers: [],
+            testType: 'SDS',
+            completedAt: assessment.createdAt ?? assessment.CreatedAt ?? new Date().toISOString(),
+            fromServer: true
+        };
+
+        if (answersJson) {
+            try {
+                const parsed = typeof answersJson === 'string' ? JSON.parse(answersJson) : answersJson;
+                const answersArray = Array.isArray(parsed) ? parsed : (parsed.answers || []);
+                answersArray.forEach(a => {
+                    const idx = (a.questionNumber ?? a.QuestionNumber ?? 0) - 1;
+                    const score = a.score ?? a.Score ?? 0;
+                    if (idx >= 0 && idx < 3) {
+                        const input = document.querySelector(`input[name="sds_question_${idx}"][value="${score}"]`);
+                        if (input) {
+                            input.checked = true;
+                            input.closest('.question-item')?.classList.add('answered');
+                        }
+                    }
+                });
+                result.answers = answersArray;
+                updateSdsAnswersStatus();
+            } catch (e) {
+                console.warn('⚠️ فشل قراءة AnswersJson:', e);
+            }
+        }
+
+        currentSdsResult = result;
+        displaySdsResult(result);
+    }
+
+    function mapSeverityNameToKey(severity) {
+        if (!severity) return 'minimal';
+        const s = String(severity).trim().toLowerCase();
+        if (s === 'severe' || s.includes('شديدة')) return 'severe';
+        if (s === 'moderate' || s.includes('متوسطة')) return 'moderate';
+        if (s === 'mild' || s.includes('طفيفة')) return 'mild';
+        return 'minimal';
+    }
+
+    /* ============================================================
+       9. Load latest assessment from API
+    ============================================================ */
+    async function loadLatestAssessment() {
+        const patientId = getPatientId();
+        if (!patientId) {
+            console.warn('⚠️ No patientId — cannot load latest SDS');
+            return;
+        }
+
+        const urls = getApiUrls();
+        const url = `${urls.latest}${urls.latest.includes('?') ? '&' : '?'}patientId=${encodeURIComponent(patientId)}`;
+
+        try {
+            const res = await fetch(url, {
+                headers: { 'X-Requested-With': 'fetch', 'Accept': 'application/json' },
+                credentials: 'same-origin'
+            });
+
+            if (res.status === 404) {
+                console.log('ℹ️ No previous SDS assessment for this patient.');
+                return;
+            }
+
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+            const payload = await res.json();
+            console.log('✅ Loaded latest SDS:', payload);
+
+            const assessment = (payload && payload.data && !Array.isArray(payload.data)) ? payload.data
+                : Array.isArray(payload) ? payload[0] : payload;
+
+            applyAssessmentToUI(assessment);
+        } catch (err) {
+            console.error('❌ فشل تحميل آخر تقييم SDS:', err);
+            showToast('error', 'فشل التحميل', 'تعذر تحميل آخر تقييم SDS.');
+        }
+    }
+
+    /* ============================================================
+       10. Build POST payload (يطابق الـ entity)
+    ============================================================ */
+    function buildCreatePayload(result) {
+        const patientId = getPatientId();
+        // ✅ الباك إند يتوقع: minimal / mild / moderate / severe
+        return {
+            patientId: patientId,
+            totalScore: result.totalScore,
+            severity: result.severityKey,
+            answersJson: JSON.stringify(result.answers || [])
+        };
+    }
+
+    async function createAssessment(payload) {
+        const urls = getApiUrls();
+        const res = await fetch(urls.create, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'fetch',
+                'Accept': 'application/json',
+                'RequestVerificationToken': getAntiForgeryToken()
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify(payload)
+        });
+        const text = await res.text();
+        if (!res.ok) throw new Error(`HTTP ${res.status} — ${text}`);
+        return text ? JSON.parse(text) : null;
+    }
+
+    /* ============================================================
+       11. Init + Submit Handler
     ============================================================ */
     function doInit() {
         renderSdsQuestions();
         restoreSdsDraft();
         updateSdsAnswersStatus();
 
-        // زر الحساب
+        loadLatestAssessment();
+
         const calcBtn = document.getElementById('sdsCalculateButton');
         if (calcBtn) {
             calcBtn.addEventListener('click', () => calculateSdsScore(true));
         }
 
-        // إذا كان هناك نتيجة محفوظة سابقة، عرضها
-        const savedResult = storage.get('sdsResult');
-        if (savedResult && savedResult.totalScore !== undefined) {
-            currentSdsResult = savedResult;
-            displaySdsResult(savedResult);
-        }
-
-        // Submit handler
         const form = document.getElementById('sdsForm');
         if (form) {
             form.addEventListener('submit', async function (event) {
@@ -463,6 +563,15 @@
 
                 const result = calculateSdsScore(true);
                 if (!result) return;
+
+                const patientId = getPatientId();
+                if (!patientId) {
+                    showToast('error', 'خطأ', 'معرّف المريض مفقود.');
+                    return;
+                }
+
+                const payload = buildCreatePayload(result);
+                console.log('📤 POST SDS payload:', payload);
 
                 const saveButton = document.getElementById('saveSdsButton');
                 const saveButtonText = document.getElementById('saveSdsButtonText');
@@ -473,22 +582,15 @@
                 saveSpinner.classList.remove('d-none');
 
                 try {
-                    await mockSaveResult(result);
+                    await createAssessment(payload);
 
-                    storage.set('sdsResult', result);
                     storage.remove('draft_sdsDraft');
-                    storage.set('sdsDraft', {
-                        data: result.answers.reduce((acc, a) => {
-                            acc[`sds_question_${a.questionNumber - 1}`] = String(a.score);
-                            return acc;
-                        }, {}),
-                        savedAt: new Date().toISOString()
-                    });
-
                     bnConfetti.fire();
-                    showToast('success', 'تم الحفظ بنجاح', `تم حفظ نتيجة مقياس SDS. النتيجة: ${result.totalScore} من 30.`);
-                } catch (error) {
-                    showToast('error', 'فشل الحفظ', 'حدث خطأ أثناء حفظ نتيجة الاختبار.');
+                    showToast('success', 'تم الحفظ بنجاح',
+                        `تم حفظ تقييم SDS جديد. النتيجة: ${result.totalScore} من 30.`);
+                } catch (err) {
+                    console.error('❌ فشل حفظ التقييم:', err);
+                    showToast('error', 'فشل الحفظ', err.message || 'حدث خطأ أثناء حفظ التقييم.');
                 } finally {
                     saveButton.disabled = false;
                     saveSpinner.classList.add('d-none');
@@ -497,18 +599,12 @@
             });
         }
 
-        // ✅ إشعار ترحيبي
         setTimeout(() => {
-            showToast('info', 'مقياس SDS', 'قيّم درجة الإعاقة الوظيفية في مجالات العمل والحياة الاجتماعية والعائلية.', 5000);
+            showToast('info', 'مقياس SDS', 'قيّم درجة الإعاقة الوظيفية في مجالات العمل والحياة الاجتماعية والعائلية. كل حفظ = سجل جديد في قاعدة البيانات.', 5000);
         }, 1000);
 
         console.log('%c✅ SDS Tab Loaded',
             'background:#db2777;color:#fff;padding:6px 16px;border-radius:6px;font-weight:bold;font-size:12px;');
-    }
-
-    async function mockSaveResult(result) {
-        console.log('Saving SDS Result:', result);
-        return new Promise(resolve => setTimeout(() => resolve({ success: true }), 800));
     }
 
     if (document.readyState === 'loading') {

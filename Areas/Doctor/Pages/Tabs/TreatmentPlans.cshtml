@@ -67,8 +67,31 @@
                     إضافة خطة علاجية جديدة
                 </h3>
 
-                <form id="treatmentPlanForm" novalidate>
+                <form id="treatmentPlanForm"
+                      novalidate
+                      data-patient-id="@Model.PatientId"
+                      data-api-list-url="/Doctor?handler=TreatmentPlans"
+                      data-api-create-url="/Doctor?handler=CreateTreatmentPlan"
+                      data-api-update-url="/Doctor?handler=UpdateTreatmentPlan"
+                      data-api-delete-url="/Doctor?handler=TreatmentPlan"
+                      data-api-problem-create-url="/Doctor?handler=CreateTreatmentProblem"
+                      data-api-problem-update-url="/Doctor?handler=UpdateTreatmentProblem"
+                      data-api-problem-delete-url="/Doctor?handler=TreatmentProblem"
+                      data-api-goal-create-url="/Doctor?handler=CreateTreatmentGoal"
+                      data-api-goal-update-url="/Doctor?handler=UpdateTreatmentGoal"
+                      data-api-goal-progress-url="/Doctor?handler=ProgressTreatmentGoal"
+                      data-api-goal-achieve-url="/Doctor?handler=AchieveTreatmentGoal"
+                      data-api-goal-unachieve-url="/Doctor?handler=UnachieveTreatmentGoal"
+                      data-api-goal-delete-url="/Doctor?handler=TreatmentGoal"
+                      data-api-mean-create-url="/Doctor?handler=CreateTreatmentMean"
+                      data-api-mean-update-url="/Doctor?handler=UpdateTreatmentMean"
+                      data-api-mean-delete-url="/Doctor?handler=TreatmentMean">
+
+                    @Html.AntiForgeryToken()
+
                     <input type="hidden" id="tpEditIndex" value="-1">
+                    <input type="hidden" id="tpEditId" value="">
+                    <input type="hidden" id="patientId" name="patientId" value="@Model.PatientId">
 
                     <div class="row g-4">
                         <div class="col-md-6">

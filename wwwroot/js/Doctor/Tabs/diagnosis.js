@@ -1,46 +1,70 @@
 ﻿/* ============================================================
-   Diagnosis Tab — Standalone Script
-   يعمل مستقلاً AND يتكامل مع bnApp إذا وُجد
+   Diagnosis Tab — API-driven (GET/POST/PUT/DELETE)
+   - يطابق DiagnosisCreateDto/UpdateDto/ResponseDto
+   - يحافظ على: Validation, Toast, Modals, Confetti, Badges
+   - يحذف: localStorage
 ============================================================ */
 
 (function initDiagnosis() {
     console.log('🚀 Diagnosis.js initialized');
 
     /* ============================================================
-       1. Storage Layer (fallback)
+       0. Utilities
     ============================================================ */
-    const storage = (window.bnApp && window.bnApp.bnStorage) ? window.bnApp.bnStorage : {
-        prefix: 'balancy_',
-        isAvailable() {
-            try {
-                const test = '__bn_test__';
-                localStorage.setItem(test, test);
-                localStorage.removeItem(test);
-                return true;
-            } catch (e) { return false; }
-        },
-        get(key, defaultValue = null) {
-            if (!this.isAvailable()) return defaultValue;
-            try {
-                const raw = localStorage.getItem(this.prefix + key);
-                return raw ? JSON.parse(raw) : defaultValue;
-            } catch (e) { return defaultValue; }
-        },
-        set(key, value) {
-            if (!this.isAvailable()) return false;
-            try {
-                localStorage.setItem(this.prefix + key, JSON.stringify(value));
-                return true;
-            } catch (e) { return false; }
-        },
-        remove(key) {
-            if (!this.isAvailable()) return;
-            try { localStorage.removeItem(this.prefix + key); } catch (e) { }
-        }
-    };
+    function escapeHtml(value) {
+        const div = document.createElement('div');
+        div.textContent = value ?? '';
+        return div.innerHTML;
+    }
+
+    function getAntiForgeryToken() {
+        return document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+    }
+
+    function getPatientId() {
+        const form = document.getElementById('diagnosisForm');
+        return form?.dataset?.patientId?.trim()
+            || document.getElementById('patientId')?.value?.trim()
+            || sessionStorage.getItem('bnCurrentPatientId')?.trim()
+            || '';
+    }
+
+    function getApiUrls() {
+        const form = document.getElementById('diagnosisForm');
+        return {
+            list: form?.dataset?.apiListUrl || '/Doctor?handler=Diagnoses',
+            create: form?.dataset?.apiCreateUrl || '/Doctor?handler=CreateDiagnosis',
+            update: form?.dataset?.apiUpdateUrl || '/Doctor?handler=UpdateDiagnosis',
+            del: form?.dataset?.apiDeleteUrl || '/Doctor?handler=Diagnosis'
+        };
+    }
+
+    function isValidGuid(value) {
+        if (!value) return false;
+        return /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(String(value).trim());
+    }
+
+    function toIsoDateTime(dateInputValue) {
+        if (!dateInputValue) return null;
+        const d = new Date(dateInputValue + 'T00:00:00Z');
+        if (isNaN(d.getTime())) return null;
+        return d.toISOString();
+    }
+
+    function normalizeDateForInput(value) {
+        if (!value) return '';
+        try {
+            const d = new Date(value);
+            if (isNaN(d.getTime())) return '';
+            const yyyy = d.getFullYear();
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const dd = String(d.getDate()).padStart(2, '0');
+            return `${yyyy}-${mm}-${dd}`;
+        } catch { return ''; }
+    }
 
     /* ============================================================
-       2. Toast — يدعم bnApp أو يعرض Toast مدمج على الشاشة
+       1. Toast
     ============================================================ */
     function ensureToastStyles() {
         if (document.getElementById('bn-dx-toast-styles')) return;
@@ -48,72 +72,49 @@
         style.id = 'bn-dx-toast-styles';
         style.textContent = `
             .bn-dx-toast-overlay {
-                position: fixed;
-                inset: 0;
-                display: none;
-                align-items: center;
-                justify-content: center;
-                z-index: 100000;
-                pointer-events: none;
-                padding: 1rem;
+                position: fixed !important; inset: 0 !important;
+                display: none; align-items: center; justify-content: center;
+                z-index: 2147483647 !important; pointer-events: none; padding: 1rem; margin: 0 !important;
             }
-            .bn-dx-toast-overlay.show { display: flex; }
+            .bn-dx-toast-overlay.show { display: flex !important; }
             .bn-dx-toast {
-                min-width: 300px;
-                max-width: 92vw;
-                padding: 1.1rem 1.4rem;
-                border-radius: 16px;
-                display: flex;
-                align-items: center;
-                gap: 0.85rem;
-                font-family: 'Tajawal', sans-serif;
-                font-weight: 800;
-                font-size: 0.95rem;
-                color: #fff;
+                min-width: 300px; max-width: 92vw;
+                padding: 1.1rem 1.4rem; border-radius: 16px;
+                display: flex; align-items: center; gap: 0.85rem;
+                font-family: 'Tajawal', sans-serif; font-weight: 800;
+                font-size: 0.95rem; color: #fff;
                 box-shadow: 0 20px 50px -12px rgba(15, 23, 42, 0.55);
                 animation: bnDxToastIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-                pointer-events: auto;
-                direction: rtl;
-                line-height: 1.5;
+                pointer-events: auto; direction: rtl; line-height: 1.5; position: relative;
             }
             .bn-dx-toast.hide { animation: bnDxToastOut 0.3s ease forwards; }
             .bn-dx-toast-icon {
-                width: 38px;
-                height: 38px;
-                min-width: 38px;
-                border-radius: 50%;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                background: rgba(255, 255, 255, 0.22);
-                font-size: 1.05rem;
+                width: 38px; height: 38px; min-width: 38px;
+                border-radius: 50%; display: flex;
+                align-items: center; justify-content: center;
+                background: rgba(255, 255, 255, 0.22); font-size: 1.05rem;
             }
-            .bn-dx-toast-body {
-                display: flex;
-                flex-direction: column;
-                gap: 0.15rem;
-                text-align: right;
-            }
+            .bn-dx-toast-body { display: flex; flex-direction: column; gap: 0.15rem; text-align: right; }
             .bn-dx-toast-title { font-size: 0.95rem; font-weight: 900; }
             .bn-dx-toast-message { font-size: 0.8rem; font-weight: 600; opacity: 0.95; }
             .bn-dx-toast.error { background: linear-gradient(135deg, #ef4444, #b91c1c); }
             .bn-dx-toast.success { background: linear-gradient(135deg, #10b981, #047857); }
             .bn-dx-toast.warning { background: linear-gradient(135deg, #f59e0b, #b45309); }
             .bn-dx-toast.info { background: linear-gradient(135deg, #0891b2, #0e7490); }
-            @keyframes bnDxToastIn {
-                from { opacity: 0; transform: translateY(20px) scale(0.92); }
-                to { opacity: 1; transform: translateY(0) scale(1); }
-            }
-            @keyframes bnDxToastOut {
-                from { opacity: 1; transform: translateY(0) scale(1); }
-                to { opacity: 0; transform: translateY(-20px) scale(0.92); }
-            }
+            @keyframes bnDxToastIn { from { opacity: 0; transform: translateY(20px) scale(0.92); } to { opacity: 1; transform: translateY(0) scale(1); } }
+            @keyframes bnDxToastOut { from { opacity: 1; transform: translateY(0) scale(1); } to { opacity: 0; transform: translateY(-20px) scale(0.92); } }
         `;
         document.head.appendChild(style);
     }
 
     function showBuiltInToast(type, title, message, duration = 3200) {
         ensureToastStyles();
+        if (!document.body) {
+            document.addEventListener('DOMContentLoaded',
+                () => showBuiltInToast(type, title, message, duration),
+                { once: true });
+            return;
+        }
         let overlay = document.getElementById('bnDxToastOverlay');
         if (!overlay) {
             overlay = document.createElement('div');
@@ -150,30 +151,32 @@
         }, duration);
     }
 
-    const showToast = (window.bnApp && typeof window.bnApp.showToast === 'function')
-        ? window.bnApp.showToast
-        : showBuiltInToast;
+    const showToast = showBuiltInToast;
 
     /* ============================================================
-       3. Confetti
+       2. Confetti
     ============================================================ */
     const bnConfetti = {
-        el: document.getElementById('bnConfetti'),
+        el: null,
         colors: ['#0891b2', '#6366f1', '#f59e0b', '#10b981', '#ef4444', '#ec4899', '#8b5cf6'],
-
-        fire(duration = 2000) {
-            if (!this.el) {
-                const confettiEl = document.createElement('div');
-                confettiEl.className = 'bn-confetti';
-                confettiEl.id = 'bnConfetti';
-                document.body.appendChild(confettiEl);
-                this.el = confettiEl;
+        ensureEl() {
+            if (this.el && document.body.contains(this.el)) return this.el;
+            let existing = document.getElementById('bnConfetti');
+            if (!existing) {
+                existing = document.createElement('div');
+                existing.className = 'bn-confetti';
+                existing.id = 'bnConfetti';
+                document.body.appendChild(existing);
             }
-            this.el.innerHTML = '';
-            this.el.classList.add('active');
-
-            const pieceCount = 60;
-            for (let i = 0; i < pieceCount; i++) {
+            this.el = existing;
+            return existing;
+        },
+        fire(duration = 2000) {
+            const el = this.ensureEl();
+            if (!el) return;
+            el.innerHTML = '';
+            el.classList.add('active');
+            for (let i = 0; i < 60; i++) {
                 const piece = document.createElement('div');
                 piece.className = 'confetti-piece';
                 piece.style.left = Math.random() * 100 + '%';
@@ -181,62 +184,48 @@
                 piece.style.animationDuration = (1.5 + Math.random() * 1.5) + 's';
                 piece.style.background = this.colors[Math.floor(Math.random() * this.colors.length)];
                 piece.style.transform = `rotate(${Math.random() * 360}deg)`;
-                this.el.appendChild(piece);
+                el.appendChild(piece);
             }
-
             setTimeout(() => {
-                this.el.classList.remove('active');
-                this.el.innerHTML = '';
+                el.classList.remove('active');
+                el.innerHTML = '';
             }, duration);
         }
     };
 
     /* ============================================================
-       4. Focus Trap Utility
+       3. Focus Trap
     ============================================================ */
     const bnFocusTrap = {
         activeTrap: null,
-
         activate(modalEl) {
             if (!modalEl) return;
-
             const focusableSelector = [
                 'a[href]', 'button:not([disabled])',
                 'input:not([disabled])', 'select:not([disabled])',
                 'textarea:not([disabled])', '[tabindex]:not([tabindex="-1"])'
             ].join(',');
-
             const previousActive = document.activeElement;
-
             const trap = {
-                modalEl,
-                previousActive,
-                getFocusable: () => Array.from(modalEl.querySelectorAll(focusableSelector))
-                    .filter(el => el.offsetParent !== null),
+                modalEl, previousActive,
+                getFocusable: () => Array.from(modalEl.querySelectorAll(focusableSelector)).filter(el => el.offsetParent !== null),
                 handleKeydown: (e) => {
                     if (e.key !== 'Tab') return;
                     const focusables = trap.getFocusable();
                     if (focusables.length === 0) { e.preventDefault(); return; }
                     const first = focusables[0];
                     const last = focusables[focusables.length - 1];
-
-                    if (e.shiftKey && document.activeElement === first) {
-                        e.preventDefault(); last.focus();
-                    } else if (!e.shiftKey && document.activeElement === last) {
-                        e.preventDefault(); first.focus();
-                    }
+                    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+                    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
                 }
             };
-
             modalEl.addEventListener('keydown', trap.handleKeydown);
             this.activeTrap = trap;
-
             setTimeout(() => {
                 const focusables = trap.getFocusable();
                 if (focusables.length > 0) focusables[0].focus();
             }, 100);
         },
-
         deactivate() {
             if (!this.activeTrap) return;
             this.activeTrap.modalEl.removeEventListener('keydown', this.activeTrap.handleKeydown);
@@ -248,17 +237,15 @@
     };
 
     /* ============================================================
-       5. Validation Engine
+       4. Validation Engine
     ============================================================ */
     const bnValidation = {
-
         rules: {
             diagnosisType: { required: true, messages: { required: 'يرجى اختيار نوع الاكتئاب' } },
             diagnosisSubtype: { required: true, messages: { required: 'يرجى اختيار النوع الفرعي' } },
             diagnosisDate: { required: true, dateNotFuture: true, messages: { required: 'تاريخ التشخيص مطلوب', dateNotFuture: 'التاريخ لا يمكن أن يكون مستقبلياً' } },
             diagnosisSeverity: { required: true, messages: { required: 'يرجى اختيار شدة التشخيص' } }
         },
-
         validators: {
             required: (value) => {
                 if (value === null || value === undefined) return false;
@@ -272,42 +259,27 @@
                 return input <= today;
             }
         },
-
         validateField(field) {
             const name = field.name || field.id;
             const rule = this.rules[name];
-
             if (!rule) return { valid: true };
-
             const value = field.value;
-
-            if (rule.required && !this.validators.required(value)) {
+            if (rule.required && !this.validators.required(value))
                 return { valid: false, type: 'error', message: rule.messages?.required || 'هذا الحقل مطلوب' };
-            }
-
-            if (!value || String(value).trim() === '') {
-                return { valid: true };
-            }
-
-            if (rule.dateNotFuture && !this.validators.dateNotFuture(value)) {
+            if (!value || String(value).trim() === '') return { valid: true };
+            if (rule.dateNotFuture && !this.validators.dateNotFuture(value))
                 return { valid: false, type: 'error', message: rule.messages?.dateNotFuture || 'التاريخ لا يمكن أن يكون في المستقبل' };
-            }
-
             return { valid: true, type: 'success', message: 'صحيح' };
         },
-
         updateFieldUI(field, result) {
             const wrapper = field.closest('.col-md-6, .col-md-12, .col-12') || field.parentElement;
-
             field.classList.remove('is-valid', 'is-invalid');
-
             let messageEl = wrapper.querySelector('.bn-field-message');
             if (!messageEl) {
                 messageEl = document.createElement('div');
                 messageEl.className = 'bn-field-message';
                 field.parentNode.insertBefore(messageEl, field.nextSibling);
             }
-
             if (result.valid && result.type === 'success' && field.value.trim() !== '') {
                 field.classList.add('is-valid');
                 messageEl.className = 'bn-field-message success show';
@@ -321,19 +293,15 @@
                 messageEl.innerHTML = '';
             }
         },
-
         validateForm(form) {
             const fields = form.querySelectorAll('input, select, textarea');
             let isValid = true;
             const errors = [];
-
             fields.forEach(field => {
                 if (field.type === 'hidden' || field.type === 'radio' || field.type === 'checkbox') return;
                 if (!field.name && !field.id) return;
-
                 const result = this.validateField(field);
                 this.updateFieldUI(field, result);
-
                 if (!result.valid) {
                     isValid = false;
                     const label = form.querySelector(`label[for="${field.id}"]`);
@@ -341,23 +309,18 @@
                     errors.push({ field, label: labelText, message: result.message });
                 }
             });
-
             return { isValid, errors };
         },
-
         scrollToFirstError(form) {
             const firstInvalid = form.querySelector('.is-invalid');
             if (!firstInvalid) return;
             firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
             setTimeout(() => firstInvalid.focus({ preventScroll: true }), 400);
         },
-
         showSummary(form, errors) {
             const existing = form.querySelector('.bn-validation-summary');
             if (existing) existing.remove();
-
             if (errors.length === 0) return;
-
             const summary = document.createElement('div');
             summary.className = 'bn-validation-summary show';
             summary.innerHTML = `
@@ -369,9 +332,7 @@
                     ${errors.map((e, i) => `<li data-error-index="${i}">${e.label}: ${e.message}</li>`).join('')}
                 </ul>
             `;
-
             form.insertBefore(summary, form.firstChild);
-
             summary.querySelectorAll('li').forEach((li, i) => {
                 li.addEventListener('click', () => {
                     const field = errors[i].field;
@@ -379,7 +340,6 @@
                     setTimeout(() => field.focus({ preventScroll: true }), 400);
                 });
             });
-
             setTimeout(() => {
                 if (summary.parentNode) {
                     summary.style.transition = 'opacity 0.4s ease';
@@ -388,23 +348,16 @@
                 }
             }, 8000);
         },
-
         attachToField(field) {
             const name = field.name || field.id;
             if (!this.rules[name]) return;
-
             const label = document.querySelector(`label[for="${field.id}"]`);
-            if (label && this.rules[name].required) {
-                label.classList.add('required');
-            }
-
+            if (label && this.rules[name].required) label.classList.add('required');
             const eventType = (field.tagName === 'SELECT' || field.type === 'date') ? 'change' : 'blur';
-
             field.addEventListener(eventType, () => {
                 const result = this.validateField(field);
                 this.updateFieldUI(field, result);
             });
-
             field.addEventListener('input', () => {
                 if (field.classList.contains('is-invalid')) {
                     const result = this.validateField(field);
@@ -416,83 +369,28 @@
                 }
             });
         },
-
         attachToForm(form) {
             if (!form) return;
-            const fields = form.querySelectorAll('input, select, textarea');
-            fields.forEach(field => this.attachToField(field));
+            form.querySelectorAll('input, select, textarea').forEach(field => this.attachToField(field));
         }
     };
 
     /* ============================================================
-       6. Utilities
+       5. Confirm Modal
     ============================================================ */
-    function escapeHtml(value) {
-        const div = document.createElement('div');
-        div.textContent = value ?? '';
-        return div.innerHTML;
-    }
-
-    /* ============================================================
-       7. Modals (Edit + Confirm)
-    ============================================================ */
-    function showEditModal({ title, subtitle, label, value, onSave, placeholder }) {
-        const modal = document.getElementById('bnEditModal');
-        const titleEl = document.getElementById('bnEditModalTitle');
-        const subtitleEl = document.getElementById('bnEditModalSubtitle');
-        const labelEl = document.getElementById('bnEditModalLabel');
-        const inputEl = document.getElementById('bnEditModalInput');
-
-        titleEl.textContent = title || 'تعديل';
-        subtitleEl.textContent = subtitle || 'قم بتعديل النص ثم اضغط حفظ';
-        labelEl.textContent = label || 'النص';
-        inputEl.value = value || '';
-        inputEl.placeholder = placeholder || '';
-
-        modal.classList.add('show');
-        bnFocusTrap.activate(modal);
-
-        const cleanup = () => {
-            modal.classList.remove('show');
-            bnFocusTrap.deactivate();
-            document.getElementById('bnEditModalSave').removeEventListener('click', onSaveHandler);
-            document.getElementById('bnEditModalCancel').removeEventListener('click', onCancelHandler);
-            inputEl.removeEventListener('keydown', onKeyHandler);
-            modal.removeEventListener('click', onOverlayClick);
-        };
-
-        const onSaveHandler = () => {
-            const newValue = inputEl.value.trim();
-            if (!newValue) {
-                inputEl.style.borderColor = '#ef4444';
-                setTimeout(() => { inputEl.style.borderColor = ''; }, 1200);
-                return;
-            }
-            cleanup();
-            onSave(newValue);
-        };
-
-        const onCancelHandler = () => cleanup();
-        const onKeyHandler = (e) => {
-            if (e.key === 'Enter') { e.preventDefault(); onSaveHandler(); }
-            else if (e.key === 'Escape') { e.preventDefault(); onCancelHandler(); }
-        };
-        const onOverlayClick = (e) => { if (e.target === modal) onCancelHandler(); };
-
-        document.getElementById('bnEditModalSave').addEventListener('click', onSaveHandler);
-        document.getElementById('bnEditModalCancel').addEventListener('click', onCancelHandler);
-        inputEl.addEventListener('keydown', onKeyHandler);
-        modal.addEventListener('click', onOverlayClick);
-
-        setTimeout(() => { inputEl.focus(); inputEl.select(); }, 120);
-    }
-
     function showConfirmModal({ title, subtitle, message, confirmText, onConfirm }) {
         const modal = document.getElementById('bnConfirmModal');
+        if (!modal) {
+            if (window.confirm(message?.replace(/<[^>]*>/g, '') || 'هل أنت متأكد؟')) {
+                if (typeof onConfirm === 'function') onConfirm();
+            }
+            return;
+        }
         const titleEl = document.getElementById('bnConfirmModalTitle');
         const subtitleEl = document.getElementById('bnConfirmModalSubtitle');
         const messageEl = document.getElementById('bnConfirmModalMessage');
         const confirmBtn = document.getElementById('bnConfirmModalConfirm');
+        const cancelBtn = document.getElementById('bnConfirmModalCancel');
 
         titleEl.textContent = title || 'تأكيد الحذف';
         subtitleEl.textContent = subtitle || 'لا يمكن التراجع عن هذه العملية';
@@ -506,11 +404,10 @@
             modal.classList.remove('show');
             bnFocusTrap.deactivate();
             confirmBtn.removeEventListener('click', onConfirmHandler);
-            document.getElementById('bnConfirmModalCancel').removeEventListener('click', onCancelHandler);
+            cancelBtn.removeEventListener('click', onCancelHandler);
             modal.removeEventListener('click', onOverlayClick);
             document.removeEventListener('keydown', onKeyHandler);
         };
-
         const onConfirmHandler = () => { cleanup(); if (typeof onConfirm === 'function') onConfirm(); };
         const onCancelHandler = () => cleanup();
         const onOverlayClick = (e) => { if (e.target === modal) onCancelHandler(); };
@@ -518,20 +415,15 @@
             if (e.key === 'Escape') onCancelHandler();
             else if (e.key === 'Enter') { e.preventDefault(); onConfirmHandler(); }
         };
-
         confirmBtn.addEventListener('click', onConfirmHandler);
-        document.getElementById('bnConfirmModalCancel').addEventListener('click', onCancelHandler);
+        cancelBtn.addEventListener('click', onCancelHandler);
         modal.addEventListener('click', onOverlayClick);
         document.addEventListener('keydown', onKeyHandler);
     }
 
     /* ============================================================
-       8. Diagnosis CRUD
+       6. Helpers
     ============================================================ */
-    let diagnosisList = storage.get('diagnosis', [
-        { type: 'اضطراب الاكتئاب الجسيم (MDD)', subtype: 'مع قلق', date: '2023-06-15', severity: 'متوسط', notes: 'تم التشخيص بناءً على المعايير التشخيصية DSM-5.' }
-    ]);
-
     function getDiagnosisSeverityBadge(severity) {
         switch (severity) {
             case 'بسيط': return 'background: #d1fae5; color: #047857;';
@@ -542,14 +434,51 @@
         }
     }
 
+    /* ============================================================
+       7. State
+    ============================================================ */
+    let diagnosisList = [];
+    let isLoadingList = false;
+
+    /* ============================================================
+       8. Extract / mapping
+    ============================================================ */
+    function extractArray(payload) {
+        if (payload == null) return [];
+        if (Array.isArray(payload)) return payload;
+        const candidates = [payload.data, payload.items, payload.result, payload.$values, payload.data?.$values, payload.data?.items];
+        for (const c of candidates) if (Array.isArray(c)) return c;
+        for (const key of Object.keys(payload)) {
+            if (Array.isArray(payload[key])) return payload[key];
+        }
+        return [];
+    }
+
+    function mapDiagnosisDto(dto) {
+        return {
+            id: dto.id ?? dto.Id ?? '',
+            patientId: dto.patientId ?? dto.PatientId ?? '',
+            type: dto.mainType ?? dto.MainType ?? '',
+            subtype: dto.subType ?? dto.SubType ?? '',
+            date: normalizeDateForInput(dto.diagnosisDate ?? dto.DiagnosisDate),
+            severity: dto.severity ?? dto.Severity ?? '',
+            notes: dto.notes ?? dto.Notes ?? '',
+            createdAt: dto.createdAt ?? dto.CreatedAt ?? null,
+            updatedAt: dto.updatedAt ?? dto.UpdatedAt ?? null
+        };
+    }
+
+    /* ============================================================
+       9. Render table
+    ============================================================ */
     function updateDiagnosisCount() {
         const badge = document.getElementById('diagnosisCountBadge');
         if (!badge) return;
         const count = diagnosisList.length;
         badge.textContent = count === 0 ? '0 تشخيص' :
             count === 1 ? 'تشخيص واحد' :
-            count === 2 ? 'تشخيصان' :
-            count <= 10 ? `${count} تشخيصات` : `${count} تشخيص`;
+                count === 2 ? 'تشخيصان' :
+                    count <= 10 ? `${count} تشخيصات` : `${count} تشخيص`;
     }
 
     function renderDiagnosisTable() {
@@ -575,19 +504,154 @@
                 <td data-label="الشدة"><span class="diagnosis-subtype-badge" style="${getDiagnosisSeverityBadge(item.severity)}">${escapeHtml(item.severity)}</span></td>
                 <td data-label="ملاحظات" style="max-width: 220px; white-space: normal;">${item.notes ? escapeHtml(item.notes) : '-'}</td>
                 <td class="text-center">
-                    <button type="button" class="btn btn-sm btn-outline-primary me-1" onclick="editDiagnosisItem(${index})" aria-label="تعديل"><i class="fa-solid fa-pen"></i></button>
-                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteDiagnosisItem(${index})" aria-label="حذف"><i class="fa-solid fa-trash"></i></button>
+                    <button type="button" class="btn btn-sm btn-outline-primary me-1" data-edit-index="${index}" aria-label="تعديل"><i class="fa-solid fa-pen"></i></button>
+                    <button type="button" class="btn btn-sm btn-outline-danger" data-delete-index="${index}" aria-label="حذف"><i class="fa-solid fa-trash"></i></button>
                 </td>
             `;
             tbody.appendChild(tr);
         });
 
+        tbody.querySelectorAll('[data-edit-index]').forEach(btn => {
+            btn.addEventListener('click', () => editDiagnosisItem(parseInt(btn.dataset.editIndex, 10)));
+        });
+        tbody.querySelectorAll('[data-delete-index]').forEach(btn => {
+            btn.addEventListener('click', () => deleteDiagnosisItem(parseInt(btn.dataset.deleteIndex, 10)));
+        });
+
         updateDiagnosisCount();
     }
 
+    /* ============================================================
+       10. Load from API
+    ============================================================ */
+    async function loadDiagnoses() {
+        if (isLoadingList) return;
+        isLoadingList = true;
+
+        const patientId = getPatientId();
+        if (!patientId) {
+            diagnosisList = [];
+            renderDiagnosisTable();
+            isLoadingList = false;
+            return;
+        }
+
+        const urls = getApiUrls();
+        const url = `${urls.list}${urls.list.includes('?') ? '&' : '?'}patientId=${encodeURIComponent(patientId)}`;
+
+        try {
+            const res = await fetch(url, {
+                headers: { 'X-Requested-With': 'fetch', 'Accept': 'application/json' },
+                credentials: 'same-origin'
+            });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const payload = await res.json();
+            const arr = extractArray(payload);
+            diagnosisList = arr.map(mapDiagnosisDto);
+            console.log('✅ Loaded diagnoses:', diagnosisList);
+            renderDiagnosisTable();
+        } catch (err) {
+            console.error('❌ فشل تحميل التشخيصات:', err);
+            diagnosisList = [];
+            renderDiagnosisTable();
+            showToast('error', 'فشل التحميل', 'تعذر تحميل التشخيصات من الخدمة.');
+        } finally {
+            isLoadingList = false;
+        }
+    }
+
+    /* ============================================================
+       11. Build payloads
+    ============================================================ */
+    function buildCreatePayload() {
+        const patientId = getPatientId();
+        return {
+            patientId: patientId,
+            mainType: document.getElementById('diagnosisType').value,
+            subType: document.getElementById('diagnosisSubtype').value,
+            diagnosisDate: toIsoDateTime(document.getElementById('diagnosisDate').value),
+            severity: document.getElementById('diagnosisSeverity').value,
+            notes: document.getElementById('diagnosisNotes').value.trim() || null
+        };
+    }
+
+    function buildUpdatePayload() {
+        const editId = document.getElementById('diagnosisEditId').value.trim();
+        return {
+            id: editId,
+            mainType: document.getElementById('diagnosisType').value,
+            subType: document.getElementById('diagnosisSubtype').value,
+            diagnosisDate: toIsoDateTime(document.getElementById('diagnosisDate').value),
+            severity: document.getElementById('diagnosisSeverity').value,
+            notes: document.getElementById('diagnosisNotes').value.trim() || null
+        };
+    }
+
+    /* ============================================================
+       12. API CRUD
+    ============================================================ */
+    async function createDiagnosisApi(payload) {
+        const urls = getApiUrls();
+        const res = await fetch(urls.create, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'fetch',
+                'Accept': 'application/json',
+                'RequestVerificationToken': getAntiForgeryToken()
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify(payload)
+        });
+        const text = await res.text();
+        if (!res.ok) throw new Error(`HTTP ${res.status} — ${text}`);
+        return text ? JSON.parse(text) : null;
+    }
+
+    async function updateDiagnosisApi(id, payload) {
+        if (!isValidGuid(id)) throw new Error(`معرّف التشخيص غير صالح: "${id}"`);
+        const urls = getApiUrls();
+        const url = `${urls.update}${urls.update.includes('?') ? '&' : '?'}id=${encodeURIComponent(id)}`;
+        const res = await fetch(url, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'fetch',
+                'Accept': 'application/json',
+                'RequestVerificationToken': getAntiForgeryToken()
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify(payload)
+        });
+        const text = await res.text();
+        if (!res.ok) throw new Error(`HTTP ${res.status} — ${text}`);
+        return text ? JSON.parse(text) : null;
+    }
+
+    async function deleteDiagnosisApi(id) {
+        if (!isValidGuid(id)) throw new Error(`معرّف التشخيص غير صالح: "${id}"`);
+        const urls = getApiUrls();
+        const url = `${urls.del}${urls.del.includes('?') ? '&' : '?'}id=${encodeURIComponent(id)}`;
+        const res = await fetch(url, {
+            method: 'DELETE',
+            headers: {
+                'X-Requested-With': 'fetch',
+                'Accept': 'application/json',
+                'RequestVerificationToken': getAntiForgeryToken()
+            },
+            credentials: 'same-origin'
+        });
+        const text = await res.text();
+        if (!res.ok) throw new Error(`HTTP ${res.status} — ${text}`);
+        return text ? JSON.parse(text) : null;
+    }
+
+    /* ============================================================
+       13. Form Submit
+    ============================================================ */
     const diagnosisForm = document.getElementById('diagnosisForm');
     if (diagnosisForm) {
-        diagnosisForm.addEventListener('submit', function (event) {
+        diagnosisForm.addEventListener('submit', async function (event) {
             event.preventDefault();
 
             const { isValid, errors } = bnValidation.validateForm(this);
@@ -598,33 +662,56 @@
                 return;
             }
 
-            const editIndex = parseInt(document.getElementById('diagnosisEditIndex').value, 10);
-            const item = {
-                type: document.getElementById('diagnosisType').value,
-                subtype: document.getElementById('diagnosisSubtype').value,
-                date: document.getElementById('diagnosisDate').value,
-                severity: document.getElementById('diagnosisSeverity').value,
-                notes: document.getElementById('diagnosisNotes').value.trim()
-            };
+            const editId = document.getElementById('diagnosisEditId').value.trim();
+            const isEdit = !!editId;
 
-            if (editIndex >= 0) {
-                diagnosisList[editIndex] = item;
-                showToast('success', 'تم التعديل', 'تم تعديل التشخيص.');
-            } else {
-                diagnosisList.push(item);
-                showToast('success', 'تمت الإضافة', 'تمت إضافة التشخيص.');
+            if (isEdit && !isValidGuid(editId)) {
+                showToast('error', 'خطأ', `معرّف التشخيص غير صالح: "${editId}"`);
+                return;
             }
 
-            storage.set('diagnosis', diagnosisList);
-            renderDiagnosisTable();
-            resetDiagnosisForm();
-            bnConfetti.fire();
+            const payload = isEdit ? buildUpdatePayload() : buildCreatePayload();
+            console.log(`📤 ${isEdit ? 'PUT' : 'POST'} payload:`, payload);
+
+            const submitBtn = document.getElementById('diagnosisSubmitBtn');
+            const originalHtml = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span> جاري الحفظ...';
+
+            try {
+                if (isEdit) {
+                    await updateDiagnosisApi(editId, payload);
+                    showToast('success', 'تم التعديل', 'تم تعديل التشخيص.');
+                } else {
+                    await createDiagnosisApi(payload);
+                    showToast('success', 'تمت الإضافة', 'تمت إضافة التشخيص.');
+                }
+                bnConfetti.fire();
+                resetDiagnosisForm();
+                await loadDiagnoses();
+            } catch (err) {
+                console.error('❌ فشل حفظ التشخيص:', err);
+                showToast('error', 'فشل الحفظ', err.message || 'حدث خطأ أثناء حفظ التشخيص.');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalHtml;
+            }
         });
     }
 
-    window.editDiagnosisItem = function (index) {
+    /* ============================================================
+       14. Edit / Delete / Reset
+    ============================================================ */
+    function editDiagnosisItem(index) {
         const item = diagnosisList[index];
         if (!item) return;
+
+        if (!item.id || !isValidGuid(item.id)) {
+            showToast('error', 'خطأ', 'هذا التشخيص لا يحتوي على معرّف (id) صالح — لا يمكن تعديله.');
+            return;
+        }
+
+        document.getElementById('diagnosisEditId').value = item.id;
         document.getElementById('diagnosisEditIndex').value = index;
         document.getElementById('diagnosisType').value = item.type;
         document.getElementById('diagnosisSubtype').value = item.subtype;
@@ -634,32 +721,43 @@
         document.getElementById('diagnosisFormTitle').innerHTML = '<i class="fa-solid fa-pen-to-square"></i> تعديل التشخيص';
         document.getElementById('diagnosisSubmitBtn').innerHTML = '<i class="fa-solid fa-floppy-disk ms-1"></i> حفظ التعديلات';
         document.getElementById('diagnosisCancelBtn').classList.remove('d-none');
-        document.getElementById('diagnosisForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
-    };
+        diagnosisForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
 
-    window.deleteDiagnosisItem = function (index) {
-        if (index < 0 || index >= diagnosisList.length) return;
+    function deleteDiagnosisItem(index) {
         const item = diagnosisList[index];
+        if (!item) return;
+
+        if (!item.id || !isValidGuid(item.id)) {
+            showToast('error', 'خطأ', 'هذا التشخيص لا يحتوي على معرّف (id) صالح — لا يمكن حذفه.');
+            return;
+        }
+
         showConfirmModal({
             title: 'تأكيد حذف التشخيص',
             subtitle: 'لن تتمكن من استرجاع التشخيص بعد الحذف',
             message: `هل أنت متأكد من حذف التشخيص <strong>${escapeHtml(item.type)}</strong>؟`,
             confirmText: 'نعم، احذف التشخيص',
-            onConfirm: () => {
-                diagnosisList.splice(index, 1);
-                storage.set('diagnosis', diagnosisList);
-                renderDiagnosisTable();
-                resetDiagnosisForm();
-                showToast('success', 'تم الحذف', 'تم حذف التشخيص.');
+            onConfirm: async () => {
+                try {
+                    await deleteDiagnosisApi(item.id);
+                    showToast('success', 'تم الحذف', 'تم حذف التشخيص.');
+                    resetDiagnosisForm();
+                    await loadDiagnoses();
+                } catch (err) {
+                    console.error('❌ فشل حذف التشخيص:', err);
+                    showToast('error', 'فشل الحذف', err.message || 'حدث خطأ أثناء حذف التشخيص.');
+                }
             }
         });
-    };
+    }
 
     window.resetDiagnosisForm = function () {
         const form = document.getElementById('diagnosisForm');
         if (!form) return;
         form.reset();
         document.getElementById('diagnosisEditIndex').value = '-1';
+        document.getElementById('diagnosisEditId').value = '';
         document.getElementById('diagnosisFormTitle').innerHTML = '<i class="fa-solid fa-plus-circle"></i> إضافة تشخيص جديد';
         document.getElementById('diagnosisSubmitBtn').innerHTML = '<i class="fa-solid fa-plus ms-1"></i> إضافة التشخيص';
         document.getElementById('diagnosisCancelBtn').classList.add('d-none');
@@ -673,11 +771,11 @@
     };
 
     /* ============================================================
-       9. Init
+       15. Init
     ============================================================ */
     function doInit() {
-        renderDiagnosisTable();
-        bnValidation.attachToForm(document.getElementById('diagnosisForm'));
+        bnValidation.attachToForm(diagnosisForm);
+        loadDiagnoses();
 
         setTimeout(() => {
             showToast('info', 'التشخيص', 'يمكنك إضافة وتعديل وحذف التشخيصات التفصيلية للمريض هنا.', 5000);

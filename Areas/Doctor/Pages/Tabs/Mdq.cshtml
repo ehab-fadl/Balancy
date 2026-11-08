@@ -42,7 +42,16 @@
          Questions Card
     ============================================================ -->
     <section class="questions-card">
-        <form id="mdqForm" data-autosave="mdqDraft" novalidate>
+        <form id="mdqForm"
+              data-autosave="mdqDraft"
+              data-patient-id="@Model.PatientId"
+              data-api-latest-url="/Doctor?handler=LatestMdq"
+              data-api-create-url="/Doctor?handler=CreateMdq"
+              novalidate>
+
+            @Html.AntiForgeryToken()
+
+            <input type="hidden" id="patientId" name="patientId" value="@Model.PatientId">
 
             <div id="mdqQuestionsContainer"></div>
 

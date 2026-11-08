@@ -1,38 +1,15 @@
 ﻿/* ============================================================
-   Treatment Plans Tab — Standalone Script
-   يعمل مستقلاً AND يتكامل مع bnApp إذا وُجد
+   Treatment Plans Tab — API-driven (GET/POST/PUT/DELETE)
+   - يطابق DTOs الباك إند (TreatmentPlan/Problem/Goal/Mean + Progress + Achieve)
+   - يحافظ على: Toast, Modals, Validation, Confetti, Charts, Filters
+   - يحذف: localStorage + mock data
 ============================================================ */
 
 (function initTreatmentPlans() {
     console.log('🚀 TreatmentPlans.js initialized');
 
     /* ============================================================
-       1. Storage Layer
-    ============================================================ */
-    const storage = (window.bnApp && window.bnApp.bnStorage) ? window.bnApp.bnStorage : {
-        prefix: 'balancy_',
-        isAvailable() {
-            try { const t = '__bn_test__'; localStorage.setItem(t, t); localStorage.removeItem(t); return true; }
-            catch (e) { return false; }
-        },
-        get(key, defaultValue = null) {
-            if (!this.isAvailable()) return defaultValue;
-            try { const raw = localStorage.getItem(this.prefix + key); return raw ? JSON.parse(raw) : defaultValue; }
-            catch (e) { return defaultValue; }
-        },
-        set(key, value) {
-            if (!this.isAvailable()) return false;
-            try { localStorage.setItem(this.prefix + key, JSON.stringify(value)); return true; }
-            catch (e) { return false; }
-        },
-        remove(key) {
-            if (!this.isAvailable()) return;
-            try { localStorage.removeItem(this.prefix + key); } catch (e) { }
-        }
-    };
-
-    /* ============================================================
-       2. Utilities
+       1. Utilities
     ============================================================ */
     function escapeHtml(value) {
         const div = document.createElement('div');
@@ -40,15 +17,70 @@
         return div.innerHTML;
     }
 
+    function getAntiForgeryToken() {
+        return document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+    }
+
+    function getPatientId() {
+        const form = document.getElementById('treatmentPlanForm');
+        return form?.dataset?.patientId?.trim()
+            || document.getElementById('patientId')?.value?.trim()
+            || sessionStorage.getItem('bnCurrentPatientId')?.trim()
+            || '';
+    }
+
+    function getApiUrls() {
+        const f = document.getElementById('treatmentPlanForm');
+        return {
+            list: f?.dataset?.apiListUrl || '/Doctor?handler=TreatmentPlans',
+            planCreate: f?.dataset?.apiCreateUrl || '/Doctor?handler=CreateTreatmentPlan',
+            planUpdate: f?.dataset?.apiUpdateUrl || '/Doctor?handler=UpdateTreatmentPlan',
+            planDelete: f?.dataset?.apiDeleteUrl || '/Doctor?handler=TreatmentPlan',
+            problemCreate: f?.dataset?.apiProblemCreateUrl || '/Doctor?handler=CreateTreatmentProblem',
+            problemUpdate: f?.dataset?.apiProblemUpdateUrl || '/Doctor?handler=UpdateTreatmentProblem',
+            problemDelete: f?.dataset?.apiProblemDeleteUrl || '/Doctor?handler=TreatmentProblem',
+            goalCreate: f?.dataset?.apiGoalCreateUrl || '/Doctor?handler=CreateTreatmentGoal',
+            goalUpdate: f?.dataset?.apiGoalUpdateUrl || '/Doctor?handler=UpdateTreatmentGoal',
+            goalProgress: f?.dataset?.apiGoalProgressUrl || '/Doctor?handler=ProgressTreatmentGoal',
+            goalAchieve: f?.dataset?.apiGoalAchieveUrl || '/Doctor?handler=AchieveTreatmentGoal',
+            goalUnachieve: f?.dataset?.apiGoalUnachieveUrl || '/Doctor?handler=UnachieveTreatmentGoal',
+            goalDelete: f?.dataset?.apiGoalDeleteUrl || '/Doctor?handler=TreatmentGoal',
+            meanCreate: f?.dataset?.apiMeanCreateUrl || '/Doctor?handler=CreateTreatmentMean',
+            meanUpdate: f?.dataset?.apiMeanUpdateUrl || '/Doctor?handler=UpdateTreatmentMean',
+            meanDelete: f?.dataset?.apiMeanDeleteUrl || '/Doctor?handler=TreatmentMean'
+        };
+    }
+
+    function isValidGuid(value) {
+        if (!value) return false;
+        return /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(String(value).trim());
+    }
+
+    function toIsoDateTime(dateInputValue) {
+        if (!dateInputValue) return null;
+        const d = new Date(dateInputValue + 'T00:00:00Z');
+        if (isNaN(d.getTime())) return null;
+        return d.toISOString();
+    }
+
+    function normalizeDateForInput(value) {
+        if (!value) return '';
+        try {
+            const d = new Date(value);
+            if (isNaN(d.getTime())) return '';
+            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        } catch { return ''; }
+    }
+
     /* ============================================================
-       3. Toast
+       2. Toast
     ============================================================ */
     function ensureToastStyles() {
         if (document.getElementById('bn-tp-toast-styles')) return;
         const style = document.createElement('style');
         style.id = 'bn-tp-toast-styles';
         style.textContent = `
-            .bn-tp-toast-overlay { position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; display: none; align-items: center; justify-content: center; z-index: 2147483647 !important; pointer-events: none; padding: 1rem; margin: 0 !important; }
+            .bn-tp-toast-overlay { position: fixed !important; inset: 0 !important; display: none; align-items: center; justify-content: center; z-index: 2147483647 !important; pointer-events: none; padding: 1rem; margin: 0 !important; }
             .bn-tp-toast-overlay.show { display: flex !important; }
             .bn-tp-toast { min-width: 300px; max-width: 92vw; padding: 1.1rem 1.4rem; border-radius: 16px; display: flex; align-items: center; gap: 0.85rem; font-family: 'Tajawal', sans-serif; font-weight: 800; font-size: 0.95rem; color: #fff; box-shadow: 0 20px 50px -12px rgba(15, 23, 42, 0.55); animation: bnTpToastIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); pointer-events: auto; direction: rtl; line-height: 1.5; position: relative; }
             .bn-tp-toast.hide { animation: bnTpToastOut 0.3s ease forwards; }
@@ -106,7 +138,7 @@
     const showToast = showBuiltInToast;
 
     /* ============================================================
-       4. Confetti
+       3. Confetti
     ============================================================ */
     const bnConfetti = {
         el: null,
@@ -128,8 +160,7 @@
             if (!el) return;
             el.innerHTML = '';
             el.classList.add('active');
-            const pieceCount = 60;
-            for (let i = 0; i < pieceCount; i++) {
+            for (let i = 0; i < 60; i++) {
                 const piece = document.createElement('div');
                 piece.className = 'confetti-piece';
                 piece.style.left = Math.random() * 100 + '%';
@@ -144,7 +175,7 @@
     };
 
     /* ============================================================
-       5. Focus Trap
+       4. Focus Trap
     ============================================================ */
     const bnFocusTrap = {
         activeTrap: null,
@@ -177,7 +208,7 @@
     };
 
     /* ============================================================
-       6. Validation Engine
+       5. Validation Engine
     ============================================================ */
     const bnValidation = {
         rules: {
@@ -313,7 +344,7 @@
     };
 
     /* ============================================================
-       7. Date Helpers
+       6. Date Helpers
     ============================================================ */
     function calculateDaysBetween(startDate, endDate) {
         if (!startDate || !endDate) return null;
@@ -368,100 +399,104 @@
     }
 
     /* ============================================================
-       8. Data
+       7. State + Mappers + Finders
     ============================================================ */
-    let treatmentPlansList = storage.get('treatmentPlans', [
-        {
-            name: 'خطة علاج القلق العام - المرحلة الأولى',
-            startDate: '2024-01-01',
-            endDate: '2024-01-31',
-            status: 'نشطة',
-            doctor: 'د. محمد العتيبي',
-            notes: 'التركيز على تثبيت الجرعة الدوائية مع بدء جلسات العلاج المعرفي السلوكي.',
-            problems: [
-                {
-                    text: 'القلق المفرط والمستمر',
-                    goals: [
-                        {
-                            text: 'تقليل شدة نوبات القلق اليومية',
-                            unit: 'نوبة/أسبوع',
-                            baseline: 7,
-                            targetValue: 2,
-                            currentValue: 4,
-                            status: 'pending',
-                            progressHistory: [
-                                { date: '2024-01-05', value: 7, note: 'البداية' },
-                                { date: '2024-01-15', value: 5, note: 'تحسن ملحوظ بعد جلستين' },
-                                { date: '2024-01-20', value: 4, note: 'استمرار التحسن' }
-                            ],
-                            means: [{ text: 'تمارين التنفس العميق مرتين يومياً' }, { text: 'جلسة علاج معرفي سلوكي أسبوعية' }]
-                        },
-                        {
-                            text: 'تحسين القدرة على التحكم بالقلق',
-                            unit: 'درجة (1-10)',
-                            baseline: 8,
-                            targetValue: 3,
-                            currentValue: 8,
-                            status: 'pending',
-                            progressHistory: [],
-                            means: [{ text: 'تدوين الأفكار القلقة يومياً' }]
-                        }
-                    ]
-                },
-                {
-                    text: 'اضطراب النوم',
-                    goals: [{
-                        text: 'تحسين جودة النوم',
-                        unit: 'ساعة/ليلة',
-                        baseline: 4,
-                        targetValue: 7,
-                        currentValue: 7,
-                        status: 'achieved',
-                        achievedAt: '2024-01-25T10:00:00.000Z',
-                        achievedBy: 'patient',
-                        achievementNote: 'التزم بالروتين المسائي لمدة أسبوعين، النوم تحسن بشكل ملحوظ.',
-                        progressHistory: [
-                            { date: '2024-01-15', value: 4, note: 'بداية' },
-                            { date: '2024-01-20', value: 6, note: '' },
-                            { date: '2024-01-25', value: 7, note: 'تحقق الهدف' }
-                        ],
-                        means: [{ text: 'روتين استرخاء مسائي ثابت' }, { text: 'إيقاف الشاشات قبل النوم بساعتين' }]
-                    }]
-                }
-            ]
-        }
-    ]);
+    let treatmentPlansList = [];
+    let isLoadingList = false;
 
-    // ترحيل البيانات القديمة
-    treatmentPlansList = treatmentPlansList.map(plan => {
-        if (!plan.startDate && !plan.endDate && plan.duration) {
-            const start = new Date();
-            const end = new Date();
-            end.setDate(end.getDate() + plan.duration);
-            plan.startDate = start.toISOString().slice(0, 10);
-            plan.endDate = end.toISOString().slice(0, 10);
-            delete plan.duration;
+    function mapGoalDto(dto) {
+        return {
+            id: dto.id ?? dto.Id ?? '',
+            text: dto.text ?? dto.Text ?? '',
+            unit: dto.unit ?? dto.Unit ?? '',
+            baseline: dto.baseline ?? dto.Baseline ?? null,
+            targetValue: dto.targetValue ?? dto.TargetValue ?? null,
+            currentValue: dto.currentValue ?? dto.CurrentValue ?? null,
+            status: (dto.status ?? dto.Status ?? 'pending').toString().toLowerCase(),
+            achievedAt: dto.achievedAt ?? dto.AchievedAt ?? null,
+            achievedBy: (dto.achievedBy ?? dto.AchievedBy ?? '').toString().toLowerCase(),
+            achievementNote: dto.achievementNote ?? dto.AchievementNote ?? '',
+            patientConfirmedByDoctor: dto.patientConfirmedByDoctor ?? dto.PatientConfirmedByDoctor ?? false,
+            means: (dto.means ?? dto.Means ?? []).map(m => ({
+                id: m.id ?? m.Id ?? '',
+                text: m.text ?? m.Text ?? ''
+            })),
+            progressHistory: (dto.progressHistory ?? dto.ProgressHistory ?? []).map(h => ({
+                id: h.id ?? h.Id ?? '',
+                date: h.recordedAt ?? h.RecordedAt ?? h.date ?? h.Date,
+                value: h.value ?? h.Value ?? '',
+                note: h.note ?? h.Note ?? ''
+            }))
+        };
+    }
+
+    function mapProblemDto(dto) {
+        return {
+            id: dto.id ?? dto.Id ?? '',
+            text: dto.text ?? dto.Text ?? '',
+            goals: (dto.goals ?? dto.Goals ?? []).map(mapGoalDto)
+        };
+    }
+
+    function mapPlanDto(dto) {
+        return {
+            id: dto.id ?? dto.Id ?? '',
+            patientId: dto.patientId ?? dto.PatientId ?? '',
+            name: dto.name ?? dto.Name ?? '',
+            startDate: normalizeDateForInput(dto.startDate ?? dto.StartDate),
+            endDate: normalizeDateForInput(dto.endDate ?? dto.EndDate),
+            status: dto.status ?? dto.Status ?? '',
+            doctor: dto.planDoctorName ?? dto.PlanDoctorName ?? '',
+            notes: dto.notes ?? dto.Notes ?? '',
+            problems: (dto.problems ?? dto.Problems ?? []).map(mapProblemDto)
+        };
+    }
+
+    function extractArray(payload) {
+        if (payload == null) return [];
+        if (Array.isArray(payload)) return payload;
+        const candidates = [payload.data, payload.items, payload.result, payload.$values, payload.data?.$values, payload.data?.items];
+        for (const c of candidates) if (Array.isArray(c)) return c;
+        for (const key of Object.keys(payload)) if (Array.isArray(payload[key])) return payload[key];
+        return [];
+    }
+
+    function findPlanById(planId) {
+        return treatmentPlansList.find(p => p.id === planId) || null;
+    }
+
+    function findProblemById(problemId) {
+        for (const plan of treatmentPlansList) {
+            const problem = (plan.problems || []).find(p => p.id === problemId);
+            if (problem) return { plan, problem };
         }
-        if (plan.problems) {
-            plan.problems.forEach(p => {
-                if (p.goals) {
-                    p.goals.forEach(g => {
-                        if (!g.status) g.status = 'pending';
-                        if (!g.progressHistory) g.progressHistory = [];
-                        if (g.targetValue === undefined) g.targetValue = null;
-                        if (g.currentValue === undefined) g.currentValue = null;
-                        if (g.baseline === undefined) g.baseline = null;
-                        if (!g.unit) g.unit = '';
-                    });
+        return null;
+    }
+
+    function findGoalById(goalId) {
+        for (const plan of treatmentPlansList) {
+            for (const problem of (plan.problems || [])) {
+                const goal = (problem.goals || []).find(g => g.id === goalId);
+                if (goal) return { plan, problem, goal };
+            }
+        }
+        return null;
+    }
+
+    function findMeanById(meanId) {
+        for (const plan of treatmentPlansList) {
+            for (const problem of (plan.problems || [])) {
+                for (const goal of (problem.goals || [])) {
+                    const mean = (goal.means || []).find(m => m.id === meanId);
+                    if (mean) return { plan, problem, goal, mean };
                 }
-            });
+            }
         }
-        return plan;
-    });
-    storage.set('treatmentPlans', treatmentPlansList);
+        return null;
+    }
 
     /* ============================================================
-       9. Render Helpers
+       8. Render Helpers
     ============================================================ */
     function getTpStatusBadge(status) {
         switch (status) {
@@ -497,16 +532,12 @@
 
     function calculatePlanProgress(plan) {
         let total = 0, achieved = 0;
-        if (plan.problems) {
-            plan.problems.forEach(p => {
-                if (p.goals) {
-                    p.goals.forEach(g => {
-                        total++;
-                        if (g.status === 'achieved') achieved++;
-                    });
-                }
+        (plan.problems || []).forEach(p => {
+            (p.goals || []).forEach(g => {
+                total++;
+                if (g.status === 'achieved') achieved++;
             });
-        }
+        });
         return { total, achieved, percentage: total === 0 ? 0 : Math.round((achieved / total) * 100) };
     }
 
@@ -567,6 +598,41 @@
     }
 
     /* ============================================================
+       9. Load from API
+    ============================================================ */
+    async function loadTreatmentPlans() {
+        if (isLoadingList) return;
+        isLoadingList = true;
+        const patientId = getPatientId();
+        if (!patientId) {
+            treatmentPlansList = [];
+            renderTreatmentPlans();
+            isLoadingList = false;
+            return;
+        }
+        const urls = getApiUrls();
+        const url = `${urls.list}${urls.list.includes('?') ? '&' : '?'}patientId=${encodeURIComponent(patientId)}`;
+        try {
+            const res = await fetch(url, {
+                headers: { 'X-Requested-With': 'fetch', 'Accept': 'application/json' },
+                credentials: 'same-origin'
+            });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const payload = await res.json();
+            treatmentPlansList = extractArray(payload).map(mapPlanDto);
+            console.log('✅ Loaded treatment plans:', treatmentPlansList);
+            renderTreatmentPlans();
+        } catch (err) {
+            console.error('❌ فشل تحميل الخطط:', err);
+            treatmentPlansList = [];
+            renderTreatmentPlans();
+            showToast('error', 'فشل التحميل', 'تعذر تحميل الخطط العلاجية.');
+        } finally {
+            isLoadingList = false;
+        }
+    }
+
+    /* ============================================================
        10. Render Plans
     ============================================================ */
     function renderTreatmentPlans() {
@@ -586,31 +652,35 @@
         emptyState.classList.add('d-none');
 
         filtered.forEach((plan) => {
-            const planIndex = treatmentPlansList.indexOf(plan);
             const progress = calculatePlanProgress(plan);
             const progressClass = progress.percentage >= 100 ? 'completed' : (progress.percentage < 30 ? 'low' : '');
+            const planId = plan.id;
 
             let problemsHtml = '';
             if (!plan.problems || plan.problems.length === 0) {
                 problemsHtml = `<p class="tp-empty-hint"><i class="fa-solid fa-circle-info ms-1"></i> لم تُضف أي مشاكل لهذه الخطة بعد.</p>`;
             } else {
-                plan.problems.forEach((problem, problemIndex) => {
+                plan.problems.forEach((problem) => {
+                    const problemId = problem.id;
+
                     let goalsHtml = '';
                     if (!problem.goals || problem.goals.length === 0) {
                         goalsHtml = `<p class="tp-empty-hint">لا توجد أهداف بعد.</p>`;
                     } else {
-                        problem.goals.forEach((goal, goalIndex) => {
+                        problem.goals.forEach((goal) => {
+                            const goalId = goal.id;
+
                             let meansHtml = '';
                             if (!goal.means || goal.means.length === 0) {
                                 meansHtml = `<p class="tp-empty-hint">لا توجد وسائل بعد.</p>`;
                             } else {
-                                goal.means.forEach((mean, meanIndex) => {
+                                goal.means.forEach((mean) => {
                                     meansHtml += `
                                         <div class="tp-mean">
                                             <span class="tp-mean-text"><i class="fa-solid fa-check-double"></i> ${escapeHtml(mean.text)}</span>
                                             <span class="tp-mini-actions">
-                                                <button type="button" class="btn btn-outline-primary" onclick="editTpMean(${planIndex},${problemIndex},${goalIndex},${meanIndex})" aria-label="تعديل"><i class="fa-solid fa-pen"></i></button>
-                                                <button type="button" class="btn btn-outline-danger" onclick="deleteTpMean(${planIndex},${problemIndex},${goalIndex},${meanIndex})" aria-label="حذف"><i class="fa-solid fa-trash"></i></button>
+                                                <button type="button" class="btn btn-outline-primary" onclick="editTpMean('${mean.id}')" aria-label="تعديل"><i class="fa-solid fa-pen"></i></button>
+                                                <button type="button" class="btn btn-outline-danger" onclick="deleteTpMean('${mean.id}')" aria-label="حذف"><i class="fa-solid fa-trash"></i></button>
                                             </span>
                                         </div>
                                     `;
@@ -624,17 +694,16 @@
                             const valueProgressClass = valueProgress === null ? '' : (valueProgress >= 100 ? 'complete' : (valueProgress < 30 ? 'low' : ''));
                             const unitText = goal.unit ? ` ${goal.unit}` : '';
 
-                            // Action buttons
                             let actionButtonsHtml = '';
                             if (isPendingPatient) {
                                 actionButtonsHtml = `
-                                    <button type="button" class="btn tp-btn-confirm-patient" onclick="confirmPatientAchievement(${planIndex},${problemIndex},${goalIndex})" title="تأكيد تحقيق المريض"><i class="fa-solid fa-check-double"></i> تأكيد</button>
-                                    <button type="button" class="btn tp-btn-reject-patient" onclick="rejectPatientAchievement(${planIndex},${problemIndex},${goalIndex})" title="رفض"><i class="fa-solid fa-xmark"></i></button>
+                                    <button type="button" class="btn tp-btn-confirm-patient" onclick="confirmPatientAchievement('${goal.id}')" title="تأكيد تحقيق المريض"><i class="fa-solid fa-check-double"></i> تأكيد</button>
+                                    <button type="button" class="btn tp-btn-reject-patient" onclick="rejectPatientAchievement('${goal.id}')" title="رفض"><i class="fa-solid fa-xmark"></i></button>
                                 `;
                             } else if (isAchieved) {
-                                actionButtonsHtml = `<button type="button" class="btn tp-btn-unachieve" onclick="toggleGoalAchieved(${planIndex},${problemIndex},${goalIndex})" title="إلغاء التحقق"><i class="fa-solid fa-rotate-left"></i></button>`;
+                                actionButtonsHtml = `<button type="button" class="btn tp-btn-unachieve" onclick="toggleGoalAchieved('${goal.id}')" title="إلغاء التحقق"><i class="fa-solid fa-rotate-left"></i></button>`;
                             } else {
-                                actionButtonsHtml = `<button type="button" class="btn tp-btn-achieve" onclick="openAchieveModal(${planIndex},${problemIndex},${goalIndex})" title="تحقق الهدف"><i class="fa-solid fa-check"></i> تحقق</button>`;
+                                actionButtonsHtml = `<button type="button" class="btn tp-btn-achieve" onclick="openAchieveModal('${goal.id}')" title="تحقق الهدف"><i class="fa-solid fa-check"></i> تحقق</button>`;
                             }
 
                             goalsHtml += `
@@ -647,10 +716,10 @@
                                         </span>
                                         <span class="tp-goal-actions">
                                             ${actionButtonsHtml}
-                                            ${hasValueTracking ? `<button type="button" class="btn tp-btn-progress" onclick="openProgressModal(${planIndex},${problemIndex},${goalIndex})" title="تحديث التقدم"><i class="fa-solid fa-chart-line"></i></button>` : ''}
-                                            <button type="button" class="btn tp-btn-config" onclick="openGoalConfigModal(${planIndex},${problemIndex},${goalIndex})" title="إعدادات القياس"><i class="fa-solid fa-sliders"></i></button>
-                                            <button type="button" class="btn btn-outline-primary" onclick="editTpGoal(${planIndex},${problemIndex},${goalIndex})" aria-label="تعديل"><i class="fa-solid fa-pen"></i></button>
-                                            <button type="button" class="btn btn-outline-danger" onclick="deleteTpGoal(${planIndex},${problemIndex},${goalIndex})" aria-label="حذف"><i class="fa-solid fa-trash"></i></button>
+                                            ${hasValueTracking ? `<button type="button" class="btn tp-btn-progress" onclick="openProgressModal('${goal.id}')" title="تحديث التقدم"><i class="fa-solid fa-chart-line"></i></button>` : ''}
+                                            <button type="button" class="btn tp-btn-config" onclick="openGoalConfigModal('${goal.id}')" title="إعدادات القياس"><i class="fa-solid fa-sliders"></i></button>
+                                            <button type="button" class="btn btn-outline-primary" onclick="editTpGoal('${goal.id}')" aria-label="تعديل"><i class="fa-solid fa-pen"></i></button>
+                                            <button type="button" class="btn btn-outline-danger" onclick="deleteTpGoal('${goal.id}')" aria-label="حذف"><i class="fa-solid fa-trash"></i></button>
                                         </span>
                                     </div>
 
@@ -670,14 +739,14 @@
                                         <div class="tp-goal-progress">
                                             ${getVerifierBadge(goal)}
                                             ${goal.achievedAt ? `<span class="tp-goal-progress-item"><i class="fa-solid fa-calendar"></i> ${new Date(goal.achievedAt).toLocaleDateString('ar-EG')}</span>` : ''}
-                                            ${goal.progressHistory && goal.progressHistory.length > 0 ? `<button type="button" class="tp-goal-history-link" onclick="showGoalHistory(${planIndex},${problemIndex},${goalIndex})"><i class="fa-solid fa-clock-rotate-left"></i> السجل (${goal.progressHistory.length})</button>` : ''}
+                                            ${goal.progressHistory && goal.progressHistory.length > 0 ? `<button type="button" class="tp-goal-history-link" onclick="showGoalHistory('${goal.id}')"><i class="fa-solid fa-clock-rotate-left"></i> السجل (${goal.progressHistory.length})</button>` : ''}
                                         </div>
                                         ${goal.achievementNote ? `<div class="tp-goal-progress" style="background: rgba(16,185,129,0.08);"><span class="tp-goal-progress-item"><i class="fa-solid fa-note-sticky"></i> ${escapeHtml(goal.achievementNote)}</span></div>` : ''}
                                     ` : `
                                         ${goal.progressHistory && goal.progressHistory.length > 0 ? `
                                             <div class="tp-goal-progress">
                                                 <span class="tp-goal-progress-item accent"><i class="fa-solid fa-chart-line"></i> آخر تحديث: <strong>${escapeHtml(String(goal.progressHistory[goal.progressHistory.length - 1].value))}${unitText}</strong></span>
-                                                <button type="button" class="tp-goal-history-link" onclick="showGoalHistory(${planIndex},${problemIndex},${goalIndex})"><i class="fa-solid fa-clock-rotate-left"></i> السجل (${goal.progressHistory.length})</button>
+                                                <button type="button" class="tp-goal-history-link" onclick="showGoalHistory('${goal.id}')"><i class="fa-solid fa-clock-rotate-left"></i> السجل (${goal.progressHistory.length})</button>
                                             </div>
                                         ` : ''}
                                     `}
@@ -686,8 +755,8 @@
 
                                     <div class="tp-means">${meansHtml}</div>
                                     <div class="tp-inline-form">
-                                        <input type="text" id="tpMeanInput_${planIndex}_${problemIndex}_${goalIndex}" placeholder="أضف وسيلة جديدة...">
-                                        <button type="button" class="btn btn-success" onclick="addTpMean(${planIndex},${problemIndex},${goalIndex})"><i class="fa-solid fa-plus ms-1"></i> إضافة وسيلة</button>
+                                        <input type="text" id="tpMeanInput_${goal.id}" placeholder="أضف وسيلة جديدة...">
+                                        <button type="button" class="btn btn-success" onclick="addTpMean('${goal.id}')"><i class="fa-solid fa-plus ms-1"></i> إضافة وسيلة</button>
                                     </div>
                                 </div>
                             `;
@@ -698,14 +767,14 @@
                             <div class="tp-problem-head">
                                 <span class="tp-problem-title"><i class="fa-solid fa-triangle-exclamation"></i> ${escapeHtml(problem.text)}</span>
                                 <span class="tp-mini-actions">
-                                    <button type="button" class="btn btn-outline-primary" onclick="editTpProblem(${planIndex},${problemIndex})" aria-label="تعديل"><i class="fa-solid fa-pen"></i></button>
-                                    <button type="button" class="btn btn-outline-danger" onclick="deleteTpProblem(${planIndex},${problemIndex})" aria-label="حذف"><i class="fa-solid fa-trash"></i></button>
+                                    <button type="button" class="btn btn-outline-primary" onclick="editTpProblem('${problem.id}')" aria-label="تعديل"><i class="fa-solid fa-pen"></i></button>
+                                    <button type="button" class="btn btn-outline-danger" onclick="deleteTpProblem('${problem.id}')" aria-label="حذف"><i class="fa-solid fa-trash"></i></button>
                                 </span>
                             </div>
                             <div class="tp-goals">${goalsHtml}</div>
                             <div class="tp-inline-form">
-                                <input type="text" id="tpGoalInput_${planIndex}_${problemIndex}" placeholder="أضف هدفاً جديداً...">
-                                <button type="button" class="btn btn-primary" onclick="addTpGoal(${planIndex},${problemIndex})"><i class="fa-solid fa-plus ms-1"></i> إضافة هدف</button>
+                                <input type="text" id="tpGoalInput_${problem.id}" placeholder="أضف هدفاً جديداً...">
+                                <button type="button" class="btn btn-primary" onclick="addTpGoal('${problem.id}')"><i class="fa-solid fa-plus ms-1"></i> إضافة هدف</button>
                             </div>
                         </div>
                     `;
@@ -727,8 +796,8 @@
                         </div>
                     </div>
                     <div class="tp-plan-actions">
-                        <button type="button" class="btn btn-outline-primary" onclick="editTreatmentPlan(${planIndex})"><i class="fa-solid fa-pen ms-1"></i> تعديل</button>
-                        <button type="button" class="btn btn-outline-danger" onclick="deleteTreatmentPlan(${planIndex})"><i class="fa-solid fa-trash ms-1"></i> حذف</button>
+                        <button type="button" class="btn btn-outline-primary" onclick="editTreatmentPlan('${plan.id}')"><i class="fa-solid fa-pen ms-1"></i> تعديل</button>
+                        <button type="button" class="btn btn-outline-danger" onclick="deleteTreatmentPlan('${plan.id}')"><i class="fa-solid fa-trash ms-1"></i> حذف</button>
                     </div>
                 </div>
                 <div class="tp-progress-wrap">
@@ -742,8 +811,8 @@
                 <div class="tp-tree">${problemsHtml}</div>
                 <div class="tp-add-problem-wrap">
                     <div class="tp-inline-form">
-                        <input type="text" id="tpProblemInput_${planIndex}" placeholder="أضف مشكلة جديدة...">
-                        <button type="button" class="btn btn-warning text-white" onclick="addTpProblem(${planIndex})"><i class="fa-solid fa-plus ms-1"></i> إضافة مشكلة</button>
+                        <input type="text" id="tpProblemInput_${plan.id}" placeholder="أضف مشكلة جديدة...">
+                        <button type="button" class="btn btn-warning text-white" onclick="addTpProblem('${plan.id}')"><i class="fa-solid fa-plus ms-1"></i> إضافة مشكلة</button>
                     </div>
                 </div>
             `;
@@ -754,7 +823,7 @@
     }
 
     /* ============================================================
-       11. Modal Helpers
+       11. Modals (Edit + Confirm)
     ============================================================ */
     function showEditModal({ title, subtitle, label, value, onSave, placeholder }) {
         const modal = document.getElementById('bnEditModal');
@@ -816,14 +885,17 @@
         document.addEventListener('keydown', onKeyHandler);
     }
 
-    function showGoalHistory(goal, planName) {
-        if (!goal || !goal.progressHistory || goal.progressHistory.length === 0) {
+    function showGoalHistory(goalId) {
+        const found = findGoalById(goalId);
+        if (!found) return;
+        const { goal } = found;
+        if (!goal.progressHistory || goal.progressHistory.length === 0) {
             showToast('info', 'لا يوجد سجل', 'لم يتم تسجيل أي تطور لهذا الهدف بعد.');
             return;
         }
         const modal = document.getElementById('bnConfirmModal');
         document.getElementById('bnConfirmModalTitle').innerHTML = '<i class="fa-solid fa-clock-rotate-left"></i> سجل تطور الهدف';
-        document.getElementById('bnConfirmModalSubtitle').textContent = planName;
+        document.getElementById('bnConfirmModalSubtitle').textContent = goal.text;
         document.getElementById('bnConfirmModalMessage').innerHTML = `
             <div style="text-align:right; max-height: 380px; overflow-y: auto; padding-right: 0.5rem;">
                 <div style="font-weight: 900; color: var(--bn-text); margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--bn-border);">
@@ -866,15 +938,13 @@
     /* ============================================================
        12. Goal Config Modal
     ============================================================ */
-    let currentConfig = null;
+    let currentConfigGoalId = null;
 
-    window.openGoalConfigModal = function (planIndex, problemIndex, goalIndex) {
-        const plan = treatmentPlansList[planIndex];
-        const goal = plan?.problems?.[problemIndex]?.goals?.[goalIndex];
-        if (!goal) return;
-
-        currentConfig = { planIndex, problemIndex, goalIndex };
-
+    window.openGoalConfigModal = function (goalId) {
+        const found = findGoalById(goalId);
+        if (!found) return;
+        const { goal } = found;
+        currentConfigGoalId = goal.id;
         const modal = document.getElementById('tpGoalConfigModal');
         document.getElementById('tpGoalConfigTitle').textContent = 'إعداد قياس الهدف';
         document.getElementById('tpGoalConfigSubtitle').textContent = 'حدد الوحدة والقيمة المستهدفة والقيمة الأولية';
@@ -882,7 +952,6 @@
         document.getElementById('tpGoalUnitInput').value = goal.unit || '';
         document.getElementById('tpGoalTargetInput').value = goal.targetValue !== null && goal.targetValue !== undefined ? goal.targetValue : '';
         document.getElementById('tpGoalBaselineInput').value = goal.baseline !== null && goal.baseline !== undefined ? goal.baseline : '';
-
         modal.classList.add('show');
         bnFocusTrap.activate(modal);
     };
@@ -891,16 +960,16 @@
         const modal = document.getElementById('tpGoalConfigModal');
         if (modal) modal.classList.remove('show');
         bnFocusTrap.deactivate();
-        currentConfig = null;
+        currentConfigGoalId = null;
     }
 
     document.getElementById('tpGoalConfigCancel').addEventListener('click', closeGoalConfigModal);
 
-    document.getElementById('tpGoalConfigSave').addEventListener('click', function () {
-        if (!currentConfig) return;
-        const { planIndex, problemIndex, goalIndex } = currentConfig;
-        const goal = treatmentPlansList[planIndex]?.problems?.[problemIndex]?.goals?.[goalIndex];
-        if (!goal) { closeGoalConfigModal(); return; }
+    document.getElementById('tpGoalConfigSave').addEventListener('click', async function () {
+        if (!currentConfigGoalId) return;
+        const found = findGoalById(currentConfigGoalId);
+        if (!found) { closeGoalConfigModal(); return; }
+        const { goal } = found;
 
         const text = document.getElementById('tpGoalTextInput').value.trim();
         if (!text) { showToast('warning', 'حقل مطلوب', 'نص الهدف مطلوب'); return; }
@@ -909,20 +978,36 @@
         const targetRaw = document.getElementById('tpGoalTargetInput').value;
         const baselineRaw = document.getElementById('tpGoalBaselineInput').value;
 
-        goal.text = text;
-        goal.unit = unit;
-        goal.targetValue = targetRaw !== '' ? parseFloat(targetRaw) : null;
-        goal.baseline = baselineRaw !== '' ? parseFloat(baselineRaw) : null;
+        const payload = {
+            id: goal.id,
+            text: text,
+            unit: unit || null,
+            baseline: baselineRaw !== '' ? parseFloat(baselineRaw) : null,
+            targetValue: targetRaw !== '' ? parseFloat(targetRaw) : null
+        };
 
-        // إذا تغير baseline، حدّث currentValue إذا لم يكن محدداً
-        if (goal.currentValue === null || goal.currentValue === undefined) {
-            goal.currentValue = goal.baseline;
+        const urls = getApiUrls();
+        try {
+            const res = await fetch(`${urls.goalUpdate}${urls.goalUpdate.includes('?') ? '&' : '?'}id=${encodeURIComponent(goal.id)}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'fetch',
+                    'Accept': 'application/json',
+                    'RequestVerificationToken': getAntiForgeryToken()
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify(payload)
+            });
+            const body = await res.text();
+            if (!res.ok) throw new Error(`HTTP ${res.status} — ${body}`);
+            showToast('success', 'تم الحفظ', 'تم حفظ إعدادات الهدف.');
+            closeGoalConfigModal();
+            await loadTreatmentPlans();
+        } catch (err) {
+            console.error('❌ فشل حفظ إعدادات الهدف:', err);
+            showToast('error', 'فشل الحفظ', err.message);
         }
-
-        storage.set('treatmentPlans', treatmentPlansList);
-        renderTreatmentPlans();
-        closeGoalConfigModal();
-        showToast('success', 'تم الحفظ', 'تم حفظ إعدادات الهدف.');
     });
 
     document.getElementById('tpGoalConfigModal').addEventListener('click', (e) => {
@@ -932,19 +1017,16 @@
     /* ============================================================
        13. Progress Update Modal
     ============================================================ */
-    let currentProgress = null;
+    let currentProgressGoalId = null;
 
-    window.openProgressModal = function (planIndex, problemIndex, goalIndex) {
-        const plan = treatmentPlansList[planIndex];
-        const goal = plan?.problems?.[problemIndex]?.goals?.[goalIndex];
-        if (!goal) return;
-
-        currentProgress = { planIndex, problemIndex, goalIndex };
-
+    window.openProgressModal = function (goalId) {
+        const found = findGoalById(goalId);
+        if (!found) return;
+        const { goal } = found;
+        currentProgressGoalId = goal.id;
         const modal = document.getElementById('tpProgressModal');
         document.getElementById('tpProgressTitle').textContent = 'تحديث التقدم';
         document.getElementById('tpProgressSubtitle').textContent = goal.text;
-
         const unitText = goal.unit ? ` ${goal.unit}` : '';
         document.getElementById('tpProgressInfoBox').innerHTML = `
             <div style="display: flex; flex-direction: column; gap: 0.35rem;">
@@ -953,10 +1035,8 @@
                 <div>📍 <strong>القيمة الحالية:</strong> ${goal.currentValue !== null && goal.currentValue !== undefined ? goal.currentValue : '—'}${unitText}</div>
             </div>
         `;
-
         document.getElementById('tpProgressValueInput').value = goal.currentValue !== null && goal.currentValue !== undefined ? goal.currentValue : '';
         document.getElementById('tpProgressNoteInput').value = '';
-
         modal.classList.add('show');
         bnFocusTrap.activate(modal);
     };
@@ -965,16 +1045,16 @@
         const modal = document.getElementById('tpProgressModal');
         if (modal) modal.classList.remove('show');
         bnFocusTrap.deactivate();
-        currentProgress = null;
+        currentProgressGoalId = null;
     }
 
     document.getElementById('tpProgressCancel').addEventListener('click', closeProgressModal);
 
-    document.getElementById('tpProgressSave').addEventListener('click', function () {
-        if (!currentProgress) return;
-        const { planIndex, problemIndex, goalIndex } = currentProgress;
-        const goal = treatmentPlansList[planIndex]?.problems?.[problemIndex]?.goals?.[goalIndex];
-        if (!goal) { closeProgressModal(); return; }
+    document.getElementById('tpProgressSave').addEventListener('click', async function () {
+        if (!currentProgressGoalId) return;
+        const found = findGoalById(currentProgressGoalId);
+        if (!found) { closeProgressModal(); return; }
+        const { goal } = found;
 
         const valueRaw = document.getElementById('tpProgressValueInput').value;
         const note = document.getElementById('tpProgressNoteInput').value.trim();
@@ -984,19 +1064,34 @@
             return;
         }
 
-        const value = parseFloat(valueRaw);
-        goal.currentValue = value;
-        if (!goal.progressHistory) goal.progressHistory = [];
-        goal.progressHistory.push({
-            date: new Date().toISOString(),
-            value: value,
-            note: note
-        });
+        const payload = {
+            goalId: goal.id,
+            value: parseFloat(valueRaw),
+            note: note || null
+        };
 
-        storage.set('treatmentPlans', treatmentPlansList);
-        renderTreatmentPlans();
-        closeProgressModal();
-        showToast('success', 'تم التحديث', `تم تحديث التقدم إلى ${value}${goal.unit ? ' ' + goal.unit : ''}.`);
+        const urls = getApiUrls();
+        try {
+            const res = await fetch(`${urls.goalProgress}${urls.goalProgress.includes('?') ? '&' : '?'}id=${encodeURIComponent(goal.id)}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'fetch',
+                    'Accept': 'application/json',
+                    'RequestVerificationToken': getAntiForgeryToken()
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify(payload)
+            });
+            const body = await res.text();
+            if (!res.ok) throw new Error(`HTTP ${res.status} — ${body}`);
+            showToast('success', 'تم التحديث', `تم تحديث التقدم إلى ${payload.value}${goal.unit ? ' ' + goal.unit : ''}.`);
+            closeProgressModal();
+            await loadTreatmentPlans();
+        } catch (err) {
+            console.error('❌ فشل تحديث التقدم:', err);
+            showToast('error', 'فشل', err.message);
+        }
     });
 
     document.getElementById('tpProgressModal').addEventListener('click', (e) => {
@@ -1006,15 +1101,13 @@
     /* ============================================================
        14. Achieve Modal
     ============================================================ */
-    let currentAchieve = null;
+    let currentAchieveGoalId = null;
 
-    window.openAchieveModal = function (planIndex, problemIndex, goalIndex) {
-        const plan = treatmentPlansList[planIndex];
-        const goal = plan?.problems?.[problemIndex]?.goals?.[goalIndex];
-        if (!goal) return;
-
-        currentAchieve = { planIndex, problemIndex, goalIndex };
-
+    window.openAchieveModal = function (goalId) {
+        const found = findGoalById(goalId);
+        if (!found) return;
+        const { goal } = found;
+        currentAchieveGoalId = goal.id;
         const modal = document.getElementById('tpAchieveModal');
         document.getElementById('tpAchieveTitle').textContent = 'تحقق الهدف';
         document.getElementById('tpAchieveSubtitle').textContent = goal.text;
@@ -1027,41 +1120,46 @@
         const modal = document.getElementById('tpAchieveModal');
         if (modal) modal.classList.remove('show');
         bnFocusTrap.deactivate();
-        currentAchieve = null;
+        currentAchieveGoalId = null;
     }
 
     document.getElementById('tpAchieveCancel').addEventListener('click', closeAchieveModal);
 
-    document.getElementById('tpAchieveSave').addEventListener('click', function () {
-        if (!currentAchieve) return;
-        const { planIndex, problemIndex, goalIndex } = currentAchieve;
-        const goal = treatmentPlansList[planIndex]?.problems?.[problemIndex]?.goals?.[goalIndex];
-        if (!goal) { closeAchieveModal(); return; }
-
+    document.getElementById('tpAchieveSave').addEventListener('click', async function () {
+        if (!currentAchieveGoalId) return;
+        const found = findGoalById(currentAchieveGoalId);
+        if (!found) { closeAchieveModal(); return; }
+        const { goal } = found;
         const note = document.getElementById('tpAchieveNoteInput').value.trim();
 
-        goal.status = 'achieved';
-        goal.achievedAt = new Date().toISOString();
-        goal.achievedBy = 'doctor';
-        goal.achievementNote = note || '';
-
-        if (!goal.progressHistory) goal.progressHistory = [];
-        goal.progressHistory.push({
-            date: new Date().toISOString(),
-            value: 'محقق ✅',
+        const payload = {
+            goalId: goal.id,
             note: note || 'تم التحقق بواسطة الطبيب'
-        });
+        };
 
-        // إذا كان هناك قيمة مستهدفة، حدّث currentValue إلى targetValue
-        if (goal.targetValue !== null && goal.targetValue !== undefined) {
-            goal.currentValue = goal.targetValue;
+        const urls = getApiUrls();
+        try {
+            const res = await fetch(`${urls.goalAchieve}${urls.goalAchieve.includes('?') ? '&' : '?'}id=${encodeURIComponent(goal.id)}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'fetch',
+                    'Accept': 'application/json',
+                    'RequestVerificationToken': getAntiForgeryToken()
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify(payload)
+            });
+            const body = await res.text();
+            if (!res.ok) throw new Error(`HTTP ${res.status} — ${body}`);
+            showToast('success', '✅ تم تحقق الهدف', goal.text);
+            bnConfetti.fire(1500);
+            closeAchieveModal();
+            await loadTreatmentPlans();
+        } catch (err) {
+            console.error('❌ فشل تحقق الهدف:', err);
+            showToast('error', 'فشل', err.message);
         }
-
-        storage.set('treatmentPlans', treatmentPlansList);
-        renderTreatmentPlans();
-        closeAchieveModal();
-        showToast('success', '✅ تم تحقق الهدف', goal.text);
-        bnConfetti.fire(1500);
     });
 
     document.getElementById('tpAchieveModal').addEventListener('click', (e) => {
@@ -1071,70 +1169,98 @@
     /* ============================================================
        15. Toggle / Confirm / Reject
     ============================================================ */
-    window.toggleGoalAchieved = function (planIndex, problemIndex, goalIndex) {
-        const plan = treatmentPlansList[planIndex];
-        const goal = plan?.problems?.[problemIndex]?.goals?.[goalIndex];
-        if (!goal) return;
+    window.toggleGoalAchieved = async function (goalId) {
+        const found = findGoalById(goalId);
+        if (!found) return;
+        const { goal } = found;
 
         if (goal.status === 'achieved') {
-            goal.status = 'pending';
-            goal.achievedAt = null;
-            goal.achievedBy = null;
-            goal.achievementNote = '';
-            goal.patientConfirmedByDoctor = false;
-            storage.set('treatmentPlans', treatmentPlansList);
-            renderTreatmentPlans();
-            showToast('info', 'تم إلغاء التحقق', `الهدف عاد إلى قيد التنفيذ: ${goal.text}`);
+            const urls = getApiUrls();
+            try {
+                const res = await fetch(`${urls.goalUnachieve}${urls.goalUnachieve.includes('?') ? '&' : '?'}id=${encodeURIComponent(goal.id)}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'fetch',
+                        'Accept': 'application/json',
+                        'RequestVerificationToken': getAntiForgeryToken()
+                    },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({ goalId: goal.id })
+                });
+                const body = await res.text();
+                if (!res.ok) throw new Error(`HTTP ${res.status} — ${body}`);
+                showToast('info', 'تم إلغاء التحقق', `الهدف عاد إلى قيد التنفيذ: ${goal.text}`);
+                await loadTreatmentPlans();
+            } catch (err) {
+                console.error('❌ فشل إلغاء التحقق:', err);
+                showToast('error', 'فشل', err.message);
+            }
         } else {
-            window.openAchieveModal(planIndex, problemIndex, goalIndex);
+            window.openAchieveModal(goal.id);
         }
     };
 
-    window.confirmPatientAchievement = function (planIndex, problemIndex, goalIndex) {
-        const plan = treatmentPlansList[planIndex];
-        const goal = plan?.problems?.[problemIndex]?.goals?.[goalIndex];
-        if (!goal) return;
-
-        goal.patientConfirmedByDoctor = true;
-        goal.confirmedAt = new Date().toISOString();
-
-        if (!goal.progressHistory) goal.progressHistory = [];
-        goal.progressHistory.push({
-            date: new Date().toISOString(),
-            value: 'مؤكد من الطبيب ✅',
-            note: 'تم تأكيد تحقيق المريض'
-        });
-
-        storage.set('treatmentPlans', treatmentPlansList);
-        renderTreatmentPlans();
-        showToast('success', '✅ تم التأكيد', 'تم تأكيد تحقيق المريض للهدف.');
-        bnConfetti.fire(1200);
+    window.confirmPatientAchievement = async function (goalId) {
+        const found = findGoalById(goalId);
+        if (!found) return;
+        const { goal } = found;
+        const urls = getApiUrls();
+        try {
+            const res = await fetch(`${urls.goalAchieve}${urls.goalAchieve.includes('?') ? '&' : '?'}id=${encodeURIComponent(goal.id)}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'fetch',
+                    'Accept': 'application/json',
+                    'RequestVerificationToken': getAntiForgeryToken()
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify({ goalId: goal.id, note: 'تم تأكيد تحقيق المريض من الطبيب' })
+            });
+            const body = await res.text();
+            if (!res.ok) throw new Error(`HTTP ${res.status} — ${body}`);
+            showToast('success', '✅ تم التأكيد', 'تم تأكيد تحقيق المريض للهدف.');
+            bnConfetti.fire(1200);
+            await loadTreatmentPlans();
+        } catch (err) {
+            console.error('❌ فشل التأكيد:', err);
+            showToast('error', 'فشل', err.message);
+        }
     };
 
-    window.rejectPatientAchievement = function (planIndex, problemIndex, goalIndex) {
-        const plan = treatmentPlansList[planIndex];
-        const goal = plan?.problems?.[problemIndex]?.goals?.[goalIndex];
-        if (!goal) return;
+    window.rejectPatientAchievement = function (goalId) {
+        const found = findGoalById(goalId);
+        if (!found) return;
+        const { goal } = found;
 
         showConfirmModal({
             title: 'رفض تحقيق المريض',
             subtitle: 'سيُعاد الهدف إلى قيد التنفيذ',
             message: `هل أنت متأكد من رفض تحقيق المريض للهدف <strong>${escapeHtml(goal.text)}</strong>؟`,
             confirmText: 'نعم، ارفض',
-            onConfirm: () => {
-                goal.status = 'rejected';
-                goal.achievedAt = null;
-                goal.achievedBy = null;
-                goal.patientConfirmedByDoctor = false;
-                if (!goal.progressHistory) goal.progressHistory = [];
-                goal.progressHistory.push({
-                    date: new Date().toISOString(),
-                    value: 'مرفوض من الطبيب ❌',
-                    note: 'لم يتم تأكيد التحقيق'
-                });
-                storage.set('treatmentPlans', treatmentPlansList);
-                renderTreatmentPlans();
-                showToast('warning', 'تم الرفض', 'تم رفض تحقيق المريض، الهدف بحاجة لمزيد من العمل.');
+            onConfirm: async () => {
+                const urls = getApiUrls();
+                try {
+                    const res = await fetch(`${urls.goalUnachieve}${urls.goalUnachieve.includes('?') ? '&' : '?'}id=${encodeURIComponent(goal.id)}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'fetch',
+                            'Accept': 'application/json',
+                            'RequestVerificationToken': getAntiForgeryToken()
+                        },
+                        credentials: 'same-origin',
+                        body: JSON.stringify({ goalId: goal.id })
+                    });
+                    const body = await res.text();
+                    if (!res.ok) throw new Error(`HTTP ${res.status} — ${body}`);
+                    showToast('warning', 'تم الرفض', 'تم رفض تحقيق المريض، الهدف بحاجة لمزيد من العمل.');
+                    await loadTreatmentPlans();
+                } catch (err) {
+                    console.error('❌ فشل الرفض:', err);
+                    showToast('error', 'فشل', err.message);
+                }
             }
         });
     };
@@ -1144,7 +1270,7 @@
     ============================================================ */
     const treatmentPlanForm = document.getElementById('treatmentPlanForm');
     if (treatmentPlanForm) {
-        treatmentPlanForm.addEventListener('submit', function (event) {
+        treatmentPlanForm.addEventListener('submit', async function (event) {
             event.preventDefault();
             const { isValid, errors } = bnValidation.validateForm(this);
             if (!isValid) {
@@ -1153,33 +1279,78 @@
                 showToast('error', 'فشل التحقق', `يوجد ${errors.length} أخطاء في النموذج.`);
                 return;
             }
-            const editIndex = parseInt(document.getElementById('tpEditIndex').value, 10);
-            const name = document.getElementById('tpPlanName').value.trim();
-            const status = document.getElementById('tpPlanStatus').value;
-            const startDate = document.getElementById('tpPlanStartDate').value;
-            const endDate = document.getElementById('tpPlanEndDate').value;
-            const doctor = document.getElementById('tpPlanDoctor').value.trim();
-            const notes = document.getElementById('tpPlanNotes').value.trim();
+            const editId = document.getElementById('tpEditId').value.trim();
+            const isEdit = !!editId;
+            const patientId = getPatientId();
+            const urls = getApiUrls();
 
-            if (editIndex >= 0) {
-                const existing = treatmentPlansList[editIndex];
-                treatmentPlansList[editIndex] = { ...existing, name, status, startDate, endDate, doctor, notes };
-                showToast('success', 'تم التعديل', 'تم تحديث الخطة.');
-            } else {
-                treatmentPlansList.push({ name, status, startDate, endDate, doctor, notes, problems: [] });
-                showToast('success', 'تمت الإضافة', 'تمت إضافة الخطة.');
+            const payload = {
+                name: document.getElementById('tpPlanName').value.trim(),
+                status: document.getElementById('tpPlanStatus').value,
+                startDate: toIsoDateTime(document.getElementById('tpPlanStartDate').value),
+                endDate: toIsoDateTime(document.getElementById('tpPlanEndDate').value),
+                planDoctorName: document.getElementById('tpPlanDoctor').value.trim() || null,
+                notes: document.getElementById('tpPlanNotes').value.trim() || null
+            };
+
+            const submitBtn = document.getElementById('tpSubmitBtn');
+            const originalHtml = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span> جاري الحفظ...';
+
+            try {
+                if (isEdit) {
+                    if (!isValidGuid(editId)) throw new Error(`معرّف الخطة غير صالح: "${editId}"`);
+                    payload.id = editId;
+                    const res = await fetch(`${urls.planUpdate}${urls.planUpdate.includes('?') ? '&' : '?'}id=${encodeURIComponent(editId)}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'fetch',
+                            'Accept': 'application/json',
+                            'RequestVerificationToken': getAntiForgeryToken()
+                        },
+                        credentials: 'same-origin',
+                        body: JSON.stringify(payload)
+                    });
+                    const body = await res.text();
+                    if (!res.ok) throw new Error(`HTTP ${res.status} — ${body}`);
+                    showToast('success', 'تم التعديل', 'تم تحديث الخطة.');
+                } else {
+                    payload.patientId = patientId;
+                    const res = await fetch(urls.planCreate, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'fetch',
+                            'Accept': 'application/json',
+                            'RequestVerificationToken': getAntiForgeryToken()
+                        },
+                        credentials: 'same-origin',
+                        body: JSON.stringify(payload)
+                    });
+                    const body = await res.text();
+                    if (!res.ok) throw new Error(`HTTP ${res.status} — ${body}`);
+                    showToast('success', 'تمت الإضافة', 'تمت إضافة الخطة.');
+                }
+                bnConfetti.fire();
+                resetTreatmentPlanForm();
+                await loadTreatmentPlans();
+            } catch (err) {
+                console.error('❌ فشل حفظ الخطة:', err);
+                showToast('error', 'فشل الحفظ', err.message);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalHtml;
             }
-            storage.set('treatmentPlans', treatmentPlansList);
-            renderTreatmentPlans();
-            resetTreatmentPlanForm();
-            bnConfetti.fire();
         });
     }
 
-    window.editTreatmentPlan = function (index) {
-        const plan = treatmentPlansList[index];
+    window.editTreatmentPlan = function (planId) {
+        const plan = findPlanById(planId);
         if (!plan) return;
-        document.getElementById('tpEditIndex').value = index;
+        document.getElementById('tpEditId').value = plan.id;
+        document.getElementById('tpEditIndex').value = 0;
         document.getElementById('tpPlanName').value = plan.name;
         document.getElementById('tpPlanStatus').value = plan.status;
         document.getElementById('tpPlanStartDate').value = plan.startDate || '';
@@ -1194,20 +1365,35 @@
         showToast('info', 'وضع التعديل', `يمكنك الآن تعديل: ${plan.name}`);
     };
 
-    window.deleteTreatmentPlan = function (index) {
-        if (index < 0 || index >= treatmentPlansList.length) return;
-        const plan = treatmentPlansList[index];
+    window.deleteTreatmentPlan = function (planId) {
+        const plan = findPlanById(planId);
+        if (!plan) return;
         showConfirmModal({
             title: 'تأكيد حذف الخطة',
             subtitle: 'سيتم حذف كل المشاكل والأهداف والوسائل التابعة لها',
             message: `هل أنت متأكد من حذف الخطة <strong>${escapeHtml(plan.name)}</strong>؟`,
             confirmText: 'نعم، احذف الخطة',
-            onConfirm: () => {
-                treatmentPlansList.splice(index, 1);
-                storage.set('treatmentPlans', treatmentPlansList);
-                renderTreatmentPlans();
-                resetTreatmentPlanForm();
-                showToast('success', 'تم الحذف', 'تم حذف الخطة.');
+            onConfirm: async () => {
+                const urls = getApiUrls();
+                try {
+                    const res = await fetch(`${urls.planDelete}${urls.planDelete.includes('?') ? '&' : '?'}id=${encodeURIComponent(plan.id)}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-Requested-With': 'fetch',
+                            'Accept': 'application/json',
+                            'RequestVerificationToken': getAntiForgeryToken()
+                        },
+                        credentials: 'same-origin'
+                    });
+                    const body = await res.text();
+                    if (!res.ok) throw new Error(`HTTP ${res.status} — ${body}`);
+                    showToast('success', 'تم الحذف', 'تم حذف الخطة.');
+                    resetTreatmentPlanForm();
+                    await loadTreatmentPlans();
+                } catch (err) {
+                    console.error('❌ فشل حذف الخطة:', err);
+                    showToast('error', 'فشل', err.message);
+                }
             }
         });
     };
@@ -1217,6 +1403,7 @@
         if (!form) return;
         form.reset();
         document.getElementById('tpEditIndex').value = '-1';
+        document.getElementById('tpEditId').value = '';
         document.getElementById('tpFormTitle').innerHTML = '<i class="fa-solid fa-plus-circle"></i> إضافة خطة علاجية جديدة';
         document.getElementById('tpSubmitBtn').innerHTML = '<i class="fa-solid fa-plus ms-1"></i> إضافة الخطة';
         document.getElementById('tpCancelBtn').classList.add('d-none');
@@ -1228,50 +1415,100 @@
     /* ============================================================
        17. Problems CRUD
     ============================================================ */
-    window.addTpProblem = function (planIndex) {
-        const plan = treatmentPlansList[planIndex];
+    window.addTpProblem = async function (planId) {
+        const plan = findPlanById(planId);
         if (!plan) return;
-        const input = document.getElementById(`tpProblemInput_${planIndex}`);
+        const input = document.getElementById(`tpProblemInput_${plan.id}`);
         const text = input ? input.value.trim() : '';
         if (!text) { showToast('warning', 'حقل فارغ', 'يرجى كتابة نص المشكلة.'); return; }
-        plan.problems.push({ text, goals: [] });
-        storage.set('treatmentPlans', treatmentPlansList);
-        renderTreatmentPlans();
-        showToast('success', 'تمت الإضافة', 'تمت إضافة المشكلة.');
+        const urls = getApiUrls();
+        try {
+            const res = await fetch(urls.problemCreate, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'fetch',
+                    'Accept': 'application/json',
+                    'RequestVerificationToken': getAntiForgeryToken()
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify({ treatmentPlanId: plan.id, text })
+            });
+            const body = await res.text();
+            if (!res.ok) throw new Error(`HTTP ${res.status} — ${body}`);
+            showToast('success', 'تمت الإضافة', 'تمت إضافة المشكلة.');
+            await loadTreatmentPlans();
+        } catch (err) {
+            console.error('❌ فشل إضافة المشكلة:', err);
+            showToast('error', 'فشل', err.message);
+        }
     };
 
-    window.editTpProblem = function (planIndex, problemIndex) {
-        const plan = treatmentPlansList[planIndex];
-        if (!plan || !plan.problems[problemIndex]) return;
+    window.editTpProblem = function (problemId) {
+        const found = findProblemById(problemId);
+        if (!found) return;
+        const { problem } = found;
         showEditModal({
             title: 'تعديل المشكلة',
             subtitle: 'قم بتعديل نص المشكلة ثم اضغط حفظ',
             label: 'نص المشكلة',
-            value: plan.problems[problemIndex].text,
+            value: problem.text,
             placeholder: 'اكتب نص المشكلة...',
-            onSave: (newValue) => {
-                plan.problems[problemIndex].text = newValue;
-                storage.set('treatmentPlans', treatmentPlansList);
-                renderTreatmentPlans();
-                showToast('success', 'تم التعديل', 'تم تعديل المشكلة.');
+            onSave: async (newValue) => {
+                const urls = getApiUrls();
+                try {
+                    const res = await fetch(`${urls.problemUpdate}${urls.problemUpdate.includes('?') ? '&' : '?'}id=${encodeURIComponent(problem.id)}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'fetch',
+                            'Accept': 'application/json',
+                            'RequestVerificationToken': getAntiForgeryToken()
+                        },
+                        credentials: 'same-origin',
+                        body: JSON.stringify({ id: problem.id, text: newValue })
+                    });
+                    const body = await res.text();
+                    if (!res.ok) throw new Error(`HTTP ${res.status} — ${body}`);
+                    showToast('success', 'تم التعديل', 'تم تعديل المشكلة.');
+                    await loadTreatmentPlans();
+                } catch (err) {
+                    console.error('❌ فشل تعديل المشكلة:', err);
+                    showToast('error', 'فشل', err.message);
+                }
             }
         });
     };
 
-    window.deleteTpProblem = function (planIndex, problemIndex) {
-        const plan = treatmentPlansList[planIndex];
-        if (!plan || !plan.problems[problemIndex]) return;
-        const problem = plan.problems[problemIndex];
+    window.deleteTpProblem = function (problemId) {
+        const found = findProblemById(problemId);
+        if (!found) return;
+        const { problem } = found;
         showConfirmModal({
             title: 'تأكيد حذف المشكلة',
             subtitle: 'سيتم حذف كل الأهداف والوسائل التابعة لها',
             message: `هل أنت متأكد من حذف المشكلة <strong>${escapeHtml(problem.text)}</strong>؟`,
             confirmText: 'نعم، احذف المشكلة',
-            onConfirm: () => {
-                plan.problems.splice(problemIndex, 1);
-                storage.set('treatmentPlans', treatmentPlansList);
-                renderTreatmentPlans();
-                showToast('success', 'تم الحذف', 'تم حذف المشكلة.');
+            onConfirm: async () => {
+                const urls = getApiUrls();
+                try {
+                    const res = await fetch(`${urls.problemDelete}${urls.problemDelete.includes('?') ? '&' : '?'}id=${encodeURIComponent(problem.id)}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-Requested-With': 'fetch',
+                            'Accept': 'application/json',
+                            'RequestVerificationToken': getAntiForgeryToken()
+                        },
+                        credentials: 'same-origin'
+                    });
+                    const body = await res.text();
+                    if (!res.ok) throw new Error(`HTTP ${res.status} — ${body}`);
+                    showToast('success', 'تم الحذف', 'تم حذف المشكلة.');
+                    await loadTreatmentPlans();
+                } catch (err) {
+                    console.error('❌ فشل حذف المشكلة:', err);
+                    showToast('error', 'فشل', err.message);
+                }
             }
         });
     };
@@ -1279,61 +1516,107 @@
     /* ============================================================
        18. Goals CRUD
     ============================================================ */
-    window.addTpGoal = function (planIndex, problemIndex) {
-        const plan = treatmentPlansList[planIndex];
-        if (!plan || !plan.problems[problemIndex]) return;
-        const input = document.getElementById(`tpGoalInput_${planIndex}_${problemIndex}`);
+    window.addTpGoal = async function (problemId) {
+        const found = findProblemById(problemId);
+        if (!found) return;
+        const { problem } = found;
+        const input = document.getElementById(`tpGoalInput_${problem.id}`);
         const text = input ? input.value.trim() : '';
         if (!text) { showToast('warning', 'حقل فارغ', 'يرجى كتابة نص الهدف.'); return; }
-        plan.problems[problemIndex].goals.push({
-            text,
-            unit: '',
-            baseline: null,
-            targetValue: null,
-            currentValue: null,
-            status: 'pending',
-            progressHistory: [],
-            means: []
-        });
-        storage.set('treatmentPlans', treatmentPlansList);
-        renderTreatmentPlans();
-        showToast('success', 'تمت الإضافة', 'تمت إضافة الهدف. يمكنك إعداد القياس من زر ⚙️');
+        const urls = getApiUrls();
+        try {
+            const res = await fetch(urls.goalCreate, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'fetch',
+                    'Accept': 'application/json',
+                    'RequestVerificationToken': getAntiForgeryToken()
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify({ treatmentProblemId: problem.id, text })
+            });
+            const body = await res.text();
+            if (!res.ok) throw new Error(`HTTP ${res.status} — ${body}`);
+            showToast('success', 'تمت الإضافة', 'تمت إضافة الهدف. يمكنك إعداد القياس من زر ⚙️');
+            await loadTreatmentPlans();
+        } catch (err) {
+            console.error('❌ فشل إضافة الهدف:', err);
+            showToast('error', 'فشل', err.message);
+        }
     };
 
-    window.editTpGoal = function (planIndex, problemIndex, goalIndex) {
-        const plan = treatmentPlansList[planIndex];
-        const goal = plan?.problems?.[problemIndex]?.goals?.[goalIndex];
-        if (!goal) return;
+    window.editTpGoal = function (goalId) {
+        const found = findGoalById(goalId);
+        if (!found) return;
+        const { goal } = found;
         showEditModal({
             title: 'تعديل نص الهدف',
             subtitle: 'قم بتعديل نص الهدف فقط. للقياس استخدم زر ⚙️',
             label: 'نص الهدف',
             value: goal.text,
             placeholder: 'اكتب نص الهدف...',
-            onSave: (newValue) => {
-                goal.text = newValue;
-                storage.set('treatmentPlans', treatmentPlansList);
-                renderTreatmentPlans();
-                showToast('success', 'تم التعديل', 'تم تعديل الهدف.');
+            onSave: async (newValue) => {
+                const urls = getApiUrls();
+                try {
+                    const res = await fetch(`${urls.goalUpdate}${urls.goalUpdate.includes('?') ? '&' : '?'}id=${encodeURIComponent(goal.id)}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'fetch',
+                            'Accept': 'application/json',
+                            'RequestVerificationToken': getAntiForgeryToken()
+                        },
+                        credentials: 'same-origin',
+                        body: JSON.stringify({
+                            id: goal.id,
+                            text: newValue,
+                            unit: goal.unit || null,
+                            baseline: goal.baseline,
+                            targetValue: goal.targetValue
+                        })
+                    });
+                    const body = await res.text();
+                    if (!res.ok) throw new Error(`HTTP ${res.status} — ${body}`);
+                    showToast('success', 'تم التعديل', 'تم تعديل الهدف.');
+                    await loadTreatmentPlans();
+                } catch (err) {
+                    console.error('❌ فشل تعديل الهدف:', err);
+                    showToast('error', 'فشل', err.message);
+                }
             }
         });
     };
 
-    window.deleteTpGoal = function (planIndex, problemIndex, goalIndex) {
-        const plan = treatmentPlansList[planIndex];
-        const goals = plan?.problems?.[problemIndex]?.goals;
-        if (!goals || !goals[goalIndex]) return;
-        const goal = goals[goalIndex];
+    window.deleteTpGoal = function (goalId) {
+        const found = findGoalById(goalId);
+        if (!found) return;
+        const { goal } = found;
         showConfirmModal({
             title: 'تأكيد حذف الهدف',
             subtitle: 'سيتم حذف كل الوسائل التابعة لهذا الهدف',
             message: `هل أنت متأكد من حذف الهدف <strong>${escapeHtml(goal.text)}</strong>؟`,
             confirmText: 'نعم، احذف الهدف',
-            onConfirm: () => {
-                goals.splice(goalIndex, 1);
-                storage.set('treatmentPlans', treatmentPlansList);
-                renderTreatmentPlans();
-                showToast('success', 'تم الحذف', 'تم حذف الهدف.');
+            onConfirm: async () => {
+                const urls = getApiUrls();
+                try {
+                    const res = await fetch(`${urls.goalDelete}${urls.goalDelete.includes('?') ? '&' : '?'}id=${encodeURIComponent(goal.id)}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-Requested-With': 'fetch',
+                            'Accept': 'application/json',
+                            'RequestVerificationToken': getAntiForgeryToken()
+                        },
+                        credentials: 'same-origin'
+                    });
+                    const body = await res.text();
+                    if (!res.ok) throw new Error(`HTTP ${res.status} — ${body}`);
+                    showToast('success', 'تم الحذف', 'تم حذف الهدف.');
+                    await loadTreatmentPlans();
+                } catch (err) {
+                    console.error('❌ فشل حذف الهدف:', err);
+                    showToast('error', 'فشل', err.message);
+                }
             }
         });
     };
@@ -1341,53 +1624,101 @@
     /* ============================================================
        19. Means CRUD
     ============================================================ */
-    window.addTpMean = function (planIndex, problemIndex, goalIndex) {
-        const plan = treatmentPlansList[planIndex];
-        const goal = plan?.problems?.[problemIndex]?.goals?.[goalIndex];
-        if (!goal) return;
-        const input = document.getElementById(`tpMeanInput_${planIndex}_${problemIndex}_${goalIndex}`);
+    window.addTpMean = async function (goalId) {
+        const found = findGoalById(goalId);
+        if (!found) return;
+        const { goal } = found;
+        const input = document.getElementById(`tpMeanInput_${goal.id}`);
         const text = input ? input.value.trim() : '';
         if (!text) { showToast('warning', 'حقل فارغ', 'يرجى كتابة نص الوسيلة.'); return; }
-        goal.means.push({ text });
-        storage.set('treatmentPlans', treatmentPlansList);
-        renderTreatmentPlans();
-        showToast('success', 'تمت الإضافة', 'تمت إضافة الوسيلة.');
+        const urls = getApiUrls();
+        try {
+            const res = await fetch(urls.meanCreate, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'fetch',
+                    'Accept': 'application/json',
+                    'RequestVerificationToken': getAntiForgeryToken()
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify({ treatmentGoalId: goal.id, text })
+            });
+            const body = await res.text();
+            if (!res.ok) throw new Error(`HTTP ${res.status} — ${body}`);
+            showToast('success', 'تمت الإضافة', 'تمت إضافة الوسيلة.');
+            await loadTreatmentPlans();
+        } catch (err) {
+            console.error('❌ فشل إضافة الوسيلة:', err);
+            showToast('error', 'فشل', err.message);
+        }
     };
 
-    window.editTpMean = function (planIndex, problemIndex, goalIndex, meanIndex) {
-        const plan = treatmentPlansList[planIndex];
-        const mean = plan?.problems?.[problemIndex]?.goals?.[goalIndex]?.means?.[meanIndex];
-        if (!mean) return;
+    window.editTpMean = function (meanId) {
+        const found = findMeanById(meanId);
+        if (!found) return;
+        const { mean } = found;
         showEditModal({
             title: 'تعديل الوسيلة',
             subtitle: 'قم بتعديل نص الوسيلة',
             label: 'نص الوسيلة',
             value: mean.text,
             placeholder: 'اكتب نص الوسيلة...',
-            onSave: (newValue) => {
-                mean.text = newValue;
-                storage.set('treatmentPlans', treatmentPlansList);
-                renderTreatmentPlans();
-                showToast('success', 'تم التعديل', 'تم تعديل الوسيلة.');
+            onSave: async (newValue) => {
+                const urls = getApiUrls();
+                try {
+                    const res = await fetch(`${urls.meanUpdate}${urls.meanUpdate.includes('?') ? '&' : '?'}id=${encodeURIComponent(mean.id)}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'fetch',
+                            'Accept': 'application/json',
+                            'RequestVerificationToken': getAntiForgeryToken()
+                        },
+                        credentials: 'same-origin',
+                        body: JSON.stringify({ id: mean.id, text: newValue })
+                    });
+                    const body = await res.text();
+                    if (!res.ok) throw new Error(`HTTP ${res.status} — ${body}`);
+                    showToast('success', 'تم التعديل', 'تم تعديل الوسيلة.');
+                    await loadTreatmentPlans();
+                } catch (err) {
+                    console.error('❌ فشل تعديل الوسيلة:', err);
+                    showToast('error', 'فشل', err.message);
+                }
             }
         });
     };
 
-    window.deleteTpMean = function (planIndex, problemIndex, goalIndex, meanIndex) {
-        const plan = treatmentPlansList[planIndex];
-        const means = plan?.problems?.[problemIndex]?.goals?.[goalIndex]?.means;
-        if (!means || !means[meanIndex]) return;
-        const mean = means[meanIndex];
+    window.deleteTpMean = function (meanId) {
+        const found = findMeanById(meanId);
+        if (!found) return;
+        const { mean } = found;
         showConfirmModal({
             title: 'تأكيد حذف الوسيلة',
             subtitle: 'لن تتمكن من استرجاع الوسيلة',
             message: `هل أنت متأكد من حذف الوسيلة <strong>${escapeHtml(mean.text)}</strong>؟`,
             confirmText: 'نعم، احذف الوسيلة',
-            onConfirm: () => {
-                means.splice(meanIndex, 1);
-                storage.set('treatmentPlans', treatmentPlansList);
-                renderTreatmentPlans();
-                showToast('success', 'تم الحذف', 'تم حذف الوسيلة.');
+            onConfirm: async () => {
+                const urls = getApiUrls();
+                try {
+                    const res = await fetch(`${urls.meanDelete}${urls.meanDelete.includes('?') ? '&' : '?'}id=${encodeURIComponent(mean.id)}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-Requested-With': 'fetch',
+                            'Accept': 'application/json',
+                            'RequestVerificationToken': getAntiForgeryToken()
+                        },
+                        credentials: 'same-origin'
+                    });
+                    const body = await res.text();
+                    if (!res.ok) throw new Error(`HTTP ${res.status} — ${body}`);
+                    showToast('success', 'تم الحذف', 'تم حذف الوسيلة.');
+                    await loadTreatmentPlans();
+                } catch (err) {
+                    console.error('❌ فشل حذف الوسيلة:', err);
+                    showToast('error', 'فشل', err.message);
+                }
             }
         });
     };
@@ -1396,17 +1727,14 @@
        20. Init
     ============================================================ */
     function doInit() {
-        renderTreatmentPlans();
         bnValidation.attachToForm(document.getElementById('treatmentPlanForm'));
         attachDateListeners();
-
         const filterEl = document.getElementById('tpFilterStatus');
         if (filterEl) filterEl.addEventListener('change', renderTreatmentPlans);
-
+        loadTreatmentPlans();
         setTimeout(() => {
             showToast('info', 'الخطط العلاجية', 'يمكنك إعداد القياس لكل هدف (⚙️) ثم تحديث التقدم (📊) وتأكيد التحقق.', 5000);
         }, 1000);
-
         console.log('%c✅ Treatment Plans Tab Loaded',
             'background:#0891b2;color:#fff;padding:8px 20px;border-radius:8px;font-weight:bold;font-size:14px;');
     }

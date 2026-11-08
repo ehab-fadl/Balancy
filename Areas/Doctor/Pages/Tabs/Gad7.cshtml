@@ -42,7 +42,16 @@
          Questions Card
     ============================================================ -->
     <section class="questions-card">
-        <form id="gadForm" data-autosave="gad7Draft" novalidate>
+        <form id="gadForm"
+              data-autosave="gad7Draft"
+              data-patient-id="@Model.PatientId"
+              data-api-latest-url="/Doctor?handler=LatestGad7"
+              data-api-create-url="/Doctor?handler=CreateGad7"
+              novalidate>
+
+            @Html.AntiForgeryToken()
+
+            <input type="hidden" id="patientId" name="patientId" value="@Model.PatientId">
 
             <div id="questionsContainer"></div>
 

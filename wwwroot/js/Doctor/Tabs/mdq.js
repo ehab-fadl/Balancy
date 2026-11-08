@@ -1,13 +1,44 @@
 ﻿/* ============================================================
-   MDQ Bipolar Disorder Test Tab — Standalone Script
-   يعمل مستقلاً AND يتكامل مع bnApp إذا وُجد
+   MDQ Bipolar Disorder Test Tab — API-driven
+   - GET: يجلب آخر تقييم MDQ للمريض عند فتح الصفحة
+   - POST: كل حفظ = سجل جديد (assessment جديد في DB)
+   - Severity: positive / negative (مطابق للـ entity)
 ============================================================ */
 
 (function initMdq() {
     console.log('🚀 MDQ.js initialized');
 
     /* ============================================================
-       1. Storage Layer (fallback)
+       0. Utilities
+    ============================================================ */
+    function escapeHtml(value) {
+        const div = document.createElement('div');
+        div.textContent = value ?? '';
+        return div.innerHTML;
+    }
+
+    function getAntiForgeryToken() {
+        return document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+    }
+
+    function getPatientId() {
+        const form = document.getElementById('mdqForm');
+        return form?.dataset?.patientId?.trim()
+            || document.getElementById('patientId')?.value?.trim()
+            || sessionStorage.getItem('bnCurrentPatientId')?.trim()
+            || '';
+    }
+
+    function getApiUrls() {
+        const form = document.getElementById('mdqForm');
+        return {
+            latest: form?.dataset?.apiLatestUrl || '/Doctor?handler=LatestMdq',
+            create: form?.dataset?.apiCreateUrl || '/Doctor?handler=CreateMdq'
+        };
+    }
+
+    /* ============================================================
+       1. Storage Layer
     ============================================================ */
     const storage = (window.bnApp && window.bnApp.bnStorage) ? window.bnApp.bnStorage : {
         prefix: 'balancy_',
@@ -40,16 +71,7 @@
     };
 
     /* ============================================================
-       2. Utilities — escapeHtml (مبكّر)
-    ============================================================ */
-    function escapeHtml(value) {
-        const div = document.createElement('div');
-        div.textContent = value ?? '';
-        return div.innerHTML;
-    }
-
-    /* ============================================================
-       3. Toast — نظام مدمج مضمون العمل
+       2. Toast
     ============================================================ */
     function ensureToastStyles() {
         if (document.getElementById('bn-mdq-toast-styles')) return;
@@ -57,85 +79,49 @@
         style.id = 'bn-mdq-toast-styles';
         style.textContent = `
             .bn-mdq-toast-overlay {
-                position: fixed !important;
-                top: 0 !important;
-                left: 0 !important;
-                right: 0 !important;
-                bottom: 0 !important;
-                display: none;
-                align-items: center;
-                justify-content: center;
-                z-index: 2147483647 !important;
-                pointer-events: none;
-                padding: 1rem;
-                margin: 0 !important;
+                position: fixed !important; inset: 0 !important;
+                display: none; align-items: center; justify-content: center;
+                z-index: 2147483647 !important; pointer-events: none; padding: 1rem; margin: 0 !important;
             }
             .bn-mdq-toast-overlay.show { display: flex !important; }
             .bn-mdq-toast {
-                min-width: 300px;
-                max-width: 92vw;
-                padding: 1.1rem 1.4rem;
-                border-radius: 16px;
-                display: flex;
-                align-items: center;
-                gap: 0.85rem;
-                font-family: 'Tajawal', 'Segoe UI', Tahoma, sans-serif;
-                font-weight: 800;
-                font-size: 0.95rem;
-                color: #fff;
+                min-width: 300px; max-width: 92vw;
+                padding: 1.1rem 1.4rem; border-radius: 16px;
+                display: flex; align-items: center; gap: 0.85rem;
+                font-family: 'Tajawal', sans-serif; font-weight: 800;
+                font-size: 0.95rem; color: #fff;
                 box-shadow: 0 20px 50px -12px rgba(15, 23, 42, 0.55);
                 animation: bnMdqToastIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-                pointer-events: auto;
-                direction: rtl;
-                line-height: 1.5;
-                position: relative;
+                pointer-events: auto; direction: rtl; line-height: 1.5; position: relative;
             }
             .bn-mdq-toast.hide { animation: bnMdqToastOut 0.3s ease forwards; }
             .bn-mdq-toast-icon {
-                width: 38px;
-                height: 38px;
-                min-width: 38px;
-                border-radius: 50%;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                background: rgba(255, 255, 255, 0.22);
-                font-size: 1.05rem;
+                width: 38px; height: 38px; min-width: 38px;
+                border-radius: 50%; display: flex;
+                align-items: center; justify-content: center;
+                background: rgba(255, 255, 255, 0.22); font-size: 1.05rem;
             }
-            .bn-mdq-toast-body {
-                display: flex;
-                flex-direction: column;
-                gap: 0.15rem;
-                text-align: right;
-            }
+            .bn-mdq-toast-body { display: flex; flex-direction: column; gap: 0.15rem; text-align: right; }
             .bn-mdq-toast-title { font-size: 0.95rem; font-weight: 900; }
             .bn-mdq-toast-message { font-size: 0.8rem; font-weight: 600; opacity: 0.95; }
             .bn-mdq-toast.error { background: linear-gradient(135deg, #ef4444, #b91c1c); }
             .bn-mdq-toast.success { background: linear-gradient(135deg, #10b981, #047857); }
             .bn-mdq-toast.warning { background: linear-gradient(135deg, #f59e0b, #b45309); }
             .bn-mdq-toast.info { background: linear-gradient(135deg, #d97706, #b45309); }
-            @keyframes bnMdqToastIn {
-                from { opacity: 0; transform: translateY(20px) scale(0.92); }
-                to { opacity: 1; transform: translateY(0) scale(1); }
-            }
-            @keyframes bnMdqToastOut {
-                from { opacity: 1; transform: translateY(0) scale(1); }
-                to { opacity: 0; transform: translateY(-20px) scale(0.92); }
-            }
+            @keyframes bnMdqToastIn { from { opacity: 0; transform: translateY(20px) scale(0.92); } to { opacity: 1; transform: translateY(0) scale(1); } }
+            @keyframes bnMdqToastOut { from { opacity: 1; transform: translateY(0) scale(1); } to { opacity: 0; transform: translateY(-20px) scale(0.92); } }
         `;
         document.head.appendChild(style);
     }
 
     function showBuiltInToast(type, title, message, duration = 3200) {
         ensureToastStyles();
-
         if (!document.body) {
             document.addEventListener('DOMContentLoaded',
                 () => showBuiltInToast(type, title, message, duration),
                 { once: true });
             return;
         }
-
         let overlay = document.getElementById('bnMdqToastOverlay');
         if (!overlay) {
             overlay = document.createElement('div');
@@ -144,7 +130,6 @@
             document.body.appendChild(overlay);
         }
         overlay.innerHTML = '';
-
         const iconMap = {
             error: 'fa-circle-exclamation',
             success: 'fa-circle-check',
@@ -173,18 +158,14 @@
         }, duration);
     }
 
-    /**
-     * showToast — يستخدم النظام المدمج مباشرة (مضمون)
-     */
     const showToast = showBuiltInToast;
 
     /* ============================================================
-       4. Confetti
+       3. Confetti
     ============================================================ */
     const bnConfetti = {
         el: null,
         colors: ['#d97706', '#f59e0b', '#fbbf24', '#10b981', '#6366f1', '#ec4899', '#8b5cf6'],
-
         ensureEl() {
             if (this.el && document.body.contains(this.el)) return this.el;
             let existing = document.getElementById('bnConfetti');
@@ -197,16 +178,12 @@
             this.el = existing;
             return existing;
         },
-
         fire(duration = 2000) {
             const el = this.ensureEl();
             if (!el) return;
             el.innerHTML = '';
             el.classList.add('active');
-
-            const pieceCount = 60;
-
-            for (let i = 0; i < pieceCount; i++) {
+            for (let i = 0; i < 60; i++) {
                 const piece = document.createElement('div');
                 piece.className = 'confetti-piece';
                 piece.style.left = Math.random() * 100 + '%';
@@ -216,7 +193,6 @@
                 piece.style.transform = `rotate(${Math.random() * 360}deg)`;
                 el.appendChild(piece);
             }
-
             setTimeout(() => {
                 el.classList.remove('active');
                 el.innerHTML = '';
@@ -225,7 +201,7 @@
     };
 
     /* ============================================================
-       5. MDQ Data
+       4. MDQ Data
     ============================================================ */
     const mdqQuestions = [
         'شعرت بحالة من المرح أو النشاط الزائد لدرجة أن الآخرين لاحظوا؟',
@@ -251,7 +227,7 @@
     let currentMdqResult = null;
 
     /* ============================================================
-       6. Render Questions
+       5. Render Questions
     ============================================================ */
     function renderMdqQuestions() {
         const container = document.getElementById('mdqQuestionsContainer');
@@ -302,7 +278,7 @@
     }
 
     /* ============================================================
-       7. Score Calculation
+       6. Score Calculation
     ============================================================ */
     function calculateMdqScore(forceDisplay = true) {
         let totalScore = 0, answeredQuestions = 0;
@@ -328,8 +304,8 @@
         const severity = getMdqSeverity(totalScore);
         currentMdqResult = {
             totalScore,
-            severity: severity.name,
-            severityKey: severity.key,
+            severity: severity.name,           // عرض بالعربي
+            severityKey: severity.key,         // positive / negative
             description: severity.description,
             answers,
             testType: 'MDQ',
@@ -342,12 +318,12 @@
 
     function getMdqSeverity(score) {
         if (score < 7) return {
-            key: 'minimal',
+            key: 'negative',
             name: 'احتمالية منخفضة',
             description: 'لا توجد مؤشرات قوية لاضطراب ثنائي القطب.'
         };
         return {
-            key: 'severe',
+            key: 'positive',
             name: 'احتمالية إيجابية مرتفعة',
             description: 'مؤشرات إيجابية تستدعي التقييم الإكلينيكي المفصل.'
         };
@@ -365,8 +341,8 @@
         badge.className = 'severity-badge';
 
         switch (result.severityKey) {
-            case 'minimal': badge.classList.add('severity-minimal'); break;
-            case 'severe': badge.classList.add('severity-severe'); break;
+            case 'negative': badge.classList.add('severity-minimal'); break;
+            case 'positive': badge.classList.add('severity-severe'); break;
         }
 
         const percentage = Math.round((result.totalScore / 13) * 100);
@@ -388,7 +364,7 @@
     }
 
     /* ============================================================
-       8. Draft Auto-Save
+       7. Draft Auto-Save
     ============================================================ */
     function saveMdqDraft() {
         const draft = {};
@@ -419,35 +395,149 @@
     }
 
     /* ============================================================
-       9. Mock Save
+       8. Apply server assessment to UI
     ============================================================ */
-    async function mockSaveResult(result) {
-        console.log('Saving MDQ Result:', result);
-        return new Promise(resolve => setTimeout(() => resolve({ success: true }), 800));
+    function applyAssessmentToUI(assessment) {
+        if (!assessment) return;
+
+        const totalScore = typeof assessment.totalScore === 'number' ? assessment.totalScore
+            : typeof assessment.TotalScore === 'number' ? assessment.TotalScore : 0;
+        const severityRaw = assessment.severity ?? assessment.Severity ?? '';
+        const answersJson = assessment.answersJson ?? assessment.AnswersJson ?? '';
+
+        const severityKey = mapSeverityNameToKey(severityRaw);
+        const severityInfo = getMdqSeverity(totalScore);
+
+        const result = {
+            totalScore,
+            severity: severityInfo.name,
+            severityKey,
+            description: severityInfo.description,
+            answers: [],
+            testType: 'MDQ',
+            completedAt: assessment.createdAt ?? assessment.CreatedAt ?? new Date().toISOString(),
+            fromServer: true
+        };
+
+        if (answersJson) {
+            try {
+                const parsed = typeof answersJson === 'string' ? JSON.parse(answersJson) : answersJson;
+                const answersArray = Array.isArray(parsed) ? parsed : (parsed.answers || []);
+                answersArray.forEach(a => {
+                    const idx = (a.questionNumber ?? a.QuestionNumber ?? 0) - 1;
+                    const score = a.score ?? a.Score ?? 0;
+                    if (idx >= 0 && idx < 13) {
+                        const input = document.querySelector(`input[name="mdq_question_${idx}"][value="${score}"]`);
+                        if (input) {
+                            input.checked = true;
+                            input.closest('.question-item')?.classList.add('answered');
+                        }
+                    }
+                });
+                result.answers = answersArray;
+                updateMdqAnswersStatus();
+            } catch (e) {
+                console.warn('⚠️ فشل قراءة AnswersJson:', e);
+            }
+        }
+
+        currentMdqResult = result;
+        displayMdqResult(result);
+    }
+
+    function mapSeverityNameToKey(severity) {
+        if (!severity) return 'negative';
+        const s = String(severity).trim().toLowerCase();
+        if (s === 'positive' || s.includes('إيجابية') || s.includes('مرتفعة')) return 'positive';
+        return 'negative';
     }
 
     /* ============================================================
-       10. Init + Submit Handler
+       9. Load latest assessment from API
+    ============================================================ */
+    async function loadLatestAssessment() {
+        const patientId = getPatientId();
+        if (!patientId) {
+            console.warn('⚠️ No patientId — cannot load latest MDQ');
+            return;
+        }
+
+        const urls = getApiUrls();
+        const url = `${urls.latest}${urls.latest.includes('?') ? '&' : '?'}patientId=${encodeURIComponent(patientId)}`;
+
+        try {
+            const res = await fetch(url, {
+                headers: { 'X-Requested-With': 'fetch', 'Accept': 'application/json' },
+                credentials: 'same-origin'
+            });
+
+            if (res.status === 404) {
+                console.log('ℹ️ No previous MDQ assessment for this patient.');
+                return;
+            }
+
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+            const payload = await res.json();
+            console.log('✅ Loaded latest MDQ:', payload);
+
+            const assessment = (payload && payload.data && !Array.isArray(payload.data)) ? payload.data
+                : Array.isArray(payload) ? payload[0] : payload;
+
+            applyAssessmentToUI(assessment);
+        } catch (err) {
+            console.error('❌ فشل تحميل آخر تقييم MDQ:', err);
+            showToast('error', 'فشل التحميل', 'تعذر تحميل آخر تقييم MDQ.');
+        }
+    }
+
+    /* ============================================================
+       10. Build POST payload (يطابق الـ entity)
+    ============================================================ */
+    function buildCreatePayload(result) {
+        const patientId = getPatientId();
+        // ✅ الباك إند يتوقع: positive / negative
+        return {
+            patientId: patientId,
+            totalScore: result.totalScore,
+            severity: result.severityKey,
+            answersJson: JSON.stringify(result.answers || [])
+        };
+    }
+
+    async function createAssessment(payload) {
+        const urls = getApiUrls();
+        const res = await fetch(urls.create, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'fetch',
+                'Accept': 'application/json',
+                'RequestVerificationToken': getAntiForgeryToken()
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify(payload)
+        });
+        const text = await res.text();
+        if (!res.ok) throw new Error(`HTTP ${res.status} — ${text}`);
+        return text ? JSON.parse(text) : null;
+    }
+
+    /* ============================================================
+       11. Init + Submit Handler
     ============================================================ */
     function doInit() {
         renderMdqQuestions();
         restoreMdqDraft();
         updateMdqAnswersStatus();
 
-        // زر الحساب
+        loadLatestAssessment();
+
         const calcBtn = document.getElementById('mdqCalculateButton');
         if (calcBtn) {
             calcBtn.addEventListener('click', () => calculateMdqScore(true));
         }
 
-        // إذا كان هناك نتيجة محفوظة سابقة، عرضها
-        const savedResult = storage.get('mdqResult');
-        if (savedResult && savedResult.totalScore !== undefined) {
-            currentMdqResult = savedResult;
-            displayMdqResult(savedResult);
-        }
-
-        // Submit handler
         const form = document.getElementById('mdqForm');
         if (form) {
             form.addEventListener('submit', async function (event) {
@@ -455,6 +545,15 @@
 
                 const result = calculateMdqScore(true);
                 if (!result) return;
+
+                const patientId = getPatientId();
+                if (!patientId) {
+                    showToast('error', 'خطأ', 'معرّف المريض مفقود.');
+                    return;
+                }
+
+                const payload = buildCreatePayload(result);
+                console.log('📤 POST MDQ payload:', payload);
 
                 const saveButton = document.getElementById('saveMdqButton');
                 const saveButtonText = document.getElementById('saveMdqButtonText');
@@ -465,22 +564,15 @@
                 saveSpinner.classList.remove('d-none');
 
                 try {
-                    await mockSaveResult(result);
+                    await createAssessment(payload);
 
-                    storage.set('mdqResult', result);
                     storage.remove('draft_mdqDraft');
-                    storage.set('mdqDraft', {
-                        data: result.answers.reduce((acc, a) => {
-                            acc[`mdq_question_${a.questionNumber - 1}`] = String(a.score);
-                            return acc;
-                        }, {}),
-                        savedAt: new Date().toISOString()
-                    });
-
                     bnConfetti.fire();
-                    showToast('success', 'تم الحفظ بنجاح', `تم حفظ نتيجة اختبار MDQ. النتيجة: ${result.totalScore} من 13.`);
-                } catch (error) {
-                    showToast('error', 'فشل الحفظ', 'حدث خطأ أثناء حفظ نتيجة الاختبار.');
+                    showToast('success', 'تم الحفظ بنجاح',
+                        `تم حفظ تقييم MDQ جديد. النتيجة: ${result.totalScore} من 13.`);
+                } catch (err) {
+                    console.error('❌ فشل حفظ التقييم:', err);
+                    showToast('error', 'فشل الحفظ', err.message || 'حدث خطأ أثناء حفظ التقييم.');
                 } finally {
                     saveButton.disabled = false;
                     saveSpinner.classList.add('d-none');
@@ -489,9 +581,8 @@
             });
         }
 
-        // ✅ إشعار ترحيبي
         setTimeout(() => {
-            showToast('info', 'اختبار MDQ', 'أجب على الأسئلة الـ 13 لتقييم احتمالية اضطراب ثنائي القطب. يتم الحفظ التلقائي لكل إجابة.', 5000);
+            showToast('info', 'اختبار MDQ', 'أجب على الأسئلة الـ 13 لتقييم احتمالية اضطراب ثنائي القطب. كل حفظ = سجل جديد في قاعدة البيانات.', 5000);
         }, 1000);
 
         console.log('%c✅ MDQ Tab Loaded',

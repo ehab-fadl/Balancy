@@ -6,8 +6,6 @@
 
 <link rel="stylesheet" href="~/css/doctor/tabs/medications.css" />
 
-
-
 <div class="medications-container">
 
     <section class="medications-card">
@@ -43,8 +41,19 @@
                     إضافة دواء موصوف جديد
                 </h3>
 
-                <form id="medicationForm" novalidate>
+                <form id="medicationForm"
+                      novalidate
+                      data-patient-id="@Model.PatientId"
+                      data-api-list-url="/Doctor?handler=Medications"
+                      data-api-create-url="/Doctor?handler=CreateMedication"
+                      data-api-update-url="/Doctor?handler=UpdateMedication"
+                      data-api-delete-url="/Doctor?handler=Medication">
+
+                    @Html.AntiForgeryToken()
+
                     <input type="hidden" id="medicationEditIndex" value="-1">
+                    <input type="hidden" id="medicationEditId" value="">
+                    <input type="hidden" id="patientId" name="patientId" value="@Model.PatientId">
 
                     <div class="row g-4">
                         <div class="col-md-6">
@@ -270,9 +279,5 @@
     </div>
 </div>
 
-<script src="~/js/doctor/tabs/medications.js"></script>
-<!-- استبدل هذا السطر -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-
-<!-- بهذا السطر -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="~/js/doctor/tabs/medications.js"></script>

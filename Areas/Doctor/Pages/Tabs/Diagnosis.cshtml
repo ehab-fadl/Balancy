@@ -38,8 +38,19 @@
                     إضافة تشخيص جديد
                 </h3>
 
-                <form id="diagnosisForm" novalidate>
+                <form id="diagnosisForm"
+                      novalidate
+                      data-patient-id="@Model.PatientId"
+                      data-api-list-url="/Doctor?handler=Diagnoses"
+                      data-api-create-url="/Doctor?handler=CreateDiagnosis"
+                      data-api-update-url="/Doctor?handler=UpdateDiagnosis"
+                      data-api-delete-url="/Doctor?handler=Diagnosis">
+
+                    @Html.AntiForgeryToken()
+
                     <input type="hidden" id="diagnosisEditIndex" value="-1">
+                    <input type="hidden" id="diagnosisEditId" value="">
+                    <input type="hidden" id="patientId" name="patientId" value="@Model.PatientId">
 
                     <div class="row g-4">
                         <div class="col-md-6">

@@ -39,6 +39,64 @@ public interface IPatientApiClient
     Task<JsonDocument?> CreateVitalSignAsync(VitalSignCreateRequest request, CancellationToken ct = default);
     Task<JsonDocument?> UpdateVitalSignAsync(string id, VitalSignUpdateRequest request, CancellationToken ct = default);
     Task<bool> DeleteVitalSignAsync(string id, CancellationToken ct = default);
+
+    // ===== GAD-7 Assessments =====
+    Task<JsonDocument?> GetLatestGad7AssessmentRawAsync(string patientId, CancellationToken ct = default);
+    Task<JsonDocument?> CreateGad7AssessmentAsync(Gad7AssessmentCreateRequest request, CancellationToken ct = default);
+
+    // ===== PHQ-9 Assessments =====
+    Task<JsonDocument?> GetLatestPhq9AssessmentRawAsync(string patientId, CancellationToken ct = default);
+    Task<JsonDocument?> CreatePhq9AssessmentAsync(Phq9AssessmentCreateRequest request, CancellationToken ct = default);
+
+    // ===== MDQ Assessments =====
+    Task<JsonDocument?> GetLatestMdqAssessmentRawAsync(string patientId, CancellationToken ct = default);
+    Task<JsonDocument?> CreateMdqAssessmentAsync(MdqAssessmentCreateRequest request, CancellationToken ct = default);
+
+    // ===== SDS Assessments =====
+    Task<JsonDocument?> GetLatestSdsAssessmentRawAsync(string patientId, CancellationToken ct = default);
+    Task<JsonDocument?> CreateSdsAssessmentAsync(SdsAssessmentCreateRequest request, CancellationToken ct = default);
+
+    // ===== C-SSRS Assessments =====
+    Task<JsonDocument?> GetLatestCssrsAssessmentRawAsync(string patientId, CancellationToken ct = default);
+    Task<JsonDocument?> CreateCssrsAssessmentAsync(CssrsAssessmentCreateRequest request, CancellationToken ct = default);
+
+    // ===== Diagnoses =====
+    Task<JsonDocument?> GetDiagnosesRawAsync(string patientId, CancellationToken ct = default);
+    Task<JsonDocument?> CreateDiagnosisAsync(DiagnosisCreateRequest request, CancellationToken ct = default);
+    Task<JsonDocument?> UpdateDiagnosisAsync(string id, DiagnosisUpdateRequest request, CancellationToken ct = default);
+    Task<bool> DeleteDiagnosisAsync(string id, CancellationToken ct = default);
+
+    // ===== Medications =====
+    Task<JsonDocument?> GetMedicationsRawAsync(string patientId, CancellationToken ct = default);
+    Task<JsonDocument?> CreateMedicationAsync(MedicationCreateRequest request, CancellationToken ct = default);
+    Task<JsonDocument?> UpdateMedicationAsync(string id, MedicationUpdateRequest request, CancellationToken ct = default);
+    Task<bool> DeleteMedicationAsync(string id, CancellationToken ct = default);
+
+
+
+    // ===== Treatment Plans =====
+Task<JsonDocument?> GetTreatmentPlansRawAsync(string patientId, CancellationToken ct = default);
+Task<JsonDocument?> CreateTreatmentPlanAsync(TreatmentPlanCreateRequest request, CancellationToken ct = default);
+Task<JsonDocument?> UpdateTreatmentPlanAsync(string id, TreatmentPlanUpdateRequest request, CancellationToken ct = default);
+Task<bool> DeleteTreatmentPlanAsync(string id, CancellationToken ct = default);
+
+// ===== Treatment Problems =====
+Task<JsonDocument?> CreateTreatmentProblemAsync(TreatmentProblemCreateRequest request, CancellationToken ct = default);
+Task<JsonDocument?> UpdateTreatmentProblemAsync(string id, TreatmentProblemUpdateRequest request, CancellationToken ct = default);
+Task<bool> DeleteTreatmentProblemAsync(string id, CancellationToken ct = default);
+
+// ===== Treatment Goals =====
+Task<JsonDocument?> CreateTreatmentGoalAsync(TreatmentGoalCreateRequest request, CancellationToken ct = default);
+Task<JsonDocument?> UpdateTreatmentGoalAsync(string id, TreatmentGoalUpdateRequest request, CancellationToken ct = default);
+Task<JsonDocument?> UpdateTreatmentGoalProgressAsync(string id, TreatmentGoalProgressRequest request, CancellationToken ct = default);
+Task<JsonDocument?> AchieveTreatmentGoalAsync(string id, TreatmentGoalAchieveRequest request, CancellationToken ct = default);
+Task<JsonDocument?> UnachieveTreatmentGoalAsync(string id, TreatmentGoalUnachieveRequest request, CancellationToken ct = default);
+Task<bool> DeleteTreatmentGoalAsync(string id, CancellationToken ct = default);
+
+// ===== Treatment Means =====
+Task<JsonDocument?> CreateTreatmentMeanAsync(TreatmentMeanCreateRequest request, CancellationToken ct = default);
+Task<JsonDocument?> UpdateTreatmentMeanAsync(string id, TreatmentMeanUpdateRequest request, CancellationToken ct = default);
+Task<bool> DeleteTreatmentMeanAsync(string id, CancellationToken ct = default);
 }
 
 public sealed class PatientSummaryDto

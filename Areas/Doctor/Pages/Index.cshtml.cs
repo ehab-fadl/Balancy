@@ -706,4 +706,854 @@ public class IndexModel : PageModel
             { StatusCode = StatusCodes.Status500InternalServerError };
         }
     }
+
+
+
+    /* =================== GAD-7 Assessments =================== */
+
+    public async Task<IActionResult> OnGetLatestGad7Async(string patientId, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(patientId))
+            return new JsonResult(new { error = "معرّف المريض مطلوب" })
+            { StatusCode = StatusCodes.Status400BadRequest };
+
+        try
+        {
+            var doc = await _patients.GetLatestGad7AssessmentRawAsync(patientId, ct);
+            if (doc is null)
+                return new JsonResult(new { error = "لا توجد تقييمات GAD-7 لهذا المريض" })
+                { StatusCode = StatusCodes.Status404NotFound };
+            return new JsonResult(doc.RootElement);
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "تعذر جلب آخر تقييم GAD-7 للمريض {PatientId}", patientId);
+            return new JsonResult(new { error = "تعذر جلب تقييم GAD-7", detail = ex.Message })
+            { StatusCode = StatusCodes.Status502BadGateway };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "خطأ غير متوقع في جلب تقييم GAD-7");
+            return new JsonResult(new { error = ex.Message })
+            { StatusCode = StatusCodes.Status500InternalServerError };
+        }
+    }
+
+    public async Task<IActionResult> OnPostCreateGad7Async(
+        [FromBody] Gad7AssessmentCreateRequest request, CancellationToken ct)
+    {
+        if (request is null)
+            return new JsonResult(new { error = "بيانات غير صالحة" })
+            { StatusCode = StatusCodes.Status400BadRequest };
+
+        if (request.PatientId == Guid.Empty)
+            return new JsonResult(new { error = "PatientId مطلوب وصالح" })
+            { StatusCode = StatusCodes.Status400BadRequest };
+
+        try
+        {
+            var doc = await _patients.CreateGad7AssessmentAsync(request, ct);
+            if (doc is null)
+                return new JsonResult(new { error = "لم يتم استلام استجابة" })
+                { StatusCode = StatusCodes.Status502BadGateway };
+            return new JsonResult(doc.RootElement);
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "تعذر إنشاء تقييم GAD-7");
+            return new JsonResult(new { error = "تعذر حفظ تقييم GAD-7", detail = ex.Message })
+            { StatusCode = StatusCodes.Status502BadGateway };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "خطأ غير متوقع في إنشاء تقييم GAD-7");
+            return new JsonResult(new { error = ex.Message })
+            { StatusCode = StatusCodes.Status500InternalServerError };
+        }
+    }
+
+
+    /* =================== PHQ-9 Assessments =================== */
+
+    public async Task<IActionResult> OnGetLatestPhq9Async(string patientId, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(patientId))
+            return new JsonResult(new { error = "معرّف المريض مطلوب" })
+            { StatusCode = StatusCodes.Status400BadRequest };
+
+        try
+        {
+            var doc = await _patients.GetLatestPhq9AssessmentRawAsync(patientId, ct);
+            if (doc is null)
+                return new JsonResult(new { error = "لا توجد تقييمات PHQ-9 لهذا المريض" })
+                { StatusCode = StatusCodes.Status404NotFound };
+            return new JsonResult(doc.RootElement);
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "تعذر جلب آخر تقييم PHQ-9 للمريض {PatientId}", patientId);
+            return new JsonResult(new { error = "تعذر جلب تقييم PHQ-9", detail = ex.Message })
+            { StatusCode = StatusCodes.Status502BadGateway };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "خطأ غير متوقع في جلب تقييم PHQ-9");
+            return new JsonResult(new { error = ex.Message })
+            { StatusCode = StatusCodes.Status500InternalServerError };
+        }
+    }
+
+    public async Task<IActionResult> OnPostCreatePhq9Async(
+        [FromBody] Phq9AssessmentCreateRequest request, CancellationToken ct)
+    {
+        if (request is null)
+            return new JsonResult(new { error = "بيانات غير صالحة" })
+            { StatusCode = StatusCodes.Status400BadRequest };
+
+        if (request.PatientId == Guid.Empty)
+            return new JsonResult(new { error = "PatientId مطلوب وصالح" })
+            { StatusCode = StatusCodes.Status400BadRequest };
+
+        try
+        {
+            var doc = await _patients.CreatePhq9AssessmentAsync(request, ct);
+            if (doc is null)
+                return new JsonResult(new { error = "لم يتم استلام استجابة" })
+                { StatusCode = StatusCodes.Status502BadGateway };
+            return new JsonResult(doc.RootElement);
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "تعذر إنشاء تقييم PHQ-9");
+            return new JsonResult(new { error = "تعذر حفظ تقييم PHQ-9", detail = ex.Message })
+            { StatusCode = StatusCodes.Status502BadGateway };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "خطأ غير متوقع في إنشاء تقييم PHQ-9");
+            return new JsonResult(new { error = ex.Message })
+            { StatusCode = StatusCodes.Status500InternalServerError };
+        }
+    }
+
+
+    /* =================== MDQ Assessments =================== */
+
+    public async Task<IActionResult> OnGetLatestMdqAsync(string patientId, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(patientId))
+            return new JsonResult(new { error = "معرّف المريض مطلوب" })
+            { StatusCode = StatusCodes.Status400BadRequest };
+
+        try
+        {
+            var doc = await _patients.GetLatestMdqAssessmentRawAsync(patientId, ct);
+            if (doc is null)
+                return new JsonResult(new { error = "لا توجد تقييمات MDQ لهذا المريض" })
+                { StatusCode = StatusCodes.Status404NotFound };
+            return new JsonResult(doc.RootElement);
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "تعذر جلب آخر تقييم MDQ للمريض {PatientId}", patientId);
+            return new JsonResult(new { error = "تعذر جلب تقييم MDQ", detail = ex.Message })
+            { StatusCode = StatusCodes.Status502BadGateway };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "خطأ غير متوقع في جلب تقييم MDQ");
+            return new JsonResult(new { error = ex.Message })
+            { StatusCode = StatusCodes.Status500InternalServerError };
+        }
+    }
+
+    public async Task<IActionResult> OnPostCreateMdqAsync(
+        [FromBody] MdqAssessmentCreateRequest request, CancellationToken ct)
+    {
+        if (request is null)
+            return new JsonResult(new { error = "بيانات غير صالحة" })
+            { StatusCode = StatusCodes.Status400BadRequest };
+
+        if (request.PatientId == Guid.Empty)
+            return new JsonResult(new { error = "PatientId مطلوب وصالح" })
+            { StatusCode = StatusCodes.Status400BadRequest };
+
+        try
+        {
+            var doc = await _patients.CreateMdqAssessmentAsync(request, ct);
+            if (doc is null)
+                return new JsonResult(new { error = "لم يتم استلام استجابة" })
+                { StatusCode = StatusCodes.Status502BadGateway };
+            return new JsonResult(doc.RootElement);
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "تعذر إنشاء تقييم MDQ");
+            return new JsonResult(new { error = "تعذر حفظ تقييم MDQ", detail = ex.Message })
+            { StatusCode = StatusCodes.Status502BadGateway };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "خطأ غير متوقع في إنشاء تقييم MDQ");
+            return new JsonResult(new { error = ex.Message })
+            { StatusCode = StatusCodes.Status500InternalServerError };
+        }
+    }
+
+
+
+    /* =================== SDS Assessments =================== */
+
+    public async Task<IActionResult> OnGetLatestSdsAsync(string patientId, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(patientId))
+            return new JsonResult(new { error = "معرّف المريض مطلوب" })
+            { StatusCode = StatusCodes.Status400BadRequest };
+
+        try
+        {
+            var doc = await _patients.GetLatestSdsAssessmentRawAsync(patientId, ct);
+            if (doc is null)
+                return new JsonResult(new { error = "لا توجد تقييمات SDS لهذا المريض" })
+                { StatusCode = StatusCodes.Status404NotFound };
+            return new JsonResult(doc.RootElement);
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "تعذر جلب آخر تقييم SDS للمريض {PatientId}", patientId);
+            return new JsonResult(new { error = "تعذر جلب تقييم SDS", detail = ex.Message })
+            { StatusCode = StatusCodes.Status502BadGateway };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "خطأ غير متوقع في جلب تقييم SDS");
+            return new JsonResult(new { error = ex.Message })
+            { StatusCode = StatusCodes.Status500InternalServerError };
+        }
+    }
+
+    public async Task<IActionResult> OnPostCreateSdsAsync(
+        [FromBody] SdsAssessmentCreateRequest request, CancellationToken ct)
+    {
+        if (request is null)
+            return new JsonResult(new { error = "بيانات غير صالحة" })
+            { StatusCode = StatusCodes.Status400BadRequest };
+
+        if (request.PatientId == Guid.Empty)
+            return new JsonResult(new { error = "PatientId مطلوب وصالح" })
+            { StatusCode = StatusCodes.Status400BadRequest };
+
+        try
+        {
+            var doc = await _patients.CreateSdsAssessmentAsync(request, ct);
+            if (doc is null)
+                return new JsonResult(new { error = "لم يتم استلام استجابة" })
+                { StatusCode = StatusCodes.Status502BadGateway };
+            return new JsonResult(doc.RootElement);
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "تعذر إنشاء تقييم SDS");
+            return new JsonResult(new { error = "تعذر حفظ تقييم SDS", detail = ex.Message })
+            { StatusCode = StatusCodes.Status502BadGateway };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "خطأ غير متوقع في إنشاء تقييم SDS");
+            return new JsonResult(new { error = ex.Message })
+            { StatusCode = StatusCodes.Status500InternalServerError };
+        }
+    }
+
+
+
+
+    /* =================== C-SSRS Assessments =================== */
+
+    public async Task<IActionResult> OnGetLatestCssrsAsync(string patientId, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(patientId))
+            return new JsonResult(new { error = "معرّف المريض مطلوب" })
+            { StatusCode = StatusCodes.Status400BadRequest };
+
+        try
+        {
+            var doc = await _patients.GetLatestCssrsAssessmentRawAsync(patientId, ct);
+            if (doc is null)
+                return new JsonResult(new { error = "لا توجد تقييمات C-SSRS لهذا المريض" })
+                { StatusCode = StatusCodes.Status404NotFound };
+            return new JsonResult(doc.RootElement);
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "تعذر جلب آخر تقييم C-SSRS للمريض {PatientId}", patientId);
+            return new JsonResult(new { error = "تعذر جلب تقييم C-SSRS", detail = ex.Message })
+            { StatusCode = StatusCodes.Status502BadGateway };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "خطأ غير متوقع في جلب تقييم C-SSRS");
+            return new JsonResult(new { error = ex.Message })
+            { StatusCode = StatusCodes.Status500InternalServerError };
+        }
+    }
+
+    public async Task<IActionResult> OnPostCreateCssrsAsync(
+        [FromBody] CssrsAssessmentCreateRequest request, CancellationToken ct)
+    {
+        if (request is null)
+            return new JsonResult(new { error = "بيانات غير صالحة" })
+            { StatusCode = StatusCodes.Status400BadRequest };
+
+        if (request.PatientId == Guid.Empty)
+            return new JsonResult(new { error = "PatientId مطلوب وصالح" })
+            { StatusCode = StatusCodes.Status400BadRequest };
+
+        try
+        {
+            var doc = await _patients.CreateCssrsAssessmentAsync(request, ct);
+            if (doc is null)
+                return new JsonResult(new { error = "لم يتم استلام استجابة" })
+                { StatusCode = StatusCodes.Status502BadGateway };
+            return new JsonResult(doc.RootElement);
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "تعذر إنشاء تقييم C-SSRS");
+            return new JsonResult(new { error = "تعذر حفظ تقييم C-SSRS", detail = ex.Message })
+            { StatusCode = StatusCodes.Status502BadGateway };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "خطأ غير متوقع في إنشاء تقييم C-SSRS");
+            return new JsonResult(new { error = ex.Message })
+            { StatusCode = StatusCodes.Status500InternalServerError };
+        }
+    }
+
+
+    /* =================== Diagnoses =================== */
+
+    public async Task<IActionResult> OnGetDiagnosesAsync(string patientId, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(patientId))
+            return new JsonResult(new { error = "معرّف المريض مطلوب" })
+            { StatusCode = StatusCodes.Status400BadRequest };
+
+        try
+        {
+            var doc = await _patients.GetDiagnosesRawAsync(patientId, ct);
+            if (doc is null)
+                return new JsonResult(Array.Empty<object>());
+            return new JsonResult(doc.RootElement);
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "تعذر جلب التشخيصات للمريض {PatientId}", patientId);
+            return new JsonResult(new { error = "تعذر جلب التشخيصات", detail = ex.Message })
+            { StatusCode = StatusCodes.Status502BadGateway };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "خطأ غير متوقع في جلب التشخيصات");
+            return new JsonResult(new { error = ex.Message })
+            { StatusCode = StatusCodes.Status500InternalServerError };
+        }
+    }
+
+    public async Task<IActionResult> OnPostCreateDiagnosisAsync(
+        [FromBody] DiagnosisCreateRequest request, CancellationToken ct)
+    {
+        if (request is null || string.IsNullOrWhiteSpace(request.MainType))
+            return new JsonResult(new { error = "بيانات غير صالحة — النوع الرئيسي مطلوب" })
+            { StatusCode = StatusCodes.Status400BadRequest };
+
+        if (request.PatientId == Guid.Empty)
+            return new JsonResult(new { error = "PatientId مطلوب وصالح" })
+            { StatusCode = StatusCodes.Status400BadRequest };
+
+        try
+        {
+            var doc = await _patients.CreateDiagnosisAsync(request, ct);
+            if (doc is null)
+                return new JsonResult(new { error = "لم يتم استلام استجابة" })
+                { StatusCode = StatusCodes.Status502BadGateway };
+            return new JsonResult(doc.RootElement);
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "تعذر إنشاء التشخيص");
+            return new JsonResult(new { error = "تعذر إنشاء التشخيص", detail = ex.Message })
+            { StatusCode = StatusCodes.Status502BadGateway };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "خطأ غير متوقع في إنشاء التشخيص");
+            return new JsonResult(new { error = ex.Message })
+            { StatusCode = StatusCodes.Status500InternalServerError };
+        }
+    }
+
+    public async Task<IActionResult> OnPutUpdateDiagnosisAsync(
+        string id, [FromBody] DiagnosisUpdateRequest request, CancellationToken ct)
+    {
+        if (request is null)
+            return new JsonResult(new { error = "بيانات غير صالحة (body غير صالح)" })
+            { StatusCode = StatusCodes.Status400BadRequest };
+
+        if (request.Id == Guid.Empty)
+        {
+            if (Guid.TryParse(id, out var parsed))
+                request.Id = parsed;
+        }
+
+        if (request.Id == Guid.Empty)
+            return new JsonResult(new { error = "معرّف التشخيص (Id) مطلوب وصالح" })
+            { StatusCode = StatusCodes.Status400BadRequest };
+
+        var diagnosisId = request.Id.ToString();
+
+        try
+        {
+            var doc = await _patients.UpdateDiagnosisAsync(diagnosisId, request, ct);
+            if (doc is null)
+                return new JsonResult(new { error = "لم يتم استلام استجابة" })
+                { StatusCode = StatusCodes.Status502BadGateway };
+            return new JsonResult(doc.RootElement);
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "تعذر تعديل التشخيص {Id}", diagnosisId);
+            return new JsonResult(new { error = "تعذر تعديل التشخيص", detail = ex.Message })
+            { StatusCode = StatusCodes.Status502BadGateway };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "خطأ غير متوقع في تعديل التشخيص {Id}", diagnosisId);
+            return new JsonResult(new { error = ex.Message })
+            { StatusCode = StatusCodes.Status500InternalServerError };
+        }
+    }
+
+    public async Task<IActionResult> OnDeleteDiagnosisAsync(string id, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(id))
+            return new JsonResult(new { error = "معرّف التشخيص مطلوب" })
+            { StatusCode = StatusCodes.Status400BadRequest };
+
+        try
+        {
+            await _patients.DeleteDiagnosisAsync(id, ct);
+            return new JsonResult(new { success = true });
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "تعذر حذف التشخيص {Id}", id);
+            return new JsonResult(new { error = "تعذر حذف التشخيص", detail = ex.Message })
+            { StatusCode = StatusCodes.Status502BadGateway };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "خطأ غير متوقع في حذف التشخيص {Id}", id);
+            return new JsonResult(new { error = ex.Message })
+            { StatusCode = StatusCodes.Status500InternalServerError };
+        }
+    }
+
+
+
+    /* =================== Medications =================== */
+
+    public async Task<IActionResult> OnGetMedicationsAsync(string patientId, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(patientId))
+            return new JsonResult(new { error = "معرّف المريض مطلوب" })
+            { StatusCode = StatusCodes.Status400BadRequest };
+
+        try
+        {
+            var doc = await _patients.GetMedicationsRawAsync(patientId, ct);
+            if (doc is null)
+                return new JsonResult(Array.Empty<object>());
+            return new JsonResult(doc.RootElement);
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "تعذر جلب الأدوية للمريض {PatientId}", patientId);
+            return new JsonResult(new { error = "تعذر جلب الأدوية", detail = ex.Message })
+            { StatusCode = StatusCodes.Status502BadGateway };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "خطأ غير متوقع في جلب الأدوية");
+            return new JsonResult(new { error = ex.Message })
+            { StatusCode = StatusCodes.Status500InternalServerError };
+        }
+    }
+
+    public async Task<IActionResult> OnPostCreateMedicationAsync(
+        [FromBody] MedicationCreateRequest request, CancellationToken ct)
+    {
+        if (request is null || string.IsNullOrWhiteSpace(request.Name))
+            return new JsonResult(new { error = "بيانات غير صالحة — اسم الدواء مطلوب" })
+            { StatusCode = StatusCodes.Status400BadRequest };
+
+        if (request.PatientId == Guid.Empty)
+            return new JsonResult(new { error = "PatientId مطلوب وصالح" })
+            { StatusCode = StatusCodes.Status400BadRequest };
+
+        try
+        {
+            var doc = await _patients.CreateMedicationAsync(request, ct);
+            if (doc is null)
+                return new JsonResult(new { error = "لم يتم استلام استجابة" })
+                { StatusCode = StatusCodes.Status502BadGateway };
+            return new JsonResult(doc.RootElement);
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "تعذر إنشاء الدواء");
+            return new JsonResult(new { error = "تعذر إنشاء الدواء", detail = ex.Message })
+            { StatusCode = StatusCodes.Status502BadGateway };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "خطأ غير متوقع في إنشاء الدواء");
+            return new JsonResult(new { error = ex.Message })
+            { StatusCode = StatusCodes.Status500InternalServerError };
+        }
+    }
+
+    public async Task<IActionResult> OnPutUpdateMedicationAsync(
+        string id, [FromBody] MedicationUpdateRequest request, CancellationToken ct)
+    {
+        if (request is null)
+            return new JsonResult(new { error = "بيانات غير صالحة (body غير صالح)" })
+            { StatusCode = StatusCodes.Status400BadRequest };
+
+        if (request.Id == Guid.Empty)
+        {
+            if (Guid.TryParse(id, out var parsed))
+                request.Id = parsed;
+        }
+
+        if (request.Id == Guid.Empty)
+            return new JsonResult(new { error = "معرّف الدواء (Id) مطلوب وصالح" })
+            { StatusCode = StatusCodes.Status400BadRequest };
+
+        var medicationId = request.Id.ToString();
+
+        try
+        {
+            var doc = await _patients.UpdateMedicationAsync(medicationId, request, ct);
+            if (doc is null)
+                return new JsonResult(new { error = "لم يتم استلام استجابة" })
+                { StatusCode = StatusCodes.Status502BadGateway };
+            return new JsonResult(doc.RootElement);
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "تعذر تعديل الدواء {Id}", medicationId);
+            return new JsonResult(new { error = "تعذر تعديل الدواء", detail = ex.Message })
+            { StatusCode = StatusCodes.Status502BadGateway };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "خطأ غير متوقع في تعديل الدواء {Id}", medicationId);
+            return new JsonResult(new { error = ex.Message })
+            { StatusCode = StatusCodes.Status500InternalServerError };
+        }
+    }
+
+    public async Task<IActionResult> OnDeleteMedicationAsync(string id, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(id))
+            return new JsonResult(new { error = "معرّف الدواء مطلوب" })
+            { StatusCode = StatusCodes.Status400BadRequest };
+
+        try
+        {
+            await _patients.DeleteMedicationAsync(id, ct);
+            return new JsonResult(new { success = true });
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "تعذر حذف الدواء {Id}", id);
+            return new JsonResult(new { error = "تعذر حذف الدواء", detail = ex.Message })
+            { StatusCode = StatusCodes.Status502BadGateway };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "خطأ غير متوقع في حذف الدواء {Id}", id);
+            return new JsonResult(new { error = ex.Message })
+            { StatusCode = StatusCodes.Status500InternalServerError };
+        }
+    }
+
+
+        /* =================== Treatment Plans =================== */
+
+    public async Task<IActionResult> OnGetTreatmentPlansAsync(string patientId, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(patientId))
+            return new JsonResult(new { error = "معرّف المريض مطلوب" })
+            { StatusCode = StatusCodes.Status400BadRequest };
+
+        try
+        {
+            var doc = await _patients.GetTreatmentPlansRawAsync(patientId, ct);
+            if (doc is null) return new JsonResult(Array.Empty<object>());
+            return new JsonResult(doc.RootElement);
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "تعذر جلب الخطط العلاجية");
+            return new JsonResult(new { error = "تعذر جلب الخطط العلاجية", detail = ex.Message })
+            { StatusCode = StatusCodes.Status502BadGateway };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "خطأ غير متوقع");
+            return new JsonResult(new { error = ex.Message })
+            { StatusCode = StatusCodes.Status500InternalServerError };
+        }
+    }
+
+    public async Task<IActionResult> OnPostCreateTreatmentPlanAsync([FromBody] TreatmentPlanCreateRequest request, CancellationToken ct)
+    {
+        if (request is null || string.IsNullOrWhiteSpace(request.Name) || request.PatientId == Guid.Empty)
+            return new JsonResult(new { error = "بيانات غير صالحة" }) { StatusCode = StatusCodes.Status400BadRequest };
+        try
+        {
+            var doc = await _patients.CreateTreatmentPlanAsync(request, ct);
+            return doc is null
+                ? new JsonResult(new { error = "لا استجابة" }) { StatusCode = StatusCodes.Status502BadGateway }
+                : new JsonResult(doc.RootElement);
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "تعذر إنشاء الخطة");
+            return new JsonResult(new { error = "تعذر إنشاء الخطة", detail = ex.Message }) { StatusCode = StatusCodes.Status502BadGateway };
+        }
+    }
+
+    public async Task<IActionResult> OnPutUpdateTreatmentPlanAsync(string id, [FromBody] TreatmentPlanUpdateRequest request, CancellationToken ct)
+    {
+        if (request is null) return new JsonResult(new { error = "بيانات غير صالحة" }) { StatusCode = StatusCodes.Status400BadRequest };
+        if (request.Id == Guid.Empty && Guid.TryParse(id, out var p)) request.Id = p;
+        if (request.Id == Guid.Empty) return new JsonResult(new { error = "Id مطلوب" }) { StatusCode = StatusCodes.Status400BadRequest };
+        try
+        {
+            var doc = await _patients.UpdateTreatmentPlanAsync(request.Id.ToString(), request, ct);
+            return doc is null
+                ? new JsonResult(new { error = "لا استجابة" }) { StatusCode = StatusCodes.Status502BadGateway }
+                : new JsonResult(doc.RootElement);
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "تعذر تعديل الخطة");
+            return new JsonResult(new { error = "تعذر تعديل الخطة", detail = ex.Message }) { StatusCode = StatusCodes.Status502BadGateway };
+        }
+    }
+
+    public async Task<IActionResult> OnDeleteTreatmentPlanAsync(string id, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(id)) return new JsonResult(new { error = "Id مطلوب" }) { StatusCode = StatusCodes.Status400BadRequest };
+        try
+        {
+            await _patients.DeleteTreatmentPlanAsync(id, ct);
+            return new JsonResult(new { success = true });
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "تعذر حذف الخطة");
+            return new JsonResult(new { error = "تعذر حذف الخطة", detail = ex.Message }) { StatusCode = StatusCodes.Status502BadGateway };
+        }
+    }
+
+    // Problems
+    public async Task<IActionResult> OnPostCreateTreatmentProblemAsync([FromBody] TreatmentProblemCreateRequest request, CancellationToken ct)
+    {
+        if (request is null || string.IsNullOrWhiteSpace(request.Text) || request.TreatmentPlanId == Guid.Empty)
+            return new JsonResult(new { error = "بيانات غير صالحة" }) { StatusCode = StatusCodes.Status400BadRequest };
+        try
+        {
+            var doc = await _patients.CreateTreatmentProblemAsync(request, ct);
+            return doc is null ? new JsonResult(new { error = "لا استجابة" }) { StatusCode = StatusCodes.Status502BadGateway } : new JsonResult(doc.RootElement);
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "تعذر إضافة المشكلة");
+            return new JsonResult(new { error = "تعذر إضافة المشكلة", detail = ex.Message }) { StatusCode = StatusCodes.Status502BadGateway };
+        }
+    }
+
+    public async Task<IActionResult> OnPutUpdateTreatmentProblemAsync(string id, [FromBody] TreatmentProblemUpdateRequest request, CancellationToken ct)
+    {
+        if (request is null) return new JsonResult(new { error = "بيانات غير صالحة" }) { StatusCode = StatusCodes.Status400BadRequest };
+        if (request.Id == Guid.Empty && Guid.TryParse(id, out var p)) request.Id = p;
+        if (request.Id == Guid.Empty) return new JsonResult(new { error = "Id مطلوب" }) { StatusCode = StatusCodes.Status400BadRequest };
+        try
+        {
+            var doc = await _patients.UpdateTreatmentProblemAsync(request.Id.ToString(), request, ct);
+            return doc is null ? new JsonResult(new { error = "لا استجابة" }) { StatusCode = StatusCodes.Status502BadGateway } : new JsonResult(doc.RootElement);
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "تعذر تعديل المشكلة");
+            return new JsonResult(new { error = "تعذر تعديل المشكلة", detail = ex.Message }) { StatusCode = StatusCodes.Status502BadGateway };
+        }
+    }
+
+    public async Task<IActionResult> OnDeleteTreatmentProblemAsync(string id, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(id)) return new JsonResult(new { error = "Id مطلوب" }) { StatusCode = StatusCodes.Status400BadRequest };
+        try { await _patients.DeleteTreatmentProblemAsync(id, ct); return new JsonResult(new { success = true }); }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "تعذر حذف المشكلة");
+            return new JsonResult(new { error = "تعذر حذف المشكلة", detail = ex.Message }) { StatusCode = StatusCodes.Status502BadGateway };
+        }
+    }
+
+    // Goals
+    public async Task<IActionResult> OnPostCreateTreatmentGoalAsync([FromBody] TreatmentGoalCreateRequest request, CancellationToken ct)
+    {
+        if (request is null || string.IsNullOrWhiteSpace(request.Text) || request.TreatmentProblemId == Guid.Empty)
+            return new JsonResult(new { error = "بيانات غير صالحة" }) { StatusCode = StatusCodes.Status400BadRequest };
+        try
+        {
+            var doc = await _patients.CreateTreatmentGoalAsync(request, ct);
+            return doc is null ? new JsonResult(new { error = "لا استجابة" }) { StatusCode = StatusCodes.Status502BadGateway } : new JsonResult(doc.RootElement);
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "تعذر إضافة الهدف");
+            return new JsonResult(new { error = "تعذر إضافة الهدف", detail = ex.Message }) { StatusCode = StatusCodes.Status502BadGateway };
+        }
+    }
+
+    public async Task<IActionResult> OnPutUpdateTreatmentGoalAsync(string id, [FromBody] TreatmentGoalUpdateRequest request, CancellationToken ct)
+    {
+        if (request is null) return new JsonResult(new { error = "بيانات غير صالحة" }) { StatusCode = StatusCodes.Status400BadRequest };
+        if (request.Id == Guid.Empty && Guid.TryParse(id, out var p)) request.Id = p;
+        if (request.Id == Guid.Empty) return new JsonResult(new { error = "Id مطلوب" }) { StatusCode = StatusCodes.Status400BadRequest };
+        try
+        {
+            var doc = await _patients.UpdateTreatmentGoalAsync(request.Id.ToString(), request, ct);
+            return doc is null ? new JsonResult(new { error = "لا استجابة" }) { StatusCode = StatusCodes.Status502BadGateway } : new JsonResult(doc.RootElement);
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "تعذر تعديل الهدف");
+            return new JsonResult(new { error = "تعذر تعديل الهدف", detail = ex.Message }) { StatusCode = StatusCodes.Status502BadGateway };
+        }
+    }
+
+    public async Task<IActionResult> OnPutProgressTreatmentGoalAsync(string id, [FromBody] TreatmentGoalProgressRequest request, CancellationToken ct)
+    {
+        if (request is null) return new JsonResult(new { error = "بيانات غير صالحة" }) { StatusCode = StatusCodes.Status400BadRequest };
+        if (request.GoalId == Guid.Empty && Guid.TryParse(id, out var p)) request.GoalId = p;
+        if (request.GoalId == Guid.Empty) return new JsonResult(new { error = "GoalId مطلوب" }) { StatusCode = StatusCodes.Status400BadRequest };
+        try
+        {
+            var doc = await _patients.UpdateTreatmentGoalProgressAsync(request.GoalId.ToString(), request, ct);
+            return doc is null ? new JsonResult(new { error = "لا استجابة" }) { StatusCode = StatusCodes.Status502BadGateway } : new JsonResult(doc.RootElement);
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "تعذر تحديث التقدم");
+            return new JsonResult(new { error = "تعذر تحديث التقدم", detail = ex.Message }) { StatusCode = StatusCodes.Status502BadGateway };
+        }
+    }
+
+    public async Task<IActionResult> OnPutAchieveTreatmentGoalAsync(string id, [FromBody] TreatmentGoalAchieveRequest request, CancellationToken ct)
+    {
+        if (request is null) return new JsonResult(new { error = "بيانات غير صالحة" }) { StatusCode = StatusCodes.Status400BadRequest };
+        if (request.GoalId == Guid.Empty && Guid.TryParse(id, out var p)) request.GoalId = p;
+        if (request.GoalId == Guid.Empty) return new JsonResult(new { error = "GoalId مطلوب" }) { StatusCode = StatusCodes.Status400BadRequest };
+        try
+        {
+            var doc = await _patients.AchieveTreatmentGoalAsync(request.GoalId.ToString(), request, ct);
+            return doc is null ? new JsonResult(new { error = "لا استجابة" }) { StatusCode = StatusCodes.Status502BadGateway } : new JsonResult(doc.RootElement);
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "تعذر تحقق الهدف");
+            return new JsonResult(new { error = "تعذر تحقق الهدف", detail = ex.Message }) { StatusCode = StatusCodes.Status502BadGateway };
+        }
+    }
+
+    public async Task<IActionResult> OnPutUnachieveTreatmentGoalAsync(string id, [FromBody] TreatmentGoalUnachieveRequest request, CancellationToken ct)
+    {
+        if (request is null) return new JsonResult(new { error = "بيانات غير صالحة" }) { StatusCode = StatusCodes.Status400BadRequest };
+        if (request.GoalId == Guid.Empty && Guid.TryParse(id, out var p)) request.GoalId = p;
+        if (request.GoalId == Guid.Empty) return new JsonResult(new { error = "GoalId مطلوب" }) { StatusCode = StatusCodes.Status400BadRequest };
+        try
+        {
+            var doc = await _patients.UnachieveTreatmentGoalAsync(request.GoalId.ToString(), request, ct);
+            return doc is null ? new JsonResult(new { error = "لا استجابة" }) { StatusCode = StatusCodes.Status502BadGateway } : new JsonResult(doc.RootElement);
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "تعذر إلغاء التحقق");
+            return new JsonResult(new { error = "تعذر إلغاء التحقق", detail = ex.Message }) { StatusCode = StatusCodes.Status502BadGateway };
+        }
+    }
+
+    public async Task<IActionResult> OnDeleteTreatmentGoalAsync(string id, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(id)) return new JsonResult(new { error = "Id مطلوب" }) { StatusCode = StatusCodes.Status400BadRequest };
+        try { await _patients.DeleteTreatmentGoalAsync(id, ct); return new JsonResult(new { success = true }); }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "تعذر حذف الهدف");
+            return new JsonResult(new { error = "تعذر حذف الهدف", detail = ex.Message }) { StatusCode = StatusCodes.Status502BadGateway };
+        }
+    }
+
+    // Means
+    public async Task<IActionResult> OnPostCreateTreatmentMeanAsync([FromBody] TreatmentMeanCreateRequest request, CancellationToken ct)
+    {
+        if (request is null || string.IsNullOrWhiteSpace(request.Text) || request.TreatmentGoalId == Guid.Empty)
+            return new JsonResult(new { error = "بيانات غير صالحة" }) { StatusCode = StatusCodes.Status400BadRequest };
+        try
+        {
+            var doc = await _patients.CreateTreatmentMeanAsync(request, ct);
+            return doc is null ? new JsonResult(new { error = "لا استجابة" }) { StatusCode = StatusCodes.Status502BadGateway } : new JsonResult(doc.RootElement);
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "تعذر إضافة الوسيلة");
+            return new JsonResult(new { error = "تعذر إضافة الوسيلة", detail = ex.Message }) { StatusCode = StatusCodes.Status502BadGateway };
+        }
+    }
+
+    public async Task<IActionResult> OnPutUpdateTreatmentMeanAsync(string id, [FromBody] TreatmentMeanUpdateRequest request, CancellationToken ct)
+    {
+        if (request is null) return new JsonResult(new { error = "بيانات غير صالحة" }) { StatusCode = StatusCodes.Status400BadRequest };
+        if (request.Id == Guid.Empty && Guid.TryParse(id, out var p)) request.Id = p;
+        if (request.Id == Guid.Empty) return new JsonResult(new { error = "Id مطلوب" }) { StatusCode = StatusCodes.Status400BadRequest };
+        try
+        {
+            var doc = await _patients.UpdateTreatmentMeanAsync(request.Id.ToString(), request, ct);
+            return doc is null ? new JsonResult(new { error = "لا استجابة" }) { StatusCode = StatusCodes.Status502BadGateway } : new JsonResult(doc.RootElement);
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "تعذر تعديل الوسيلة");
+            return new JsonResult(new { error = "تعذر تعديل الوسيلة", detail = ex.Message }) { StatusCode = StatusCodes.Status502BadGateway };
+        }
+    }
+
+    public async Task<IActionResult> OnDeleteTreatmentMeanAsync(string id, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(id)) return new JsonResult(new { error = "Id مطلوب" }) { StatusCode = StatusCodes.Status400BadRequest };
+        try { await _patients.DeleteTreatmentMeanAsync(id, ct); return new JsonResult(new { success = true }); }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "تعذر حذف الوسيلة");
+            return new JsonResult(new { error = "تعذر حذف الوسيلة", detail = ex.Message }) { StatusCode = StatusCodes.Status502BadGateway };
+        }
+    }
 }

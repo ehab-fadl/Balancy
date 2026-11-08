@@ -42,7 +42,16 @@
          Questions Card
     ============================================================ -->
     <section class="questions-card">
-        <form id="cssrsForm" data-autosave="cssrsDraft" novalidate>
+        <form id="cssrsForm"
+              data-autosave="cssrsDraft"
+              data-patient-id="@Model.PatientId"
+              data-api-latest-url="/Doctor?handler=LatestCssrs"
+              data-api-create-url="/Doctor?handler=CreateCssrs"
+              novalidate>
+
+            @Html.AntiForgeryToken()
+
+            <input type="hidden" id="patientId" name="patientId" value="@Model.PatientId">
 
             <div id="cssrsQuestionsContainer"></div>
 

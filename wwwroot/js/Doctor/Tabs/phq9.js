@@ -1,13 +1,44 @@
 ﻿/* ============================================================
-   PHQ-9 Depression Scale Tab — Standalone Script
-   يعمل مستقلاً AND يتكامل مع bnApp إذا وُجد
+   PHQ-9 Depression Scale Tab — API-driven
+   - GET: يجلب آخر تقييم PHQ-9 للمريض عند فتح الصفحة
+   - POST: كل حفظ = سجل جديد (assessment جديد في DB)
+   - Severity: minimal / mild / moderate / moderately_severe / severe
 ============================================================ */
 
 (function initPhq9() {
     console.log('🚀 PHQ9.js initialized');
 
     /* ============================================================
-       1. Storage Layer (fallback)
+       0. Utilities
+    ============================================================ */
+    function escapeHtml(value) {
+        const div = document.createElement('div');
+        div.textContent = value ?? '';
+        return div.innerHTML;
+    }
+
+    function getAntiForgeryToken() {
+        return document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+    }
+
+    function getPatientId() {
+        const form = document.getElementById('phqForm');
+        return form?.dataset?.patientId?.trim()
+            || document.getElementById('patientId')?.value?.trim()
+            || sessionStorage.getItem('bnCurrentPatientId')?.trim()
+            || '';
+    }
+
+    function getApiUrls() {
+        const form = document.getElementById('phqForm');
+        return {
+            latest: form?.dataset?.apiLatestUrl || '/Doctor?handler=LatestPhq9',
+            create: form?.dataset?.apiCreateUrl || '/Doctor?handler=CreatePhq9'
+        };
+    }
+
+    /* ============================================================
+       1. Storage Layer
     ============================================================ */
     const storage = (window.bnApp && window.bnApp.bnStorage) ? window.bnApp.bnStorage : {
         prefix: 'balancy_',
@@ -40,16 +71,7 @@
     };
 
     /* ============================================================
-       2. Utilities — escapeHtml (مبكّر)
-    ============================================================ */
-    function escapeHtml(value) {
-        const div = document.createElement('div');
-        div.textContent = value ?? '';
-        return div.innerHTML;
-    }
-
-    /* ============================================================
-       3. Toast — نظام مدمج مضمون العمل
+       2. Toast
     ============================================================ */
     function ensureToastStyles() {
         if (document.getElementById('bn-phq-toast-styles')) return;
@@ -57,85 +79,49 @@
         style.id = 'bn-phq-toast-styles';
         style.textContent = `
             .bn-phq-toast-overlay {
-                position: fixed !important;
-                top: 0 !important;
-                left: 0 !important;
-                right: 0 !important;
-                bottom: 0 !important;
-                display: none;
-                align-items: center;
-                justify-content: center;
-                z-index: 2147483647 !important;
-                pointer-events: none;
-                padding: 1rem;
-                margin: 0 !important;
+                position: fixed !important; inset: 0 !important;
+                display: none; align-items: center; justify-content: center;
+                z-index: 2147483647 !important; pointer-events: none; padding: 1rem; margin: 0 !important;
             }
             .bn-phq-toast-overlay.show { display: flex !important; }
             .bn-phq-toast {
-                min-width: 300px;
-                max-width: 92vw;
-                padding: 1.1rem 1.4rem;
-                border-radius: 16px;
-                display: flex;
-                align-items: center;
-                gap: 0.85rem;
-                font-family: 'Tajawal', 'Segoe UI', Tahoma, sans-serif;
-                font-weight: 800;
-                font-size: 0.95rem;
-                color: #fff;
+                min-width: 300px; max-width: 92vw;
+                padding: 1.1rem 1.4rem; border-radius: 16px;
+                display: flex; align-items: center; gap: 0.85rem;
+                font-family: 'Tajawal', sans-serif; font-weight: 800;
+                font-size: 0.95rem; color: #fff;
                 box-shadow: 0 20px 50px -12px rgba(15, 23, 42, 0.55);
                 animation: bnPhqToastIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-                pointer-events: auto;
-                direction: rtl;
-                line-height: 1.5;
-                position: relative;
+                pointer-events: auto; direction: rtl; line-height: 1.5; position: relative;
             }
             .bn-phq-toast.hide { animation: bnPhqToastOut 0.3s ease forwards; }
             .bn-phq-toast-icon {
-                width: 38px;
-                height: 38px;
-                min-width: 38px;
-                border-radius: 50%;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                background: rgba(255, 255, 255, 0.22);
-                font-size: 1.05rem;
+                width: 38px; height: 38px; min-width: 38px;
+                border-radius: 50%; display: flex;
+                align-items: center; justify-content: center;
+                background: rgba(255, 255, 255, 0.22); font-size: 1.05rem;
             }
-            .bn-phq-toast-body {
-                display: flex;
-                flex-direction: column;
-                gap: 0.15rem;
-                text-align: right;
-            }
+            .bn-phq-toast-body { display: flex; flex-direction: column; gap: 0.15rem; text-align: right; }
             .bn-phq-toast-title { font-size: 0.95rem; font-weight: 900; }
             .bn-phq-toast-message { font-size: 0.8rem; font-weight: 600; opacity: 0.95; }
             .bn-phq-toast.error { background: linear-gradient(135deg, #ef4444, #b91c1c); }
             .bn-phq-toast.success { background: linear-gradient(135deg, #10b981, #047857); }
             .bn-phq-toast.warning { background: linear-gradient(135deg, #f59e0b, #b45309); }
             .bn-phq-toast.info { background: linear-gradient(135deg, #4338ca, #3730a3); }
-            @keyframes bnPhqToastIn {
-                from { opacity: 0; transform: translateY(20px) scale(0.92); }
-                to { opacity: 1; transform: translateY(0) scale(1); }
-            }
-            @keyframes bnPhqToastOut {
-                from { opacity: 1; transform: translateY(0) scale(1); }
-                to { opacity: 0; transform: translateY(-20px) scale(0.92); }
-            }
+            @keyframes bnPhqToastIn { from { opacity: 0; transform: translateY(20px) scale(0.92); } to { opacity: 1; transform: translateY(0) scale(1); } }
+            @keyframes bnPhqToastOut { from { opacity: 1; transform: translateY(0) scale(1); } to { opacity: 0; transform: translateY(-20px) scale(0.92); } }
         `;
         document.head.appendChild(style);
     }
 
     function showBuiltInToast(type, title, message, duration = 3200) {
         ensureToastStyles();
-
         if (!document.body) {
             document.addEventListener('DOMContentLoaded',
                 () => showBuiltInToast(type, title, message, duration),
                 { once: true });
             return;
         }
-
         let overlay = document.getElementById('bnPhqToastOverlay');
         if (!overlay) {
             overlay = document.createElement('div');
@@ -144,7 +130,6 @@
             document.body.appendChild(overlay);
         }
         overlay.innerHTML = '';
-
         const iconMap = {
             error: 'fa-circle-exclamation',
             success: 'fa-circle-check',
@@ -173,18 +158,14 @@
         }, duration);
     }
 
-    /**
-     * showToast — يستخدم النظام المدمج مباشرة (مضمون)
-     */
     const showToast = showBuiltInToast;
 
     /* ============================================================
-       4. Confetti
+       3. Confetti
     ============================================================ */
     const bnConfetti = {
         el: null,
         colors: ['#4338ca', '#6366f1', '#818cf8', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6'],
-
         ensureEl() {
             if (this.el && document.body.contains(this.el)) return this.el;
             let existing = document.getElementById('bnConfetti');
@@ -197,16 +178,12 @@
             this.el = existing;
             return existing;
         },
-
         fire(duration = 2000) {
             const el = this.ensureEl();
             if (!el) return;
             el.innerHTML = '';
             el.classList.add('active');
-
-            const pieceCount = 60;
-
-            for (let i = 0; i < pieceCount; i++) {
+            for (let i = 0; i < 60; i++) {
                 const piece = document.createElement('div');
                 piece.className = 'confetti-piece';
                 piece.style.left = Math.random() * 100 + '%';
@@ -216,7 +193,6 @@
                 piece.style.transform = `rotate(${Math.random() * 360}deg)`;
                 el.appendChild(piece);
             }
-
             setTimeout(() => {
                 el.classList.remove('active');
                 el.innerHTML = '';
@@ -225,7 +201,7 @@
     };
 
     /* ============================================================
-       5. PHQ-9 Data
+       4. PHQ-9 Data
     ============================================================ */
     const phqQuestions = [
         'قليلة هي الاهتمامات أو المتعة في القيام بالأشياء.',
@@ -249,7 +225,7 @@
     let currentPhqResult = null;
 
     /* ============================================================
-       6. Render Questions
+       5. Render Questions
     ============================================================ */
     function renderPhqQuestions() {
         const container = document.getElementById('phqQuestionsContainer');
@@ -300,7 +276,7 @@
     }
 
     /* ============================================================
-       7. Score Calculation
+       6. Score Calculation
     ============================================================ */
     function calculatePhqScore(forceDisplay = true) {
         let totalScore = 0, answeredQuestions = 0;
@@ -326,8 +302,8 @@
         const severity = getPhqSeverity(totalScore);
         currentPhqResult = {
             totalScore,
-            severity: severity.name,
-            severityKey: severity.key,
+            severity: severity.name,           // عرض بالعربي
+            severityKey: severity.key,         // minimal / mild / moderate / moderately_severe / severe
             description: severity.description,
             answers,
             testType: 'PHQ-9',
@@ -355,7 +331,7 @@
             description: 'تشير النتيجة إلى مستوى متوسط من أعراض الاكتئاب.'
         };
         if (score <= 19) return {
-            key: 'moderate',
+            key: 'moderately_severe',
             name: 'اكتئاب متوسط إلى شديد',
             description: 'أعراض اكتئاب واضحة تتطلب متابعة وثيقة.'
         };
@@ -381,6 +357,7 @@
             case 'minimal': badge.classList.add('severity-minimal'); break;
             case 'mild': badge.classList.add('severity-mild'); break;
             case 'moderate': badge.classList.add('severity-moderate'); break;
+            case 'moderately_severe': badge.classList.add('severity-moderately-severe'); break;
             case 'severe': badge.classList.add('severity-severe'); break;
         }
 
@@ -403,7 +380,7 @@
     }
 
     /* ============================================================
-       8. Draft Auto-Save
+       7. Draft Auto-Save
     ============================================================ */
     function savePhqDraft() {
         const draft = {};
@@ -434,27 +411,152 @@
     }
 
     /* ============================================================
-       9. Init + Submit Handler
+       8. Apply server assessment to UI
+    ============================================================ */
+    function applyAssessmentToUI(assessment) {
+        if (!assessment) return;
+
+        const totalScore = typeof assessment.totalScore === 'number' ? assessment.totalScore
+            : typeof assessment.TotalScore === 'number' ? assessment.TotalScore : 0;
+        const severityRaw = assessment.severity ?? assessment.Severity ?? '';
+        const answersJson = assessment.answersJson ?? assessment.AnswersJson ?? '';
+
+        const severityKey = mapSeverityNameToKey(severityRaw);
+        const severityInfo = getPhqSeverity(totalScore);
+
+        const result = {
+            totalScore,
+            severity: severityInfo.name,
+            severityKey,
+            description: severityInfo.description,
+            answers: [],
+            testType: 'PHQ-9',
+            completedAt: assessment.createdAt ?? assessment.CreatedAt ?? new Date().toISOString(),
+            fromServer: true
+        };
+
+        if (answersJson) {
+            try {
+                const parsed = typeof answersJson === 'string' ? JSON.parse(answersJson) : answersJson;
+                const answersArray = Array.isArray(parsed) ? parsed : (parsed.answers || []);
+                answersArray.forEach(a => {
+                    const idx = (a.questionNumber ?? a.QuestionNumber ?? 0) - 1;
+                    const score = a.score ?? a.Score ?? 0;
+                    if (idx >= 0 && idx < 9) {
+                        const input = document.querySelector(`input[name="phq_question_${idx}"][value="${score}"]`);
+                        if (input) {
+                            input.checked = true;
+                            input.closest('.question-item')?.classList.add('answered');
+                        }
+                    }
+                });
+                result.answers = answersArray;
+                updatePhqAnswersStatus();
+            } catch (e) {
+                console.warn('⚠️ فشل قراءة AnswersJson:', e);
+            }
+        }
+
+        currentPhqResult = result;
+        displayPhqResult(result);
+    }
+
+    function mapSeverityNameToKey(severity) {
+        if (!severity) return 'minimal';
+        const s = String(severity).trim().toLowerCase();
+        if (s === 'severe' || s.includes('حاد')) return 'severe';
+        if (s === 'moderately_severe' || s.includes('متوسط إلى شديد') || s.includes('متوسط وشديد')) return 'moderately_severe';
+        if (s === 'moderate' || s.includes('متوسط')) return 'moderate';
+        if (s === 'mild' || s.includes('خفيف')) return 'mild';
+        return 'minimal';
+    }
+
+    /* ============================================================
+       9. Load latest assessment from API
+    ============================================================ */
+    async function loadLatestAssessment() {
+        const patientId = getPatientId();
+        if (!patientId) {
+            console.warn('⚠️ No patientId — cannot load latest PHQ-9');
+            return;
+        }
+
+        const urls = getApiUrls();
+        const url = `${urls.latest}${urls.latest.includes('?') ? '&' : '?'}patientId=${encodeURIComponent(patientId)}`;
+
+        try {
+            const res = await fetch(url, {
+                headers: { 'X-Requested-With': 'fetch', 'Accept': 'application/json' },
+                credentials: 'same-origin'
+            });
+
+            if (res.status === 404) {
+                console.log('ℹ️ No previous PHQ-9 assessment for this patient.');
+                return;
+            }
+
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+            const payload = await res.json();
+            console.log('✅ Loaded latest PHQ-9:', payload);
+
+            const assessment = (payload && payload.data && !Array.isArray(payload.data)) ? payload.data
+                : Array.isArray(payload) ? payload[0] : payload;
+
+            applyAssessmentToUI(assessment);
+        } catch (err) {
+            console.error('❌ فشل تحميل آخر تقييم PHQ-9:', err);
+            showToast('error', 'فشل التحميل', 'تعذر تحميل آخر تقييم PHQ-9.');
+        }
+    }
+
+    /* ============================================================
+       10. Build POST payload (يطابق الـ entity)
+    ============================================================ */
+    function buildCreatePayload(result) {
+        const patientId = getPatientId();
+        // ✅ الباك إند يتوقع: minimal / mild / moderate / moderately_severe / severe
+        return {
+            patientId: patientId,
+            totalScore: result.totalScore,
+            severity: result.severityKey,
+            answersJson: JSON.stringify(result.answers || [])
+        };
+    }
+
+    async function createAssessment(payload) {
+        const urls = getApiUrls();
+        const res = await fetch(urls.create, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'fetch',
+                'Accept': 'application/json',
+                'RequestVerificationToken': getAntiForgeryToken()
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify(payload)
+        });
+        const text = await res.text();
+        if (!res.ok) throw new Error(`HTTP ${res.status} — ${text}`);
+        return text ? JSON.parse(text) : null;
+    }
+
+    /* ============================================================
+       11. Init + Submit Handler
     ============================================================ */
     function doInit() {
         renderPhqQuestions();
         restorePhqDraft();
         updatePhqAnswersStatus();
 
-        // زر الحساب
+        loadLatestAssessment();
+
         const calcBtn = document.getElementById('phqCalculateButton');
         if (calcBtn) {
             calcBtn.addEventListener('click', () => calculatePhqScore(true));
         }
 
-        // إذا كان هناك نتيجة محفوظة سابقة، عرضها
-        const savedResult = storage.get('phq9Result');
-        if (savedResult && savedResult.totalScore !== undefined) {
-            currentPhqResult = savedResult;
-            displayPhqResult(savedResult);
-        }
-
-        // Submit handler
         const form = document.getElementById('phqForm');
         if (form) {
             form.addEventListener('submit', async function (event) {
@@ -462,6 +564,15 @@
 
                 const result = calculatePhqScore(true);
                 if (!result) return;
+
+                const patientId = getPatientId();
+                if (!patientId) {
+                    showToast('error', 'خطأ', 'معرّف المريض مفقود.');
+                    return;
+                }
+
+                const payload = buildCreatePayload(result);
+                console.log('📤 POST PHQ-9 payload:', payload);
 
                 const saveButton = document.getElementById('savePhqButton');
                 const saveButtonText = document.getElementById('savePhqButtonText');
@@ -472,22 +583,15 @@
                 saveSpinner.classList.remove('d-none');
 
                 try {
-                    await mockSaveResult(result);
+                    await createAssessment(payload);
 
-                    storage.set('phq9Result', result);
                     storage.remove('draft_phq9Draft');
-                    storage.set('phq9Draft', {
-                        data: result.answers.reduce((acc, a) => {
-                            acc[`phq_question_${a.questionNumber - 1}`] = String(a.score);
-                            return acc;
-                        }, {}),
-                        savedAt: new Date().toISOString()
-                    });
-
                     bnConfetti.fire();
-                    showToast('success', 'تم الحفظ بنجاح', `تم حفظ نتيجة اختبار PHQ-9. النتيجة: ${result.totalScore} من 27.`);
-                } catch (error) {
-                    showToast('error', 'فشل الحفظ', 'حدث خطأ أثناء حفظ نتيجة الاختبار.');
+                    showToast('success', 'تم الحفظ بنجاح',
+                        `تم حفظ تقييم PHQ-9 جديد. النتيجة: ${result.totalScore} من 27.`);
+                } catch (err) {
+                    console.error('❌ فشل حفظ التقييم:', err);
+                    showToast('error', 'فشل الحفظ', err.message || 'حدث خطأ أثناء حفظ التقييم.');
                 } finally {
                     saveButton.disabled = false;
                     saveSpinner.classList.add('d-none');
@@ -496,18 +600,12 @@
             });
         }
 
-        // ✅ إشعار ترحيبي
         setTimeout(() => {
-            showToast('info', 'اختبار PHQ-9', 'أجب على الأسئلة التسعة لتقييم مستوى الاكتئاب. يتم الحفظ التلقائي لكل إجابة.', 5000);
+            showToast('info', 'اختبار PHQ-9', 'أجب على الأسئلة التسعة لتقييم مستوى الاكتئاب. كل حفظ = سجل جديد في قاعدة البيانات.', 5000);
         }, 1000);
 
         console.log('%c✅ PHQ-9 Tab Loaded',
             'background:#4338ca;color:#fff;padding:6px 16px;border-radius:6px;font-weight:bold;font-size:12px;');
-    }
-
-    async function mockSaveResult(result) {
-        console.log('Saving PHQ-9 Result:', result);
-        return new Promise(resolve => setTimeout(() => resolve({ success: true }), 800));
     }
 
     if (document.readyState === 'loading') {

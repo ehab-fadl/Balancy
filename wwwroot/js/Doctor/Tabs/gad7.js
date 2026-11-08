@@ -1,13 +1,44 @@
 ﻿/* ============================================================
-   GAD-7 Anxiety Scale Tab — Standalone Script
-   يعمل مستقلاً AND يتكامل مع bnApp إذا وُجد
+   GAD-7 Anxiety Scale Tab — API-driven
+   - GET: يجلب آخر تقييم GAD-7 للمريض عند فتح الصفحة
+   - POST: كل حفظ = سجل جديد (assessment جديد في DB)
+   - Severity: minimal / mild / moderate / severe (lowercase — مطابق للـ entity)
 ============================================================ */
 
 (function initGad7() {
     console.log('🚀 GAD7.js initialized');
 
     /* ============================================================
-       1. Storage Layer (fallback)
+       0. Utilities
+    ============================================================ */
+    function escapeHtml(value) {
+        const div = document.createElement('div');
+        div.textContent = value ?? '';
+        return div.innerHTML;
+    }
+
+    function getAntiForgeryToken() {
+        return document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+    }
+
+    function getPatientId() {
+        const form = document.getElementById('gadForm');
+        return form?.dataset?.patientId?.trim()
+            || document.getElementById('patientId')?.value?.trim()
+            || sessionStorage.getItem('bnCurrentPatientId')?.trim()
+            || '';
+    }
+
+    function getApiUrls() {
+        const form = document.getElementById('gadForm');
+        return {
+            latest: form?.dataset?.apiLatestUrl || '/Doctor?handler=LatestGad7',
+            create: form?.dataset?.apiCreateUrl || '/Doctor?handler=CreateGad7'
+        };
+    }
+
+    /* ============================================================
+       1. Storage Layer
     ============================================================ */
     const storage = (window.bnApp && window.bnApp.bnStorage) ? window.bnApp.bnStorage : {
         prefix: 'balancy_',
@@ -40,16 +71,7 @@
     };
 
     /* ============================================================
-       2. Utilities — escapeHtml (مبكّر)
-    ============================================================ */
-    function escapeHtml(value) {
-        const div = document.createElement('div');
-        div.textContent = value ?? '';
-        return div.innerHTML;
-    }
-
-    /* ============================================================
-       3. Toast — نظام مدمج مضمون العمل
+       2. Toast
     ============================================================ */
     function ensureToastStyles() {
         if (document.getElementById('bn-gad-toast-styles')) return;
@@ -57,85 +79,49 @@
         style.id = 'bn-gad-toast-styles';
         style.textContent = `
             .bn-gad-toast-overlay {
-                position: fixed !important;
-                top: 0 !important;
-                left: 0 !important;
-                right: 0 !important;
-                bottom: 0 !important;
-                display: none;
-                align-items: center;
-                justify-content: center;
-                z-index: 2147483647 !important;
-                pointer-events: none;
-                padding: 1rem;
-                margin: 0 !important;
+                position: fixed !important; inset: 0 !important;
+                display: none; align-items: center; justify-content: center;
+                z-index: 2147483647 !important; pointer-events: none; padding: 1rem; margin: 0 !important;
             }
             .bn-gad-toast-overlay.show { display: flex !important; }
             .bn-gad-toast {
-                min-width: 300px;
-                max-width: 92vw;
-                padding: 1.1rem 1.4rem;
-                border-radius: 16px;
-                display: flex;
-                align-items: center;
-                gap: 0.85rem;
-                font-family: 'Tajawal', 'Segoe UI', Tahoma, sans-serif;
-                font-weight: 800;
-                font-size: 0.95rem;
-                color: #fff;
+                min-width: 300px; max-width: 92vw;
+                padding: 1.1rem 1.4rem; border-radius: 16px;
+                display: flex; align-items: center; gap: 0.85rem;
+                font-family: 'Tajawal', sans-serif; font-weight: 800;
+                font-size: 0.95rem; color: #fff;
                 box-shadow: 0 20px 50px -12px rgba(15, 23, 42, 0.55);
                 animation: bnGadToastIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-                pointer-events: auto;
-                direction: rtl;
-                line-height: 1.5;
-                position: relative;
+                pointer-events: auto; direction: rtl; line-height: 1.5; position: relative;
             }
             .bn-gad-toast.hide { animation: bnGadToastOut 0.3s ease forwards; }
             .bn-gad-toast-icon {
-                width: 38px;
-                height: 38px;
-                min-width: 38px;
-                border-radius: 50%;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                background: rgba(255, 255, 255, 0.22);
-                font-size: 1.05rem;
+                width: 38px; height: 38px; min-width: 38px;
+                border-radius: 50%; display: flex;
+                align-items: center; justify-content: center;
+                background: rgba(255, 255, 255, 0.22); font-size: 1.05rem;
             }
-            .bn-gad-toast-body {
-                display: flex;
-                flex-direction: column;
-                gap: 0.15rem;
-                text-align: right;
-            }
+            .bn-gad-toast-body { display: flex; flex-direction: column; gap: 0.15rem; text-align: right; }
             .bn-gad-toast-title { font-size: 0.95rem; font-weight: 900; }
             .bn-gad-toast-message { font-size: 0.8rem; font-weight: 600; opacity: 0.95; }
             .bn-gad-toast.error { background: linear-gradient(135deg, #ef4444, #b91c1c); }
             .bn-gad-toast.success { background: linear-gradient(135deg, #10b981, #047857); }
             .bn-gad-toast.warning { background: linear-gradient(135deg, #f59e0b, #b45309); }
             .bn-gad-toast.info { background: linear-gradient(135deg, #0891b2, #0e7490); }
-            @keyframes bnGadToastIn {
-                from { opacity: 0; transform: translateY(20px) scale(0.92); }
-                to { opacity: 1; transform: translateY(0) scale(1); }
-            }
-            @keyframes bnGadToastOut {
-                from { opacity: 1; transform: translateY(0) scale(1); }
-                to { opacity: 0; transform: translateY(-20px) scale(0.92); }
-            }
+            @keyframes bnGadToastIn { from { opacity: 0; transform: translateY(20px) scale(0.92); } to { opacity: 1; transform: translateY(0) scale(1); } }
+            @keyframes bnGadToastOut { from { opacity: 1; transform: translateY(0) scale(1); } to { opacity: 0; transform: translateY(-20px) scale(0.92); } }
         `;
         document.head.appendChild(style);
     }
 
     function showBuiltInToast(type, title, message, duration = 3200) {
         ensureToastStyles();
-
         if (!document.body) {
             document.addEventListener('DOMContentLoaded',
                 () => showBuiltInToast(type, title, message, duration),
                 { once: true });
             return;
         }
-
         let overlay = document.getElementById('bnGadToastOverlay');
         if (!overlay) {
             overlay = document.createElement('div');
@@ -144,7 +130,6 @@
             document.body.appendChild(overlay);
         }
         overlay.innerHTML = '';
-
         const iconMap = {
             error: 'fa-circle-exclamation',
             success: 'fa-circle-check',
@@ -173,19 +158,14 @@
         }, duration);
     }
 
-    /**
-     * showToast — يستخدم النظام المدمج أولاً لضمان العمل
-     * (نستفيد من bnApp فقط إن كان يعمل، لكن لا نعتمد عليه)
-     */
     const showToast = showBuiltInToast;
 
     /* ============================================================
-       4. Confetti
+       3. Confetti
     ============================================================ */
     const bnConfetti = {
         el: null,
         colors: ['#0891b2', '#6366f1', '#f59e0b', '#10b981', '#ef4444', '#ec4899', '#8b5cf6'],
-
         ensureEl() {
             if (this.el && document.body.contains(this.el)) return this.el;
             let existing = document.getElementById('bnConfetti');
@@ -198,16 +178,12 @@
             this.el = existing;
             return existing;
         },
-
         fire(duration = 2000) {
             const el = this.ensureEl();
             if (!el) return;
             el.innerHTML = '';
             el.classList.add('active');
-
-            const pieceCount = 60;
-
-            for (let i = 0; i < pieceCount; i++) {
+            for (let i = 0; i < 60; i++) {
                 const piece = document.createElement('div');
                 piece.className = 'confetti-piece';
                 piece.style.left = Math.random() * 100 + '%';
@@ -217,7 +193,6 @@
                 piece.style.transform = `rotate(${Math.random() * 360}deg)`;
                 el.appendChild(piece);
             }
-
             setTimeout(() => {
                 el.classList.remove('active');
                 el.innerHTML = '';
@@ -226,7 +201,7 @@
     };
 
     /* ============================================================
-       5. GAD-7 Data
+       4. GAD-7 Questions & Answers
     ============================================================ */
     const gadQuestions = [
         'الشعور بالعصبية أو القلق أو التوتر.',
@@ -248,7 +223,7 @@
     let currentResult = null;
 
     /* ============================================================
-       6. Render Questions
+       5. Render Questions
     ============================================================ */
     function renderQuestions() {
         const container = document.getElementById('questionsContainer');
@@ -300,7 +275,7 @@
     }
 
     /* ============================================================
-       7. Score Calculation
+       6. Score Calculation
     ============================================================ */
     function calculateScore(forceDisplay = true) {
         let totalScore = 0, answeredQuestions = 0;
@@ -326,8 +301,8 @@
         const severity = getSeverity(totalScore);
         currentResult = {
             totalScore,
-            severity: severity.name,
-            severityKey: severity.key,
+            severity: severity.name,           // عرض بالعربي
+            severityKey: severity.key,         // minimal / mild / moderate / severe
             description: severity.description,
             answers,
             testType: 'GAD-7',
@@ -398,7 +373,7 @@
     }
 
     /* ============================================================
-       8. Draft Auto-Save
+       7. Draft Auto-Save
     ============================================================ */
     function saveDraft() {
         const draft = {};
@@ -429,27 +404,158 @@
     }
 
     /* ============================================================
-       9. Init + Submit Handler
+       8. Apply server assessment to UI
+    ============================================================ */
+    function applyAssessmentToUI(assessment) {
+        if (!assessment) return;
+
+        const totalScore = typeof assessment.totalScore === 'number' ? assessment.totalScore
+            : typeof assessment.TotalScore === 'number' ? assessment.TotalScore : 0;
+        const severityRaw = assessment.severity ?? assessment.Severity ?? '';
+        const answersJson = assessment.answersJson ?? assessment.AnswersJson ?? '';
+
+        const severityKey = mapSeverityNameToKey(severityRaw);
+        const severityInfo = getSeverity(totalScore);
+
+        const result = {
+            totalScore,
+            severity: severityInfo.name,          // نعرض العربي دائماً
+            severityKey,
+            description: severityInfo.description,
+            answers: [],
+            testType: 'GAD-7',
+            completedAt: assessment.createdAt ?? assessment.CreatedAt ?? new Date().toISOString(),
+            fromServer: true
+        };
+
+        if (answersJson) {
+            try {
+                const parsed = typeof answersJson === 'string' ? JSON.parse(answersJson) : answersJson;
+                const answersArray = Array.isArray(parsed) ? parsed : (parsed.answers || []);
+                answersArray.forEach(a => {
+                    const idx = (a.questionNumber ?? a.QuestionNumber ?? 0) - 1;
+                    const score = a.score ?? a.Score ?? 0;
+                    if (idx >= 0 && idx < 7) {
+                        const input = document.querySelector(`input[name="gad7_question_${idx}"][value="${score}"]`);
+                        if (input) {
+                            input.checked = true;
+                            input.closest('.question-item')?.classList.add('answered');
+                        }
+                    }
+                });
+                result.answers = answersArray;
+                updateAnswersStatus();
+            } catch (e) {
+                console.warn('⚠️ فشل قراءة AnswersJson:', e);
+            }
+        }
+
+        currentResult = result;
+        displayResult(result);
+    }
+
+    /**
+     * يحوّل severity من الـ API (minimal/mild/moderate/severe أو العربي) إلى key.
+     */
+    function mapSeverityNameToKey(severity) {
+        if (!severity) return 'minimal';
+        const s = String(severity).trim().toLowerCase();
+        if (s === 'severe' || s.includes('حاد')) return 'severe';
+        if (s === 'moderate' || s.includes('متوسط')) return 'moderate';
+        if (s === 'mild' || s.includes('طفيف')) return 'mild';
+        return 'minimal';
+    }
+
+    /* ============================================================
+       9. Load latest assessment from API
+    ============================================================ */
+    async function loadLatestAssessment() {
+        const patientId = getPatientId();
+        if (!patientId) {
+            console.warn('⚠️ No patientId — cannot load latest GAD-7');
+            return;
+        }
+
+        const urls = getApiUrls();
+        const url = `${urls.latest}${urls.latest.includes('?') ? '&' : '?'}patientId=${encodeURIComponent(patientId)}`;
+
+        try {
+            const res = await fetch(url, {
+                headers: { 'X-Requested-With': 'fetch', 'Accept': 'application/json' },
+                credentials: 'same-origin'
+            });
+
+            if (res.status === 404) {
+                console.log('ℹ️ No previous GAD-7 assessment for this patient.');
+                return;
+            }
+
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+            const payload = await res.json();
+            console.log('✅ Loaded latest GAD-7:', payload);
+
+            const assessment = (payload && payload.data && !Array.isArray(payload.data)) ? payload.data
+                : Array.isArray(payload) ? payload[0] : payload;
+
+            applyAssessmentToUI(assessment);
+        } catch (err) {
+            console.error('❌ فشل تحميل آخر تقييم GAD-7:', err);
+            showToast('error', 'فشل التحميل', 'تعذر تحميل آخر تقييم GAD-7.');
+        }
+    }
+
+    /* ============================================================
+       10. Build POST payload (يطابق الـ entity)
+    ============================================================ */
+    function buildCreatePayload(result) {
+        const patientId = getPatientId();
+        // ✅ الباك إند يتوقع: minimal / mild / moderate / severe (lowercase)
+        //    الـ entity: public string Severity // minimal, mild, moderate, severe
+        return {
+            patientId: patientId,
+            totalScore: result.totalScore,
+            severity: result.severityKey,               // ← القيمة الإنجليزية
+            answersJson: JSON.stringify(result.answers || [])
+        };
+    }
+
+    async function createAssessment(payload) {
+        const urls = getApiUrls();
+        const res = await fetch(urls.create, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'fetch',
+                'Accept': 'application/json',
+                'RequestVerificationToken': getAntiForgeryToken()
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify(payload)
+        });
+        const text = await res.text();
+        if (!res.ok) throw new Error(`HTTP ${res.status} — ${text}`);
+        return text ? JSON.parse(text) : null;
+    }
+
+    /* ============================================================
+       11. Init + Submit Handler
     ============================================================ */
     function doInit() {
         renderQuestions();
         restoreDraft();
         updateAnswersStatus();
 
-        // زر الحساب
+        // Load latest from server
+        loadLatestAssessment();
+
+        // Calculate button
         const calcBtn = document.getElementById('calculateButton');
         if (calcBtn) {
             calcBtn.addEventListener('click', () => calculateScore(true));
         }
 
-        // إذا كان هناك نتيجة محفوظة سابقة، عرضها
-        const savedResult = storage.get('gad7Result');
-        if (savedResult && savedResult.totalScore !== undefined) {
-            currentResult = savedResult;
-            displayResult(savedResult);
-        }
-
-        // Submit handler
+        // Submit — كل حفظ = سجل جديد
         const form = document.getElementById('gadForm');
         if (form) {
             form.addEventListener('submit', async function (event) {
@@ -457,6 +563,15 @@
 
                 const result = calculateScore(true);
                 if (!result) return;
+
+                const patientId = getPatientId();
+                if (!patientId) {
+                    showToast('error', 'خطأ', 'معرّف المريض مفقود.');
+                    return;
+                }
+
+                const payload = buildCreatePayload(result);
+                console.log('📤 POST GAD-7 payload:', payload);
 
                 const saveButton = document.getElementById('saveGadButton');
                 const saveButtonText = document.getElementById('saveGadButtonText');
@@ -467,22 +582,15 @@
                 saveSpinner.classList.remove('d-none');
 
                 try {
-                    await mockSaveResult(result);
+                    await createAssessment(payload);
 
-                    storage.set('gad7Result', result);
                     storage.remove('draft_gad7Draft');
-                    storage.set('gad7Draft', {
-                        data: result.answers.reduce((acc, a) => {
-                            acc[`gad7_question_${a.questionNumber - 1}`] = String(a.score);
-                            return acc;
-                        }, {}),
-                        savedAt: new Date().toISOString()
-                    });
-
                     bnConfetti.fire();
-                    showToast('success', 'تم الحفظ بنجاح', `تم حفظ نتيجة اختبار GAD-7. النتيجة: ${result.totalScore} من 21.`);
-                } catch (error) {
-                    showToast('error', 'فشل الحفظ', 'حدث خطأ أثناء حفظ نتيجة الاختبار.');
+                    showToast('success', 'تم الحفظ بنجاح',
+                        `تم حفظ تقييم GAD-7 جديد. النتيجة: ${result.totalScore} من 21.`);
+                } catch (err) {
+                    console.error('❌ فشل حفظ التقييم:', err);
+                    showToast('error', 'فشل الحفظ', err.message || 'حدث خطأ أثناء حفظ التقييم.');
                 } finally {
                     saveButton.disabled = false;
                     saveSpinner.classList.add('d-none');
@@ -491,18 +599,12 @@
             });
         }
 
-        // ✅ إشعار ترحيبي
         setTimeout(() => {
-            showToast('info', 'اختبار GAD-7', 'أجب على الأسئلة السبعة لحساب درجة القلق. يتم الحفظ التلقائي لكل إجابة.', 5000);
+            showToast('info', 'اختبار GAD-7', 'أجب على الأسئلة السبعة لحساب درجة القلق. كل حفظ = سجل جديد في قاعدة البيانات.', 5000);
         }, 1000);
 
         console.log('%c✅ GAD-7 Tab Loaded',
             'background:#0891b2;color:#fff;padding:6px 16px;border-radius:6px;font-weight:bold;font-size:12px;');
-    }
-
-    async function mockSaveResult(result) {
-        console.log('Saving GAD-7 Result:', result);
-        return new Promise(resolve => setTimeout(() => resolve({ success: true }), 800));
     }
 
     if (document.readyState === 'loading') {
