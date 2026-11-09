@@ -1,38 +1,15 @@
 ﻿/* ============================================================
-   Substance Use Tab — Standalone Script
-   يعمل مستقلاً AND يتكامل مع bnApp إذا وُجد
+   Substance Use Tab — API-driven (GET/POST/PUT/DELETE)
+   - يطابق SubstanceUseCreateDto/UpdateDto/ResponseDto
+   - يحافظ على: Toast, Confirm Modal, Validation, Confetti, Badges, Stats
+   - يحذف: localStorage
 ============================================================ */
 
 (function initSubstanceUse() {
     console.log('🚀 SubstanceUse.js initialized');
 
     /* ============================================================
-       1. Storage Layer (fallback)
-    ============================================================ */
-    const storage = (window.bnApp && window.bnApp.bnStorage) ? window.bnApp.bnStorage : {
-        prefix: 'balancy_',
-        isAvailable() {
-            try { const t = '__bn_test__'; localStorage.setItem(t, t); localStorage.removeItem(t); return true; }
-            catch (e) { return false; }
-        },
-        get(key, defaultValue = null) {
-            if (!this.isAvailable()) return defaultValue;
-            try { const raw = localStorage.getItem(this.prefix + key); return raw ? JSON.parse(raw) : defaultValue; }
-            catch (e) { return defaultValue; }
-        },
-        set(key, value) {
-            if (!this.isAvailable()) return false;
-            try { localStorage.setItem(this.prefix + key, JSON.stringify(value)); return true; }
-            catch (e) { return false; }
-        },
-        remove(key) {
-            if (!this.isAvailable()) return;
-            try { localStorage.removeItem(this.prefix + key); } catch (e) { }
-        }
-    };
-
-    /* ============================================================
-       2. Utilities — escapeHtml
+       0. Utilities
     ============================================================ */
     function escapeHtml(value) {
         const div = document.createElement('div');
@@ -40,15 +17,58 @@
         return div.innerHTML;
     }
 
+    function getAntiForgeryToken() {
+        return document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+    }
+
+    function getPatientId() {
+        const form = document.getElementById('substanceUseForm');
+        return form?.dataset?.patientId?.trim()
+            || document.getElementById('patientId')?.value?.trim()
+            || sessionStorage.getItem('bnCurrentPatientId')?.trim()
+            || '';
+    }
+
+    function getApiUrls() {
+        const form = document.getElementById('substanceUseForm');
+        return {
+            list: form?.dataset?.apiListUrl || '/Doctor?handler=SubstanceUses',
+            create: form?.dataset?.apiCreateUrl || '/Doctor?handler=CreateSubstanceUse',
+            update: form?.dataset?.apiUpdateUrl || '/Doctor?handler=UpdateSubstanceUse',
+            del: form?.dataset?.apiDeleteUrl || '/Doctor?handler=SubstanceUse'
+        };
+    }
+
+    function isValidGuid(value) {
+        if (!value) return false;
+        return /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(String(value).trim());
+    }
+
+    function toIsoDateTime(dateInputValue) {
+        if (!dateInputValue) return null;
+        const d = new Date(dateInputValue + 'T00:00:00Z');
+        if (isNaN(d.getTime())) return null;
+        return d.toISOString();
+    }
+
+    function normalizeDateForInput(value) {
+        if (!value) return '';
+        try {
+            const d = new Date(value);
+            if (isNaN(d.getTime())) return '';
+            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        } catch { return ''; }
+    }
+
     /* ============================================================
-       3. Toast — نظام مدمج
+       1. Toast
     ============================================================ */
     function ensureToastStyles() {
         if (document.getElementById('bn-su-toast-styles')) return;
         const style = document.createElement('style');
         style.id = 'bn-su-toast-styles';
         style.textContent = `
-            .bn-su-toast-overlay { position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; display: none; align-items: center; justify-content: center; z-index: 2147483647 !important; pointer-events: none; padding: 1rem; margin: 0 !important; }
+            .bn-su-toast-overlay { position: fixed !important; inset: 0 !important; display: none; align-items: center; justify-content: center; z-index: 2147483647 !important; pointer-events: none; padding: 1rem; margin: 0 !important; }
             .bn-su-toast-overlay.show { display: flex !important; }
             .bn-su-toast { min-width: 300px; max-width: 92vw; padding: 1.1rem 1.4rem; border-radius: 16px; display: flex; align-items: center; gap: 0.85rem; font-family: 'Tajawal', sans-serif; font-weight: 800; font-size: 0.95rem; color: #fff; box-shadow: 0 20px 50px -12px rgba(15, 23, 42, 0.55); animation: bnSuToastIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); pointer-events: auto; direction: rtl; line-height: 1.5; position: relative; }
             .bn-su-toast.hide { animation: bnSuToastOut 0.3s ease forwards; }
@@ -106,7 +126,7 @@
     const showToast = showBuiltInToast;
 
     /* ============================================================
-       4. Confetti
+       2. Confetti
     ============================================================ */
     const bnConfetti = {
         el: null,
@@ -128,8 +148,7 @@
             if (!el) return;
             el.innerHTML = '';
             el.classList.add('active');
-            const pieceCount = 60;
-            for (let i = 0; i < pieceCount; i++) {
+            for (let i = 0; i < 60; i++) {
                 const piece = document.createElement('div');
                 piece.className = 'confetti-piece';
                 piece.style.left = Math.random() * 100 + '%';
@@ -144,7 +163,7 @@
     };
 
     /* ============================================================
-       5. Validation Engine
+       3. Validation Engine
     ============================================================ */
     const bnValidation = {
         rules: {
@@ -160,7 +179,6 @@
             substanceAgeOfOnset: { numberRange: { min: 5, max: 100 }, messages: { numberRange: 'العمر بين 5 و 100' } },
             substanceQuitAttempts: { numberRange: { min: 0, max: 100 }, messages: { numberRange: 'العدد بين 0 و 100' } }
         },
-
         validators: {
             required: (v) => v !== null && v !== undefined && String(v).trim().length > 0,
             minLength: (v, len) => !v || v.trim().length >= len,
@@ -178,13 +196,11 @@
                 return input <= today;
             }
         },
-
         validateField(field) {
             const name = field.name || field.id;
             const rule = this.rules[name];
             if (!rule) return { valid: true };
             const value = field.value;
-
             if (rule.required && !this.validators.required(value)) {
                 return { valid: false, type: 'error', message: rule.messages?.required || 'هذا الحقل مطلوب' };
             }
@@ -203,7 +219,6 @@
             }
             return { valid: true, type: 'success', message: 'صحيح' };
         },
-
         updateFieldUI(field, result) {
             const wrapper = field.closest('.col-md-6, .col-md-12, .col-12') || field.parentElement;
             field.classList.remove('is-valid', 'is-invalid');
@@ -226,7 +241,6 @@
                 messageEl.innerHTML = '';
             }
         },
-
         validateForm(form) {
             const fields = form.querySelectorAll('input, select, textarea');
             let isValid = true;
@@ -245,14 +259,12 @@
             });
             return { isValid, errors };
         },
-
         scrollToFirstError(form) {
             const firstInvalid = form.querySelector('.is-invalid');
             if (!firstInvalid) return;
             firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
             setTimeout(() => firstInvalid.focus({ preventScroll: true }), 400);
         },
-
         showSummary(form, errors) {
             const existing = form.querySelector('.bn-validation-summary');
             if (existing) existing.remove();
@@ -282,7 +294,6 @@
                 setTimeout(() => summary.remove(), 300);
             });
         },
-
         attachToField(field) {
             const name = field.name || field.id;
             if (!this.rules[name]) return;
@@ -301,7 +312,6 @@
                 }
             });
         },
-
         attachToForm(form) {
             if (!form) return;
             form.querySelectorAll('input, select, textarea').forEach(field => this.attachToField(field));
@@ -309,14 +319,21 @@
     };
 
     /* ============================================================
-       6. Confirm Modal
+       4. Confirm Modal
     ============================================================ */
     function showConfirmModal({ title, subtitle, message, confirmText, onConfirm }) {
         const modal = document.getElementById('bnConfirmModal');
+        if (!modal) {
+            if (window.confirm(message?.replace(/<[^>]*>/g, '') || 'هل أنت متأكد؟')) {
+                if (typeof onConfirm === 'function') onConfirm();
+            }
+            return;
+        }
         const titleEl = document.getElementById('bnConfirmModalTitle');
         const subtitleEl = document.getElementById('bnConfirmModalSubtitle');
         const messageEl = document.getElementById('bnConfirmModalMessage');
         const confirmBtn = document.getElementById('bnConfirmModalConfirm');
+        const cancelBtn = document.getElementById('bnConfirmModalCancel');
 
         titleEl.textContent = title || 'تأكيد الحذف';
         subtitleEl.textContent = subtitle || 'لا يمكن التراجع عن هذه العملية';
@@ -328,7 +345,7 @@
         const cleanup = () => {
             modal.classList.remove('show');
             confirmBtn.removeEventListener('click', onConfirmHandler);
-            document.getElementById('bnConfirmModalCancel').removeEventListener('click', onCancelHandler);
+            cancelBtn.removeEventListener('click', onCancelHandler);
             modal.removeEventListener('click', onOverlayClick);
             document.removeEventListener('keydown', onKeyHandler);
         };
@@ -340,13 +357,13 @@
             else if (e.key === 'Enter') { e.preventDefault(); onConfirmHandler(); }
         };
         confirmBtn.addEventListener('click', onConfirmHandler);
-        document.getElementById('bnConfirmModalCancel').addEventListener('click', onCancelHandler);
+        cancelBtn.addEventListener('click', onCancelHandler);
         modal.addEventListener('click', onOverlayClick);
         document.addEventListener('keydown', onKeyHandler);
     }
 
     /* ============================================================
-       7. Badge Helpers
+       5. Badge Helpers
     ============================================================ */
     function getSeverityBadge(severity) {
         if (!severity) return '';
@@ -377,44 +394,55 @@
     }
 
     /* ============================================================
-       8. Substance Use CRUD
+       6. State + Mappers
     ============================================================ */
-    let substanceUseList = storage.get('substanceUse', [
-        {
-            name: 'الكحول', amount: '2-3 كؤوس يومياً', lastUse: '2024-01-15',
-            notes: 'يتم المتابعة أسبوعياً.',
-            type: 'كحول', route: 'فموي', frequency: 'يومياً',
-            duration: 5, ageOfOnset: 20, reason: 'ترفيهي',
-            currentStatus: 'نشط', craving: 7, severity: 'متوسط',
-            physicalDependence: false, psychologicalDependence: true,
-            impactWork: false, impactRelationships: true, impactHealth: true, impactLegal: false,
-            quitAttempts: 2, lastQuitDate: '2023-11-01'
+    let substanceUseList = [];
+    let isLoadingList = false;
+
+    function extractArray(payload) {
+        if (payload == null) return [];
+        if (Array.isArray(payload)) return payload;
+        const candidates = [payload.data, payload.items, payload.result, payload.$values, payload.data?.$values, payload.data?.items];
+        for (const c of candidates) if (Array.isArray(c)) return c;
+        for (const key of Object.keys(payload)) {
+            if (Array.isArray(payload[key])) return payload[key];
         }
-    ]);
+        return [];
+    }
 
-    // ✅ ترحيل البيانات القديمة
-    substanceUseList = substanceUseList.map(item => {
-        if (!item.type) item.type = 'أخرى';
-        if (!item.route) item.route = 'فموي';
-        if (!item.frequency) item.frequency = 'عرضياً';
-        if (item.duration === undefined) item.duration = null;
-        if (item.ageOfOnset === undefined) item.ageOfOnset = null;
-        if (!item.reason) item.reason = '';
-        if (!item.currentStatus) item.currentStatus = 'نشط';
-        if (item.craving === undefined) item.craving = 0;
-        if (!item.severity) item.severity = 'متوسط';
-        if (item.physicalDependence === undefined) item.physicalDependence = false;
-        if (item.psychologicalDependence === undefined) item.psychologicalDependence = false;
-        if (item.impactWork === undefined) item.impactWork = false;
-        if (item.impactRelationships === undefined) item.impactRelationships = false;
-        if (item.impactHealth === undefined) item.impactHealth = false;
-        if (item.impactLegal === undefined) item.impactLegal = false;
-        if (item.quitAttempts === undefined) item.quitAttempts = 0;
-        if (item.lastQuitDate === undefined) item.lastQuitDate = '';
-        return item;
-    });
-    storage.set('substanceUse', substanceUseList);
+    function mapSubstanceDto(dto) {
+        return {
+            id: dto.id ?? dto.Id ?? '',
+            patientId: dto.patientId ?? dto.PatientId ?? '',
+            name: dto.name ?? dto.Name ?? '',
+            type: dto.type ?? dto.Type ?? '',
+            route: dto.route ?? dto.Route ?? '',
+            frequency: dto.frequency ?? dto.Frequency ?? '',
+            amount: dto.amount ?? dto.Amount ?? '',
+            duration: dto.durationYears ?? dto.DurationYears ?? null,
+            ageOfOnset: dto.ageOfOnset ?? dto.AgeOfOnset ?? null,
+            reason: dto.reason ?? dto.Reason ?? '',
+            lastUse: normalizeDateForInput(dto.lastUseDate ?? dto.LastUseDate),
+            currentStatus: dto.currentStatus ?? dto.CurrentStatus ?? '',
+            craving: dto.cravingLevel ?? dto.CravingLevel ?? 0,
+            severity: dto.severity ?? dto.Severity ?? '',
+            physicalDependence: dto.physicalDependence ?? dto.PhysicalDependence ?? false,
+            psychologicalDependence: dto.psychologicalDependence ?? dto.PsychologicalDependence ?? false,
+            impactWork: dto.impactWork ?? dto.ImpactWork ?? false,
+            impactRelationships: dto.impactRelationships ?? dto.ImpactRelationships ?? false,
+            impactHealth: dto.impactHealth ?? dto.ImpactHealth ?? false,
+            impactLegal: dto.impactLegal ?? dto.ImpactLegal ?? false,
+            quitAttempts: dto.quitAttempts ?? dto.QuitAttempts ?? 0,
+            lastQuitDate: dto.lastQuitDate || dto.LastQuitDate ? normalizeDateForInput(dto.lastQuitDate ?? dto.LastQuitDate) : '',
+            notes: dto.notes ?? dto.Notes ?? '',
+            createdAt: dto.createdAt ?? dto.CreatedAt ?? null,
+            updatedAt: dto.updatedAt ?? dto.UpdatedAt ?? null
+        };
+    }
 
+    /* ============================================================
+       7. Stats + Render
+    ============================================================ */
     function updateStatsSummary() {
         const statActive = document.getElementById('suStatActive');
         const statRecovery = document.getElementById('suStatRecovery');
@@ -435,7 +463,7 @@
         if (!tbody) return;
 
         tbody.innerHTML = '';
-        emptyState.style.display = substanceUseList.length === 0 ? 'block' : 'none';
+        if (emptyState) emptyState.style.display = substanceUseList.length === 0 ? 'block' : 'none';
 
         if (badge) {
             if (substanceUseList.length > 0) {
@@ -474,20 +502,194 @@
                 </td>
                 <td class="text-center">
                     <div class="action-btns">
-                        <button type="button" class="btn btn-edit" onclick="editSubstanceUseItem(${index})" aria-label="تعديل"><i class="fa-solid fa-pen"></i></button>
-                        <button type="button" class="btn btn-delete" onclick="deleteSubstanceUseItem(${index})" aria-label="حذف"><i class="fa-solid fa-trash"></i></button>
+                        <button type="button" class="btn btn-edit" data-edit-index="${index}" aria-label="تعديل"><i class="fa-solid fa-pen"></i></button>
+                        <button type="button" class="btn btn-delete" data-delete-index="${index}" aria-label="حذف"><i class="fa-solid fa-trash"></i></button>
                     </div>
                 </td>
             `;
             tbody.appendChild(tr);
         });
 
+        tbody.querySelectorAll('[data-edit-index]').forEach(btn => {
+            btn.addEventListener('click', () => editSubstanceUseItem(parseInt(btn.dataset.editIndex, 10)));
+        });
+        tbody.querySelectorAll('[data-delete-index]').forEach(btn => {
+            btn.addEventListener('click', () => deleteSubstanceUseItem(parseInt(btn.dataset.deleteIndex, 10)));
+        });
+
         updateStatsSummary();
     }
 
+    /* ============================================================
+       8. Load from API
+    ============================================================ */
+    async function loadSubstanceUses() {
+        if (isLoadingList) return;
+        isLoadingList = true;
+        const patientId = getPatientId();
+        if (!patientId) {
+            substanceUseList = [];
+            renderSubstanceUseTable();
+            isLoadingList = false;
+            return;
+        }
+        const urls = getApiUrls();
+        const url = `${urls.list}${urls.list.includes('?') ? '&' : '?'}patientId=${encodeURIComponent(patientId)}`;
+        try {
+            const res = await fetch(url, {
+                headers: { 'X-Requested-With': 'fetch', 'Accept': 'application/json' },
+                credentials: 'same-origin'
+            });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const payload = await res.json();
+            const arr = extractArray(payload);
+            substanceUseList = arr.map(mapSubstanceDto);
+            console.log('✅ Loaded substance uses:', substanceUseList);
+            renderSubstanceUseTable();
+        } catch (err) {
+            console.error('❌ فشل تحميل سجلات التعاطي:', err);
+            substanceUseList = [];
+            renderSubstanceUseTable();
+            showToast('error', 'فشل التحميل', 'تعذر تحميل سجلات التعاطي.');
+        } finally {
+            isLoadingList = false;
+        }
+    }
+
+    /* ============================================================
+       9. Build payloads
+    ============================================================ */
+    function buildCreatePayload() {
+        const patientId = getPatientId();
+        const durationRaw = document.getElementById('substanceDuration').value;
+        const ageOfOnsetRaw = document.getElementById('substanceAgeOfOnset').value;
+        const quitAttemptsRaw = document.getElementById('substanceQuitAttempts').value;
+        const lastQuitDateRaw = document.getElementById('substanceLastQuitDate').value;
+
+        return {
+            patientId: patientId,
+            name: document.getElementById('substanceName').value.trim(),
+            type: document.getElementById('substanceType').value,
+            route: document.getElementById('substanceRoute').value,
+            frequency: document.getElementById('substanceFrequency').value,
+            amount: document.getElementById('substanceAmount').value.trim(),
+            durationYears: durationRaw ? parseFloat(durationRaw) : null,
+            ageOfOnset: ageOfOnsetRaw ? parseInt(ageOfOnsetRaw, 10) : null,
+            reason: document.getElementById('substanceReason').value || null,
+            lastUseDate: toIsoDateTime(document.getElementById('substanceLastUse').value),
+            currentStatus: document.getElementById('substanceCurrentStatus').value,
+            cravingLevel: parseInt(document.getElementById('substanceCraving').value, 10) || 0,
+            severity: document.getElementById('substanceSeverity').value,
+            physicalDependence: document.getElementById('substancePhysicalDependence').checked,
+            psychologicalDependence: document.getElementById('substancePsychologicalDependence').checked,
+            impactWork: document.getElementById('substanceImpactWork').checked,
+            impactRelationships: document.getElementById('substanceImpactRelationships').checked,
+            impactHealth: document.getElementById('substanceImpactHealth').checked,
+            impactLegal: document.getElementById('substanceImpactLegal').checked,
+            quitAttempts: quitAttemptsRaw ? parseInt(quitAttemptsRaw, 10) : 0,
+            lastQuitDate: lastQuitDateRaw ? toIsoDateTime(lastQuitDateRaw) : null,
+            notes: document.getElementById('substanceNotes').value.trim() || null
+        };
+    }
+
+    function buildUpdatePayload() {
+        const editId = document.getElementById('substanceUseEditId').value.trim();
+        const durationRaw = document.getElementById('substanceDuration').value;
+        const ageOfOnsetRaw = document.getElementById('substanceAgeOfOnset').value;
+        const quitAttemptsRaw = document.getElementById('substanceQuitAttempts').value;
+        const lastQuitDateRaw = document.getElementById('substanceLastQuitDate').value;
+
+        return {
+            id: editId,
+            name: document.getElementById('substanceName').value.trim(),
+            type: document.getElementById('substanceType').value,
+            route: document.getElementById('substanceRoute').value,
+            frequency: document.getElementById('substanceFrequency').value,
+            amount: document.getElementById('substanceAmount').value.trim(),
+            durationYears: durationRaw ? parseFloat(durationRaw) : null,
+            ageOfOnset: ageOfOnsetRaw ? parseInt(ageOfOnsetRaw, 10) : null,
+            reason: document.getElementById('substanceReason').value || null,
+            lastUseDate: toIsoDateTime(document.getElementById('substanceLastUse').value),
+            currentStatus: document.getElementById('substanceCurrentStatus').value,
+            cravingLevel: parseInt(document.getElementById('substanceCraving').value, 10) || 0,
+            severity: document.getElementById('substanceSeverity').value,
+            physicalDependence: document.getElementById('substancePhysicalDependence').checked,
+            psychologicalDependence: document.getElementById('substancePsychologicalDependence').checked,
+            impactWork: document.getElementById('substanceImpactWork').checked,
+            impactRelationships: document.getElementById('substanceImpactRelationships').checked,
+            impactHealth: document.getElementById('substanceImpactHealth').checked,
+            impactLegal: document.getElementById('substanceImpactLegal').checked,
+            quitAttempts: quitAttemptsRaw ? parseInt(quitAttemptsRaw, 10) : 0,
+            lastQuitDate: lastQuitDateRaw ? toIsoDateTime(lastQuitDateRaw) : null,
+            notes: document.getElementById('substanceNotes').value.trim() || null
+        };
+    }
+
+    /* ============================================================
+       10. API CRUD
+    ============================================================ */
+    async function createSubstanceUseApi(payload) {
+        const urls = getApiUrls();
+        const res = await fetch(urls.create, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'fetch',
+                'Accept': 'application/json',
+                'RequestVerificationToken': getAntiForgeryToken()
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify(payload)
+        });
+        const text = await res.text();
+        if (!res.ok) throw new Error(`HTTP ${res.status} — ${text}`);
+        return text ? JSON.parse(text) : null;
+    }
+
+    async function updateSubstanceUseApi(id, payload) {
+        if (!isValidGuid(id)) throw new Error(`معرّف السجل غير صالح: "${id}"`);
+        const urls = getApiUrls();
+        const url = `${urls.update}${urls.update.includes('?') ? '&' : '?'}id=${encodeURIComponent(id)}`;
+        const res = await fetch(url, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'fetch',
+                'Accept': 'application/json',
+                'RequestVerificationToken': getAntiForgeryToken()
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify(payload)
+        });
+        const text = await res.text();
+        if (!res.ok) throw new Error(`HTTP ${res.status} — ${text}`);
+        return text ? JSON.parse(text) : null;
+    }
+
+    async function deleteSubstanceUseApi(id) {
+        if (!isValidGuid(id)) throw new Error(`معرّف السجل غير صالح: "${id}"`);
+        const urls = getApiUrls();
+        const url = `${urls.del}${urls.del.includes('?') ? '&' : '?'}id=${encodeURIComponent(id)}`;
+        const res = await fetch(url, {
+            method: 'DELETE',
+            headers: {
+                'X-Requested-With': 'fetch',
+                'Accept': 'application/json',
+                'RequestVerificationToken': getAntiForgeryToken()
+            },
+            credentials: 'same-origin'
+        });
+        const text = await res.text();
+        if (!res.ok) throw new Error(`HTTP ${res.status} — ${text}`);
+        return text ? JSON.parse(text) : null;
+    }
+
+    /* ============================================================
+       11. Form Submit
+    ============================================================ */
     const substanceUseForm = document.getElementById('substanceUseForm');
     if (substanceUseForm) {
-        substanceUseForm.addEventListener('submit', function (e) {
+        substanceUseForm.addEventListener('submit', async function (e) {
             e.preventDefault();
             const { isValid, errors } = bnValidation.validateForm(this);
             if (!isValid) {
@@ -497,50 +699,55 @@
                 return;
             }
 
-            const editIndex = parseInt(document.getElementById('substanceUseEditIndex').value);
-            const item = {
-                name: document.getElementById('substanceName').value.trim(),
-                type: document.getElementById('substanceType').value,
-                route: document.getElementById('substanceRoute').value,
-                frequency: document.getElementById('substanceFrequency').value,
-                amount: document.getElementById('substanceAmount').value.trim(),
-                duration: document.getElementById('substanceDuration').value ? parseFloat(document.getElementById('substanceDuration').value) : null,
-                ageOfOnset: document.getElementById('substanceAgeOfOnset').value ? parseInt(document.getElementById('substanceAgeOfOnset').value) : null,
-                reason: document.getElementById('substanceReason').value,
-                lastUse: document.getElementById('substanceLastUse').value,
-                currentStatus: document.getElementById('substanceCurrentStatus').value,
-                craving: parseInt(document.getElementById('substanceCraving').value) || 0,
-                severity: document.getElementById('substanceSeverity').value,
-                physicalDependence: document.getElementById('substancePhysicalDependence').checked,
-                psychologicalDependence: document.getElementById('substancePsychologicalDependence').checked,
-                impactWork: document.getElementById('substanceImpactWork').checked,
-                impactRelationships: document.getElementById('substanceImpactRelationships').checked,
-                impactHealth: document.getElementById('substanceImpactHealth').checked,
-                impactLegal: document.getElementById('substanceImpactLegal').checked,
-                quitAttempts: document.getElementById('substanceQuitAttempts').value ? parseInt(document.getElementById('substanceQuitAttempts').value) : 0,
-                lastQuitDate: document.getElementById('substanceLastQuitDate').value,
-                notes: document.getElementById('substanceNotes').value.trim()
-            };
+            const editId = document.getElementById('substanceUseEditId').value.trim();
+            const isEdit = !!editId;
 
-            if (editIndex === -1) {
-                substanceUseList.push(item);
-                showToast('success', 'تمت الإضافة', 'تمت إضافة المادة.');
-            } else {
-                substanceUseList[editIndex] = item;
-                showToast('success', 'تم التعديل', 'تم تحديث بيانات المادة.');
+            if (isEdit && !isValidGuid(editId)) {
+                showToast('error', 'خطأ', `معرّف السجل غير صالح: "${editId}"`);
+                return;
             }
 
-            storage.set('substanceUse', substanceUseList);
-            resetSubstanceUseForm();
-            renderSubstanceUseTable();
-            bnConfetti.fire();
+            const payload = isEdit ? buildUpdatePayload() : buildCreatePayload();
+            console.log(`📤 ${isEdit ? 'PUT' : 'POST'} payload:`, payload);
+
+            const submitBtn = document.getElementById('substanceUseSubmitBtn');
+            const originalHtml = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span> جاري الحفظ...';
+
+            try {
+                if (isEdit) {
+                    await updateSubstanceUseApi(editId, payload);
+                    showToast('success', 'تم التعديل', 'تم تحديث بيانات المادة.');
+                } else {
+                    await createSubstanceUseApi(payload);
+                    showToast('success', 'تمت الإضافة', 'تمت إضافة المادة.');
+                }
+                bnConfetti.fire();
+                resetSubstanceUseForm();
+                await loadSubstanceUses();
+            } catch (err) {
+                console.error('❌ فشل حفظ سجل التعاطي:', err);
+                showToast('error', 'فشل الحفظ', err.message || 'حدث خطأ أثناء الحفظ.');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalHtml;
+            }
         });
     }
 
-    window.editSubstanceUseItem = function (index) {
+    /* ============================================================
+       12. Edit / Delete / Reset
+    ============================================================ */
+    function editSubstanceUseItem(index) {
         const item = substanceUseList[index];
         if (!item) return;
-
+        if (!item.id || !isValidGuid(item.id)) {
+            showToast('error', 'خطأ', 'هذا السجل لا يحتوي على معرّف (id) صالح — لا يمكن تعديله.');
+            return;
+        }
+        document.getElementById('substanceUseEditId').value = item.id;
+        document.getElementById('substanceUseEditIndex').value = index;
         document.getElementById('substanceName').value = item.name || '';
         document.getElementById('substanceType').value = item.type || '';
         document.getElementById('substanceRoute').value = item.route || '';
@@ -564,37 +771,45 @@
         document.getElementById('substanceLastQuitDate').value = item.lastQuitDate || '';
         document.getElementById('substanceNotes').value = item.notes || '';
 
-        document.getElementById('substanceUseEditIndex').value = index;
         document.getElementById('substanceUseFormTitle').innerHTML = '<i class="fa-solid fa-pen-to-square"></i> تعديل سجل التعاطي';
         document.getElementById('substanceUseSubmitBtn').innerHTML = '<i class="fa-solid fa-floppy-disk"></i> حفظ التعديل';
         document.getElementById('substanceUseCancelBtn').classList.remove('d-none');
-        document.getElementById('substanceUseForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        substanceUseForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
         showToast('info', 'وضع التعديل', `يمكنك الآن تعديل: ${item.name}`);
-    };
+    }
 
-    window.deleteSubstanceUseItem = function (index) {
-        if (index < 0 || index >= substanceUseList.length) return;
+    function deleteSubstanceUseItem(index) {
         const item = substanceUseList[index];
+        if (!item) return;
+        if (!item.id || !isValidGuid(item.id)) {
+            showToast('error', 'خطأ', 'هذا السجل لا يحتوي على معرّف (id) صالح — لا يمكن حذفه.');
+            return;
+        }
         showConfirmModal({
             title: 'تأكيد حذف المادة',
             subtitle: 'لن تتمكن من استرجاعها',
             message: `هل أنت متأكد من حذف <strong>${escapeHtml(item.name)}</strong>؟`,
             confirmText: 'نعم، احذف',
-            onConfirm: () => {
-                substanceUseList.splice(index, 1);
-                storage.set('substanceUse', substanceUseList);
-                renderSubstanceUseTable();
-                resetSubstanceUseForm();
-                showToast('success', 'تم الحذف', 'تم حذف المادة.');
+            onConfirm: async () => {
+                try {
+                    await deleteSubstanceUseApi(item.id);
+                    showToast('success', 'تم الحذف', 'تم حذف المادة.');
+                    resetSubstanceUseForm();
+                    await loadSubstanceUses();
+                } catch (err) {
+                    console.error('❌ فشل حذف المادة:', err);
+                    showToast('error', 'فشل', err.message || 'حدث خطأ أثناء الحذف.');
+                }
             }
         });
-    };
+    }
 
     window.resetSubstanceUseForm = function () {
         const form = document.getElementById('substanceUseForm');
         if (!form) return;
         form.reset();
         document.getElementById('substanceUseEditIndex').value = '-1';
+        document.getElementById('substanceUseEditId').value = '';
         document.getElementById('substanceCraving').value = 0;
         document.getElementById('substanceCravingValue').textContent = '0 / 10';
         document.getElementById('substanceUseFormTitle').innerHTML = '<i class="fa-solid fa-plus-circle"></i> إضافة مادة جديدة';
@@ -610,10 +825,9 @@
     };
 
     /* ============================================================
-       9. Init
+       13. Init
     ============================================================ */
     function doInit() {
-        renderSubstanceUseTable();
         bnValidation.attachToForm(document.getElementById('substanceUseForm'));
 
         // Craving slider update
@@ -624,6 +838,14 @@
                 cravingValueEl.textContent = `${this.value} / 10`;
             });
         }
+
+        // ضبط تاريخ اليوم افتراضياً
+        const lastUseEl = document.getElementById('substanceLastUse');
+        if (lastUseEl && !lastUseEl.value) {
+            lastUseEl.value = new Date().toISOString().slice(0, 10);
+        }
+
+        loadSubstanceUses();
 
         setTimeout(() => {
             showToast('info', 'تعاطي المواد', 'سجّل نوع المادة، شدتها، وحالة التعافي مع التقييم الطبي الكامل.', 5000);

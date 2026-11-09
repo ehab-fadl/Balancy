@@ -1,12 +1,13 @@
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
-namespace Balancy.Areas.Doctor.Pages.Tabs
+namespace Balancy.Areas.Doctor.Pages.Tabs;
+
+public class ListeningSessionsModel : PageModel
 {
-    public class ListeningSessionsModel : PageModel
+    public string? PatientId { get; set; }
+
+    public void OnGet(string? patientId = null)
     {
-        public void OnGet()
-        {
-        }
+        PatientId = patientId;
     }
 }

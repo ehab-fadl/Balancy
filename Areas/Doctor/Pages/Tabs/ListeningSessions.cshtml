@@ -67,7 +67,22 @@
                     إضافة جلسة استماع جديدة
                 </h3>
 
-                <form id="listeningSessionForm" novalidate>
+                <form id="listeningSessionForm"
+                      novalidate
+                      data-patient-id="@Model.PatientId"
+                      data-api-list-url="/Doctor?handler=ListeningSessions"
+                      data-api-create-url="/Doctor?handler=CreateListeningSession"
+                      data-api-update-url="/Doctor?handler=UpdateListeningSession"
+                      data-api-delete-url="/Doctor?handler=ListeningSession"
+                      data-api-plans-url="/Doctor?handler=TreatmentPlans">
+
+                    @Html.AntiForgeryToken()
+
+                    <input type="hidden" id="sessionEditIndex" value="-1">
+                    <input type="hidden" id="sessionEditId" value="">
+                    <input type="hidden" id="patientId" name="patientId" value="@Model.PatientId">
+                    <input type="hidden" id="sessionMoodBeforeHidden" value="5">
+                    <input type="hidden" id="sessionMoodAfterHidden" value="5">
                     <input type="hidden" id="sessionEditIndex" value="-1">
                     <input type="hidden" id="sessionMoodBeforeHidden" value="5">
                     <input type="hidden" id="sessionMoodAfterHidden" value="5">

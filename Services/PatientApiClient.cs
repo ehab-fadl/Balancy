@@ -826,4 +826,207 @@ public sealed class PatientApiClient : IPatientApiClient
         }
         return true;
     }
+
+    /* =================== Side Effects =================== */
+    public async Task<JsonDocument?> GetSideEffectsRawAsync(string patientId, CancellationToken ct = default)
+    {
+        var response = await _http.GetAsync($"api/SideEffects/patient/{patientId}", ct);
+        if (!response.IsSuccessStatusCode)
+        {
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound) return null;
+            _logger.LogWarning("Get side effects for {PatientId} returned {Status}",
+                patientId, response.StatusCode);
+            response.EnsureSuccessStatusCode();
+        }
+        var raw = await response.Content.ReadAsStringAsync(ct);
+        return string.IsNullOrWhiteSpace(raw) ? null : JsonDocument.Parse(raw);
+    }
+
+    public async Task<JsonDocument?> CreateSideEffectAsync(
+        SideEffectCreateRequest request, CancellationToken ct = default)
+    {
+        var response = await _http.PostAsJsonAsync("api/SideEffects", request, JsonOpts, ct);
+        var raw = await response.Content.ReadAsStringAsync(ct);
+        if (!response.IsSuccessStatusCode)
+            throw new HttpRequestException($"API returned {(int)response.StatusCode}: {raw}", null, response.StatusCode);
+        return string.IsNullOrWhiteSpace(raw) ? null : JsonDocument.Parse(raw);
+    }
+
+    public async Task<JsonDocument?> UpdateSideEffectAsync(
+        string id, SideEffectUpdateRequest request, CancellationToken ct = default)
+    {
+        if (request.Id == Guid.Empty && Guid.TryParse(id, out var parsed))
+            request.Id = parsed;
+
+        var response = await _http.PutAsJsonAsync($"api/SideEffects/{id}", request, JsonOpts, ct);
+        var raw = await response.Content.ReadAsStringAsync(ct);
+        if (!response.IsSuccessStatusCode)
+            throw new HttpRequestException($"API returned {(int)response.StatusCode}: {raw}", null, response.StatusCode);
+        return string.IsNullOrWhiteSpace(raw) ? null : JsonDocument.Parse(raw);
+    }
+
+    public async Task<bool> DeleteSideEffectAsync(string id, CancellationToken ct = default)
+    {
+        var response = await _http.DeleteAsync($"api/SideEffects/{id}", ct);
+        if (!response.IsSuccessStatusCode)
+        {
+            var raw = await response.Content.ReadAsStringAsync(ct);
+            throw new HttpRequestException($"API returned {(int)response.StatusCode}: {raw}", null, response.StatusCode);
+        }
+        return true;
+    }
+
+
+
+    /* =================== Visits =================== */
+    public async Task<JsonDocument?> GetVisitsRawAsync(string patientId, CancellationToken ct = default)
+    {
+        var response = await _http.GetAsync($"api/Visits/patient/{patientId}", ct);
+        if (!response.IsSuccessStatusCode)
+        {
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound) return null;
+            _logger.LogWarning("Get visits for {PatientId} returned {Status}",
+                patientId, response.StatusCode);
+            response.EnsureSuccessStatusCode();
+        }
+        var raw = await response.Content.ReadAsStringAsync(ct);
+        return string.IsNullOrWhiteSpace(raw) ? null : JsonDocument.Parse(raw);
+    }
+
+    public async Task<JsonDocument?> CreateVisitAsync(
+        VisitCreateRequest request, CancellationToken ct = default)
+    {
+        var response = await _http.PostAsJsonAsync("api/Visits", request, JsonOpts, ct);
+        var raw = await response.Content.ReadAsStringAsync(ct);
+        if (!response.IsSuccessStatusCode)
+            throw new HttpRequestException($"API returned {(int)response.StatusCode}: {raw}", null, response.StatusCode);
+        return string.IsNullOrWhiteSpace(raw) ? null : JsonDocument.Parse(raw);
+    }
+
+    public async Task<JsonDocument?> UpdateVisitAsync(
+        string id, VisitUpdateRequest request, CancellationToken ct = default)
+    {
+        if (request.Id == Guid.Empty && Guid.TryParse(id, out var parsed))
+            request.Id = parsed;
+
+        var response = await _http.PutAsJsonAsync($"api/Visits/{id}", request, JsonOpts, ct);
+        var raw = await response.Content.ReadAsStringAsync(ct);
+        if (!response.IsSuccessStatusCode)
+            throw new HttpRequestException($"API returned {(int)response.StatusCode}: {raw}", null, response.StatusCode);
+        return string.IsNullOrWhiteSpace(raw) ? null : JsonDocument.Parse(raw);
+    }
+
+    public async Task<bool> DeleteVisitAsync(string id, CancellationToken ct = default)
+    {
+        var response = await _http.DeleteAsync($"api/Visits/{id}", ct);
+        if (!response.IsSuccessStatusCode)
+        {
+            var raw = await response.Content.ReadAsStringAsync(ct);
+            throw new HttpRequestException($"API returned {(int)response.StatusCode}: {raw}", null, response.StatusCode);
+        }
+        return true;
+    }
+
+
+
+
+    /* =================== Substance Use =================== */
+    public async Task<JsonDocument?> GetSubstanceUsesRawAsync(string patientId, CancellationToken ct = default)
+    {
+        var response = await _http.GetAsync($"api/SubstanceUses/patient/{patientId}", ct);
+        if (!response.IsSuccessStatusCode)
+        {
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound) return null;
+            _logger.LogWarning("Get substance uses for {PatientId} returned {Status}",
+                patientId, response.StatusCode);
+            response.EnsureSuccessStatusCode();
+        }
+        var raw = await response.Content.ReadAsStringAsync(ct);
+        return string.IsNullOrWhiteSpace(raw) ? null : JsonDocument.Parse(raw);
+    }
+
+    public async Task<JsonDocument?> CreateSubstanceUseAsync(
+        SubstanceUseCreateRequest request, CancellationToken ct = default)
+    {
+        var response = await _http.PostAsJsonAsync("api/SubstanceUses", request, JsonOpts, ct);
+        var raw = await response.Content.ReadAsStringAsync(ct);
+        if (!response.IsSuccessStatusCode)
+            throw new HttpRequestException($"API returned {(int)response.StatusCode}: {raw}", null, response.StatusCode);
+        return string.IsNullOrWhiteSpace(raw) ? null : JsonDocument.Parse(raw);
+    }
+
+    public async Task<JsonDocument?> UpdateSubstanceUseAsync(
+        string id, SubstanceUseUpdateRequest request, CancellationToken ct = default)
+    {
+        if (request.Id == Guid.Empty && Guid.TryParse(id, out var parsed))
+            request.Id = parsed;
+
+        var response = await _http.PutAsJsonAsync($"api/SubstanceUses/{id}", request, JsonOpts, ct);
+        var raw = await response.Content.ReadAsStringAsync(ct);
+        if (!response.IsSuccessStatusCode)
+            throw new HttpRequestException($"API returned {(int)response.StatusCode}: {raw}", null, response.StatusCode);
+        return string.IsNullOrWhiteSpace(raw) ? null : JsonDocument.Parse(raw);
+    }
+
+    public async Task<bool> DeleteSubstanceUseAsync(string id, CancellationToken ct = default)
+    {
+        var response = await _http.DeleteAsync($"api/SubstanceUses/{id}", ct);
+        if (!response.IsSuccessStatusCode)
+        {
+            var raw = await response.Content.ReadAsStringAsync(ct);
+            throw new HttpRequestException($"API returned {(int)response.StatusCode}: {raw}", null, response.StatusCode);
+        }
+        return true;
+    }
+
+
+
+    /* =================== Listening Sessions =================== */
+    public async Task<JsonDocument?> GetListeningSessionsRawAsync(string patientId, CancellationToken ct = default)
+    {
+        var response = await _http.GetAsync($"api/ListeningSessions/patient/{patientId}", ct);
+        if (!response.IsSuccessStatusCode)
+        {
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound) return null;
+            _logger.LogWarning("Get listening sessions for {PatientId} returned {Status}",
+                patientId, response.StatusCode);
+            response.EnsureSuccessStatusCode();
+        }
+        var raw = await response.Content.ReadAsStringAsync(ct);
+        return string.IsNullOrWhiteSpace(raw) ? null : JsonDocument.Parse(raw);
+    }
+
+    public async Task<JsonDocument?> CreateListeningSessionAsync(
+        ListeningSessionCreateRequest request, CancellationToken ct = default)
+    {
+        var response = await _http.PostAsJsonAsync("api/ListeningSessions", request, JsonOpts, ct);
+        var raw = await response.Content.ReadAsStringAsync(ct);
+        if (!response.IsSuccessStatusCode)
+            throw new HttpRequestException($"API returned {(int)response.StatusCode}: {raw}", null, response.StatusCode);
+        return string.IsNullOrWhiteSpace(raw) ? null : JsonDocument.Parse(raw);
+    }
+
+    public async Task<JsonDocument?> UpdateListeningSessionAsync(
+        string id, ListeningSessionUpdateRequest request, CancellationToken ct = default)
+    {
+        if (request.Id == Guid.Empty && Guid.TryParse(id, out var parsed))
+            request.Id = parsed;
+
+        var response = await _http.PutAsJsonAsync($"api/ListeningSessions/{id}", request, JsonOpts, ct);
+        var raw = await response.Content.ReadAsStringAsync(ct);
+        if (!response.IsSuccessStatusCode)
+            throw new HttpRequestException($"API returned {(int)response.StatusCode}: {raw}", null, response.StatusCode);
+        return string.IsNullOrWhiteSpace(raw) ? null : JsonDocument.Parse(raw);
+    }
+
+    public async Task<bool> DeleteListeningSessionAsync(string id, CancellationToken ct = default)
+    {
+        var response = await _http.DeleteAsync($"api/ListeningSessions/{id}", ct);
+        if (!response.IsSuccessStatusCode)
+        {
+            var raw = await response.Content.ReadAsStringAsync(ct);
+            throw new HttpRequestException($"API returned {(int)response.StatusCode}: {raw}", null, response.StatusCode);
+        }
+        return true;
+    }
 }

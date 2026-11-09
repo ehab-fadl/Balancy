@@ -35,8 +35,19 @@
                     إضافة عرض جانبي جديد
                 </h3>
 
-                <form id="sideEffectForm" novalidate>
+                <form id="sideEffectForm"
+                      novalidate
+                      data-patient-id="@Model.PatientId"
+                      data-api-list-url="/Doctor?handler=SideEffects"
+                      data-api-create-url="/Doctor?handler=CreateSideEffect"
+                      data-api-update-url="/Doctor?handler=UpdateSideEffect"
+                      data-api-delete-url="/Doctor?handler=SideEffect">
+
+                    @Html.AntiForgeryToken()
+
                     <input type="hidden" id="sideEffectEditIndex" value="-1">
+                    <input type="hidden" id="sideEffectEditId" value="">
+                    <input type="hidden" id="patientId" name="patientId" value="@Model.PatientId">
 
                     <div class="row g-4">
                         <div class="col-md-6">

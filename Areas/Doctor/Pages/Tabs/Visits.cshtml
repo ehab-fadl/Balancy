@@ -35,8 +35,19 @@
                     تسجيل زيارة جديدة
                 </h3>
 
-                <form id="visitForm" novalidate>
+                <form id="visitForm"
+                      novalidate
+                      data-patient-id="@Model.PatientId"
+                      data-api-list-url="/Doctor?handler=Visits"
+                      data-api-create-url="/Doctor?handler=CreateVisit"
+                      data-api-update-url="/Doctor?handler=UpdateVisit"
+                      data-api-delete-url="/Doctor?handler=Visit">
+
+                    @Html.AntiForgeryToken()
+
                     <input type="hidden" id="visitEditIndex" value="-1">
+                    <input type="hidden" id="visitEditId" value="">
+                    <input type="hidden" id="patientId" name="patientId" value="@Model.PatientId">
 
                     <div class="row g-4">
                         <!-- سبب الزيارة -->
@@ -57,7 +68,7 @@
                             <input type="date" class="form-control form-control-custom" id="visitDate" name="visitDate" required>
                         </div>
 
-                        <!-- ✅ نوع الزيارة (جديد) -->
+                        <!-- نوع الزيارة -->
                         <div class="col-md-6">
                             <label for="visitType" class="form-label-custom">
                                 <i class="fa-solid fa-tag"></i>
@@ -72,7 +83,7 @@
                             </select>
                         </div>
 
-                        <!-- ✅ مكان الزيارة (جديد) -->
+                        <!-- مكان الزيارة -->
                         <div class="col-md-6">
                             <label for="visitLocation" class="form-label-custom">
                                 <i class="fa-solid fa-location-dot"></i>
@@ -110,6 +121,13 @@
                                 <i class="fa-solid fa-info-circle"></i>
                                 سيُفتح نموذج لإضافة الموعد دون مغادرة الصفحة
                             </small>
+                            <div id="nextVisitPreview" class="mt-2" style="display:none;">
+                                <span class="badge bg-info text-dark" style="font-size: 0.85rem; padding: 0.5rem 0.75rem;">
+                                    <i class="fa-solid fa-calendar-check"></i>
+                                    الموعد القادم: <strong id="nextVisitPreviewText">—</strong>
+                                    <button type="button" id="clearNextVisitBtn" class="btn btn-sm btn-link text-danger p-0 ms-2" style="font-size: 0.75rem;">مسح</button>
+                                </span>
+                            </div>
                         </div>
                     </div>
 
@@ -143,6 +161,7 @@
                             <th>النوع</th>
                             <th>المكان</th>
                             <th>التاريخ</th>
+                            <th>الزيارة القادمة</th>
                             <th>ملاحظات</th>
                             <th class="text-center">الإجراءات</th>
                         </tr>

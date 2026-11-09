@@ -97,6 +97,32 @@ Task<bool> DeleteTreatmentGoalAsync(string id, CancellationToken ct = default);
 Task<JsonDocument?> CreateTreatmentMeanAsync(TreatmentMeanCreateRequest request, CancellationToken ct = default);
 Task<JsonDocument?> UpdateTreatmentMeanAsync(string id, TreatmentMeanUpdateRequest request, CancellationToken ct = default);
 Task<bool> DeleteTreatmentMeanAsync(string id, CancellationToken ct = default);
+
+    // ===== Side Effects =====
+    Task<JsonDocument?> GetSideEffectsRawAsync(string patientId, CancellationToken ct = default);
+    Task<JsonDocument?> CreateSideEffectAsync(SideEffectCreateRequest request, CancellationToken ct = default);
+    Task<JsonDocument?> UpdateSideEffectAsync(string id, SideEffectUpdateRequest request, CancellationToken ct = default);
+    Task<bool> DeleteSideEffectAsync(string id, CancellationToken ct = default);
+
+
+    // ===== Visits =====
+    Task<JsonDocument?> GetVisitsRawAsync(string patientId, CancellationToken ct = default);
+    Task<JsonDocument?> CreateVisitAsync(VisitCreateRequest request, CancellationToken ct = default);
+    Task<JsonDocument?> UpdateVisitAsync(string id, VisitUpdateRequest request, CancellationToken ct = default);
+    Task<bool> DeleteVisitAsync(string id, CancellationToken ct = default);
+
+
+    // ===== Substance Use =====
+    Task<JsonDocument?> GetSubstanceUsesRawAsync(string patientId, CancellationToken ct = default);
+    Task<JsonDocument?> CreateSubstanceUseAsync(SubstanceUseCreateRequest request, CancellationToken ct = default);
+    Task<JsonDocument?> UpdateSubstanceUseAsync(string id, SubstanceUseUpdateRequest request, CancellationToken ct = default);
+    Task<bool> DeleteSubstanceUseAsync(string id, CancellationToken ct = default);
+
+    // ===== Listening Sessions =====
+    Task<JsonDocument?> GetListeningSessionsRawAsync(string patientId, CancellationToken ct = default);
+    Task<JsonDocument?> CreateListeningSessionAsync(ListeningSessionCreateRequest request, CancellationToken ct = default);
+    Task<JsonDocument?> UpdateListeningSessionAsync(string id, ListeningSessionUpdateRequest request, CancellationToken ct = default);
+    Task<bool> DeleteListeningSessionAsync(string id, CancellationToken ct = default);
 }
 
 public sealed class PatientSummaryDto
