@@ -308,6 +308,16 @@ let isLoadingPatient = false;
 let isLoadingPatients = false;
 
 /**
+ * مطابقة آمنة لمعرّف المريض (case-insensitive + trim + string coercion).
+ * تعالج فروق حالة الأحرف بين GUID من الـ API و GUID من الـ URL.
+ */
+function findPatientSafeId(rawId) {
+    if (!rawId) return null;
+    const needle = String(rawId).trim().toLowerCase();
+    return patients.find(p => String(p.id || '').trim().toLowerCase() === needle) || null;
+}
+
+/**
  * استخراج الكود من patientCode (object) أو من حقل مسطح.
  */
 function extractPatientCode(dto) {
@@ -624,6 +634,7 @@ function renderPatientsList(filterText = '') {
 
     console.log(`✅ تم رسم ${filtered.length} مريض في القائمة`);
 }
+
 /* ============================================================
    6. Load Patient Details
 ============================================================ */
@@ -631,7 +642,25 @@ async function loadPatientDetailsIntoMain(patientId) {
     if (isLoadingPatient) return;
     isLoadingPatient = true;
 
-    const patient = patients.find(p => p.id === patientId);
+    // ✅ بحث آمن (case-insensitive) — لا يعتمد على تطابق === الحرفي
+    const patient = findPatientSafeId(patientId);
+
+    // ✅ حدّث sessionStorage فوراً حتى لو لم يُعثر على المريض في القائمة
+    // (صفحة PatientDetails تقرأ من هنا عند التحميل)
+    const pid = String(patientId);
+    window.bnCurrentPatientId = pid;
+    sessionStorage.setItem('bnCurrentPatientId', pid);
+
+    if (patient) {
+        window.bnCurrentPatientCode = patient.code;
+        window.bnCurrentPatientName = patient.name;
+        window.bnCurrentPatientAge = patient.age;
+
+        sessionStorage.setItem('bnCurrentPatientCode', patient.code || '');
+        sessionStorage.setItem('bnCurrentPatientName', patient.name || '');
+        sessionStorage.setItem('bnCurrentPatientAge', patient.age != null ? String(patient.age) : '');
+    }
+
     const mainArea = document.querySelector('.main-content-area');
     if (!mainArea) {
         isLoadingPatient = false;
@@ -646,19 +675,7 @@ async function loadPatientDetailsIntoMain(patientId) {
     `;
 
     try {
-        if (patient) {
-            window.bnCurrentPatientId = patient.id;
-            window.bnCurrentPatientCode = patient.code;
-            window.bnCurrentPatientName = patient.name;
-            window.bnCurrentPatientAge = patient.age;
-
-            sessionStorage.setItem('bnCurrentPatientId', patient.id);
-            sessionStorage.setItem('bnCurrentPatientCode', patient.code || '');
-            sessionStorage.setItem('bnCurrentPatientName', patient.name || '');
-            sessionStorage.setItem('bnCurrentPatientAge', patient.age != null ? String(patient.age) : '');
-        }
-
-        const url = `/Doctor/PatientDetails?id=${encodeURIComponent(patientId)}&t=${Date.now()}`;
+        const url = `/Doctor/PatientDetails?id=${encodeURIComponent(pid)}&t=${Date.now()}`;
         const res = await fetch(url, { headers: { 'X-Requested-With': 'fetch' } });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
@@ -681,7 +698,7 @@ async function loadPatientDetailsIntoMain(patientId) {
         fillPatientCodeInDetails(patient?.code);
 
         // ✅ تحديث روابط الوثائق والتقارير
-        updateDocumentLinks(patientId);
+        updateDocumentLinks(pid);
 
         ensureStylesheet('/css/doctor/patientdetails.css');
 
@@ -781,11 +798,18 @@ function ensurePatientDetailsScript() {
    7. Select Patient
 ============================================================ */
 function selectPatient(patientId) {
-    const patient = patients.find(p => p.id === patientId);
-    if (!patient) return;
+    // ✅ مطابقة آمنة بـ case-insensitive
+    const patient = findPatientSafeId(patientId);
+    if (!patient) {
+        console.warn('⚠️ المريض غير موجود بالقائمة:', patientId);
+        return;
+    }
 
-    if (selectedPatientId === patientId) {
-        loadPatientDetailsIntoMain(patientId);
+    // ✅ التطبيع النهائي: نستخدم patient.id من الـ API
+    const normalizedId = patient.id;
+
+    if (selectedPatientId === normalizedId) {
+        loadPatientDetailsIntoMain(normalizedId);
         return;
     }
 
@@ -804,10 +828,13 @@ function selectPatient(patientId) {
 }
 
 function applyPatientSelection(patient) {
-    selectedPatientId = patient.id;
-    bnStorage.set('selectedPatientId', patient.id);
+    // ✅ تطبيع ID كـ string
+    const pid = String(patient.id);
+    selectedPatientId = pid;
+    bnStorage.set('selectedPatientId', pid);
 
-    sessionStorage.setItem('bnCurrentPatientId', patient.id);
+    // ✅ حفظ فوري في sessionStorage قبل أي fetch
+    sessionStorage.setItem('bnCurrentPatientId', pid);
     sessionStorage.setItem('bnCurrentPatientCode', patient.code || '');
     sessionStorage.setItem('bnCurrentPatientName', patient.name || '');
     sessionStorage.setItem('bnCurrentPatientAge', patient.age != null ? String(patient.age) : '');
@@ -815,15 +842,15 @@ function applyPatientSelection(patient) {
 
     renderPatientsList(document.getElementById('patientSearch')?.value || '');
 
-    const newUrl = `/Doctor?patientId=${encodeURIComponent(patient.id)}`;
+    const newUrl = `/Doctor?patientId=${encodeURIComponent(pid)}`;
     window.history.pushState(
-        { patientId: patient.id },
+        { patientId: pid },
         `ملف المريض: ${patient.name}`,
         newUrl
     );
 
     showToast('success', 'تم اختيار المريض', `جارٍ تحميل ملف: ${patient.name}`);
-    loadPatientDetailsIntoMain(patient.id);
+    loadPatientDetailsIntoMain(pid);
 }
 
 /* ============================================================
@@ -832,9 +859,10 @@ function applyPatientSelection(patient) {
 function openPatientStatistics(patientId, patientName) {
     if (!patientId) return;
 
-    const patient = patients.find(p => p.id === patientId);
+    const patient = findPatientSafeId(patientId);
 
-    sessionStorage.setItem('bnCurrentPatientId', patientId);
+    const pid = String(patientId);
+    sessionStorage.setItem('bnCurrentPatientId', pid);
     sessionStorage.setItem('bnCurrentPatientCode', patient?.code || '');
     sessionStorage.setItem('bnLastPatientName', patientName || '');
     sessionStorage.setItem('bnReturnToDoctor', 'true');
@@ -842,7 +870,7 @@ function openPatientStatistics(patientId, patientName) {
     showToast('info', 'إحصائيات الاكتئاب',
         patientName ? `جارٍ فتح إحصائيات: ${patientName}` : 'جارٍ فتح الإحصائيات...');
 
-    window.location.href = `/Doctor/Statistic?id=${encodeURIComponent(patientId)}`;
+    window.location.href = `/Doctor/Statistic?id=${encodeURIComponent(pid)}`;
 }
 
 window.openPatientStatistics = openPatientStatistics;
@@ -883,9 +911,13 @@ window.addEventListener('DOMContentLoaded', async () => {
 
     sessionStorage.removeItem('bnReturnToDoctor');
 
-    if (targetId && patients.some(p => p.id === targetId)) {
+    // ✅ مطابقة آمنة للـ ID (case-insensitive + string coercion)
+    const matchedPatient = findPatientSafeId(targetId);
+    console.log('🎯 targetId =', targetId, '| matched =', matchedPatient?.name || 'NONE');
+
+    if (matchedPatient) {
         selectedPatientId = null;
-        selectPatient(targetId);
+        selectPatient(matchedPatient.id);
     }
 
     setTimeout(() => {
@@ -906,9 +938,11 @@ window.addEventListener('popstate', () => {
     const patientId = urlParams.get('patientId');
 
     if (patientId) {
-        if (patients.some(p => p.id === patientId)) {
+        // ✅ مطابقة آمنة
+        const matched = findPatientSafeId(patientId);
+        if (matched) {
             selectedPatientId = null;
-            selectPatient(patientId);
+            selectPatient(matched.id);
         }
     } else {
         selectedPatientId = null;

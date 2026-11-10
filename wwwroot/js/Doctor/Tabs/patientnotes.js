@@ -1,38 +1,16 @@
 ﻿/* ============================================================
-   Patient Notes Tab — Standalone Script
-   يعمل مستقلاً AND يتكامل مع bnApp إذا وُجد
+   Patient Notes Tab — API-driven (GET/POST/PUT/DELETE)
+   - يطابق PatientNoteCreateDto/UpdateDto/ResponseDto
+   - Symptoms → string مفصول بفاصلة
+   - LinkItemId → GUID من قوائم العناصر المحمّلة من الـ API
+   - يحذف: localStorage + mock data
 ============================================================ */
 
 (function initPatientNotes() {
     console.log('🚀 PatientNotes.js initialized');
 
     /* ============================================================
-       1. Storage Layer
-    ============================================================ */
-    const storage = (window.bnApp && window.bnApp.bnStorage) ? window.bnApp.bnStorage : {
-        prefix: 'balancy_',
-        isAvailable() {
-            try { const t = '__bn_test__'; localStorage.setItem(t, t); localStorage.removeItem(t); return true; }
-            catch (e) { return false; }
-        },
-        get(key, defaultValue = null) {
-            if (!this.isAvailable()) return defaultValue;
-            try { const raw = localStorage.getItem(this.prefix + key); return raw ? JSON.parse(raw) : defaultValue; }
-            catch (e) { return defaultValue; }
-        },
-        set(key, value) {
-            if (!this.isAvailable()) return false;
-            try { localStorage.setItem(this.prefix + key, JSON.stringify(value)); return true; }
-            catch (e) { return false; }
-        },
-        remove(key) {
-            if (!this.isAvailable()) return;
-            try { localStorage.removeItem(this.prefix + key); } catch (e) { }
-        }
-    };
-
-    /* ============================================================
-       2. Utilities — escapeHtml
+       0. Utilities
     ============================================================ */
     function escapeHtml(value) {
         const div = document.createElement('div');
@@ -40,15 +18,78 @@
         return div.innerHTML;
     }
 
+    function getAntiForgeryToken() {
+        return document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+    }
+
+    function getPatientId() {
+        const form = document.getElementById('patientNoteForm');
+        return form?.dataset?.patientId?.trim()
+            || document.getElementById('patientId')?.value?.trim()
+            || sessionStorage.getItem('bnCurrentPatientId')?.trim()
+            || '';
+    }
+
+    function getApiUrls() {
+        const form = document.getElementById('patientNoteForm');
+        return {
+            list: form?.dataset?.apiListUrl || '/Doctor?handler=PatientNotes',
+            create: form?.dataset?.apiCreateUrl || '/Doctor?handler=CreatePatientNote',
+            update: form?.dataset?.apiUpdateUrl || '/Doctor?handler=UpdatePatientNote',
+            del: form?.dataset?.apiDeleteUrl || '/Doctor?handler=PatientNote',
+            sessions: form?.dataset?.apiSessionsUrl || '/Doctor?handler=ListeningSessions',
+            visits: form?.dataset?.apiVisitsUrl || '/Doctor?handler=Visits',
+            plans: form?.dataset?.apiPlansUrl || '/Doctor?handler=TreatmentPlans',
+            medications: form?.dataset?.apiMedicationsUrl || '/Doctor?handler=Medications'
+        };
+    }
+
+    function isValidGuid(value) {
+        if (!value) return false;
+        return /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(String(value).trim());
+    }
+
+    function toIsoDateTime(dateInputValue) {
+        if (!dateInputValue) return null;
+        const d = new Date(dateInputValue + 'T00:00:00Z');
+        if (isNaN(d.getTime())) return null;
+        return d.toISOString();
+    }
+
+    function normalizeDateForInput(value) {
+        if (!value) return '';
+        try {
+            const d = new Date(value);
+            if (isNaN(d.getTime())) return '';
+            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        } catch { return ''; }
+    }
+
+    function splitCommaString(str) {
+        if (!str) return [];
+        return String(str).split(',').map(s => s.trim()).filter(Boolean);
+    }
+
+    function extractArray(payload) {
+        if (payload == null) return [];
+        if (Array.isArray(payload)) return payload;
+        const candidates = [payload.data, payload.items, payload.result, payload.$values, payload.data?.$values, payload.data?.items];
+        for (const c of candidates) if (Array.isArray(c)) return c;
+        for (const key of Object.keys(payload)) {
+            if (Array.isArray(payload[key])) return payload[key];
+        }
+        return [];
+    }
+
     /* ============================================================
-       3. Toast
+       1. Toast
     ============================================================ */
     function ensureToastStyles() {
         if (document.getElementById('bn-pn-toast-styles')) return;
         const style = document.createElement('style');
         style.id = 'bn-pn-toast-styles';
         style.textContent = `
-            .bn-pn-toast-overlay { position: fixed !important; top: 0; left: 0; right: 0; bottom: 0; display: none; align-items: center; justify-content: center; z-index: 2147483647 !important; pointer-events: none; padding: 1rem; margin: 0 !important; }
+            .bn-pn-toast-overlay { position: fixed !important; inset: 0 !important; display: none; align-items: center; justify-content: center; z-index: 2147483647 !important; pointer-events: none; padding: 1rem; margin: 0 !important; }
             .bn-pn-toast-overlay.show { display: flex !important; }
             .bn-pn-toast { min-width: 300px; max-width: 92vw; padding: 1.1rem 1.4rem; border-radius: 16px; display: flex; align-items: center; gap: 0.85rem; font-family: 'Tajawal', sans-serif; font-weight: 800; font-size: 0.95rem; color: #fff; box-shadow: 0 20px 50px -12px rgba(15, 23, 42, 0.55); animation: bnPnToastIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); pointer-events: auto; direction: rtl; line-height: 1.5; position: relative; }
             .bn-pn-toast.hide { animation: bnPnToastOut 0.3s ease forwards; }
@@ -106,7 +147,7 @@
     const showToast = showBuiltInToast;
 
     /* ============================================================
-       4. Confetti
+       2. Confetti
     ============================================================ */
     const bnConfetti = {
         el: null,
@@ -128,8 +169,7 @@
             if (!el) return;
             el.innerHTML = '';
             el.classList.add('active');
-            const pieceCount = 60;
-            for (let i = 0; i < pieceCount; i++) {
+            for (let i = 0; i < 60; i++) {
                 const piece = document.createElement('div');
                 piece.className = 'confetti-piece';
                 piece.style.left = Math.random() * 100 + '%';
@@ -144,49 +184,18 @@
     };
 
     /* ============================================================
-       5. Validation Engine — مع القواعد الجديدة
+       3. Validation
     ============================================================ */
     const bnValidation = {
         rules: {
-            noteTitle: {
-                required: true, minLength: 3, maxLength: 150,
-                messages: {
-                    required: 'عنوان الملاحظة مطلوب',
-                    minLength: 'العنوان قصير جداً (3 أحرف على الأقل)',
-                    maxLength: 'العنوان طويل جداً'
-                }
-            },
-            noteDate: {
-                required: true,
-                messages: { required: 'تاريخ الملاحظة مطلوب' }
-            },
-            noteType: {
-                required: true,
-                messages: { required: 'يرجى اختيار نوع الملاحظة' }
-            },
-            noteAuthor: {
-                required: true, minLength: 2, maxLength: 100,
-                messages: { required: 'اسم الكاتب مطلوب', minLength: 'الاسم قصير جداً' }
-            },
-            noteAuthorRole: {
-                required: true,
-                messages: { required: 'يرجى اختيار دور الكاتب' }
-            },
-            noteVisibility: {
-                required: true,
-                messages: { required: 'يرجى تحديد مستوى السرية' }
-            },
-            noteContent: {
-                required: true, minLength: 10, maxLength: 3000,
-                messages: {
-                    required: 'محتوى الملاحظة مطلوب',
-                    minLength: 'المحتوى قصير جداً (10 أحرف على الأقل)',
-                    maxLength: 'الحد الأقصى 3000 حرف'
-                }
-            }
+            noteTitle: { required: true, minLength: 3, maxLength: 150, messages: { required: 'عنوان الملاحظة مطلوب', minLength: 'العنوان قصير جداً' } },
+            noteDate: { required: true, messages: { required: 'تاريخ الملاحظة مطلوب' } },
+            noteType: { required: true, messages: { required: 'يرجى اختيار نوع الملاحظة' } },
+            noteAuthor: { required: true, minLength: 2, maxLength: 100, messages: { required: 'اسم الكاتب مطلوب' } },
+            noteAuthorRole: { required: true, messages: { required: 'يرجى اختيار دور الكاتب' } },
+            noteVisibility: { required: true, messages: { required: 'يرجى تحديد مستوى السرية' } },
+            noteContent: { required: true, minLength: 10, maxLength: 3000, messages: { required: 'محتوى الملاحظة مطلوب', minLength: 'المحتوى قصير جداً' } }
         },
-
-        // ✅ قواعد شرطية
         conditionalRules: [
             {
                 id: 'riskIfIncident',
@@ -194,12 +203,7 @@
                     const noteType = document.getElementById('noteType').value;
                     const risk = document.getElementById('noteRiskLevel').value;
                     if (noteType === 'Incident' && !risk) {
-                        return {
-                            field: document.getElementById('noteRiskLevel'),
-                            label: 'مستوى الخطر',
-                            message: 'يجب تقييم مستوى الخطر لملاحظات الحوادث الطارئة',
-                            type: 'error'
-                        };
+                        return { field: document.getElementById('noteRiskLevel'), label: 'مستوى الخطر', message: 'يجب تقييم مستوى الخطر لملاحظات الحوادث', type: 'error' };
                     }
                     return null;
                 }
@@ -210,52 +214,26 @@
                     const suicidal = Array.from(document.querySelectorAll('.pn-symptom:checked')).some(c => c.value === 'أفكار انتحارية');
                     const risk = document.getElementById('noteRiskLevel').value;
                     if (suicidal && (!risk || risk === 'لا' || risk === 'منخفض')) {
-                        return {
-                            field: document.getElementById('noteRiskLevel'),
-                            label: 'مستوى الخطر',
-                            message: 'عند ملاحظة أفكار انتحارية، يجب تحديد مستوى خطر متوسط على الأقل',
-                            type: 'error'
-                        };
-                    }
-                    return null;
-                }
-            },
-            {
-                id: 'linkItemRequired',
-                check: function () {
-                    const linkType = document.getElementById('noteLinkType').value;
-                    const linkItem = document.getElementById('noteLinkItem').value;
-                    if (linkType && !linkItem) {
-                        return {
-                            field: document.getElementById('noteLinkItem'),
-                            label: 'ربط بعنصر',
-                            message: 'اختر العنصر الذي تريد ربط الملاحظة به',
-                            type: 'error'
-                        };
+                        return { field: document.getElementById('noteRiskLevel'), label: 'مستوى الخطر', message: 'عند ملاحظة أفكار انتحارية، حدد خطر متوسط على الأقل', type: 'error' };
                     }
                     return null;
                 }
             }
         ],
-
         validators: {
             required: (v) => v !== null && v !== undefined && String(v).trim().length > 0,
             minLength: (v, len) => !v || v.trim().length >= len,
             maxLength: (v, len) => !v || v.length <= len
         },
-
         validateField(field) {
             const name = field.name || field.id;
             const rule = this.rules[name];
             if (!rule) return { valid: true };
-
             const value = field.value;
-
             if (rule.required && !this.validators.required(value)) {
                 return { valid: false, type: 'error', message: rule.messages?.required || 'هذا الحقل مطلوب' };
             }
             if (!value || String(value).trim() === '') return { valid: true };
-
             if (rule.minLength && !this.validators.minLength(value, rule.minLength)) {
                 return { valid: false, type: 'error', message: rule.messages?.minLength || `الحد الأدنى ${rule.minLength}` };
             }
@@ -264,7 +242,6 @@
             }
             return { valid: true, type: 'success', message: 'صحيح' };
         },
-
         updateFieldUI(field, result) {
             if (!field) return;
             const wrapper = field.closest('.col-md-6, .col-md-12, .col-12, .col-md-4, .col-md-8') || field.parentElement;
@@ -288,35 +265,29 @@
                 messageEl.innerHTML = '';
             }
         },
-
         validateForm(form) {
             const fields = form.querySelectorAll('input, select, textarea');
             let isValid = true;
             const errors = [];
-
             fields.forEach(field => {
                 if (field.type === 'hidden' || field.type === 'checkbox' || field.type === 'range') return;
                 if (!field.name && !field.id) return;
-
                 const result = this.validateField(field);
                 this.updateFieldUI(field, result);
-
                 if (!result.valid) {
                     isValid = false;
                     const label = form.querySelector(`label[for="${field.id}"]`);
                     const labelText = label ? label.textContent.trim().replace('*', '').trim() : (field.name || field.id);
-                    errors.push({ field, label: labelText, message: result.message, type: 'error' });
+                    errors.push({ field, label: labelText, message: result.message });
                 }
             });
-
-            // القواعد الشرطية
             this.conditionalRules.forEach(rule => {
                 const err = rule.check();
                 if (err) {
                     isValid = false;
                     errors.push(err);
                     if (err.field) {
-                        const wrapper = err.field.closest('.col-md-6, .col-md-12, .col-12, .col-md-4, .col-md-8') || err.field.parentElement;
+                        const wrapper = err.field.closest('.col-md-6, .col-md-12, .col-12') || err.field.parentElement;
                         if (wrapper) {
                             let msgEl = wrapper.querySelector('.bn-field-message');
                             if (!msgEl) {
@@ -330,22 +301,18 @@
                     }
                 }
             });
-
             return { isValid, errors };
         },
-
         scrollToFirstError(form) {
             const firstInvalid = form.querySelector('.is-invalid');
             if (!firstInvalid) return;
             firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
             setTimeout(() => firstInvalid.focus({ preventScroll: true }), 400);
         },
-
         showSummary(form, errors) {
             const existing = form.querySelector('.bn-validation-summary');
             if (existing) existing.remove();
             if (errors.length === 0) return;
-
             const summary = document.createElement('div');
             summary.className = 'bn-validation-summary show';
             summary.innerHTML = `
@@ -354,12 +321,9 @@
                     <span>يوجد ${errors.length} ${errors.length === 1 ? 'خطأ' : 'أخطاء'} يجب تصحيحها:</span>
                     <button type="button" class="bn-summary-close" aria-label="إغلاق"><i class="fa-solid fa-xmark"></i></button>
                 </div>
-                <ul>
-                    ${errors.map((e, i) => `<li data-error-index="${i}">${e.label}: ${e.message}</li>`).join('')}
-                </ul>
+                <ul>${errors.map((e, i) => `<li data-error-index="${i}">${e.label}: ${e.message}</li>`).join('')}</ul>
             `;
             form.insertBefore(summary, form.firstChild);
-
             summary.querySelectorAll('li').forEach((li, i) => {
                 li.addEventListener('click', () => {
                     const field = errors[i].field;
@@ -369,17 +333,13 @@
                     }
                 });
             });
-
             const closeBtn = summary.querySelector('.bn-summary-close');
-            if (closeBtn) {
-                closeBtn.addEventListener('click', () => {
-                    summary.style.transition = 'opacity 0.3s ease';
-                    summary.style.opacity = '0';
-                    setTimeout(() => summary.remove(), 300);
-                });
-            }
+            if (closeBtn) closeBtn.addEventListener('click', () => {
+                summary.style.transition = 'opacity 0.3s ease';
+                summary.style.opacity = '0';
+                setTimeout(() => summary.remove(), 300);
+            });
         },
-
         attachToField(field) {
             const name = field.name || field.id;
             if (!this.rules[name]) return;
@@ -398,7 +358,6 @@
                 }
             });
         },
-
         attachToForm(form) {
             if (!form) return;
             form.querySelectorAll('input, select, textarea').forEach(field => this.attachToField(field));
@@ -406,7 +365,7 @@
     };
 
     /* ============================================================
-       6. Badge Helpers
+       4. Badge Helpers
     ============================================================ */
     function getNoteTypeBadge(type) {
         if (!type) return '';
@@ -464,7 +423,7 @@
     }
 
     /* ============================================================
-       7. Critical Alert Banner
+       5. Critical Alert Banner
     ============================================================ */
     function checkForCriticalNotes() {
         const alertEl = document.getElementById('pnCriticalAlert');
@@ -484,23 +443,31 @@
         }
 
         const latest = criticalNotes[0];
-        const reason = latest.riskLevel === 'حرج' ? 'خطر حرج' :
-            latest.riskLevel === 'عالي' ? 'خطر عالي' :
-                (latest.symptoms || []).includes('أفكار انتحارية') ? 'أفكار انتحارية' : 'إيذاء ذاتي';
+        const reason = latest.riskLevel === 'حرج' ? 'خطر حرج'
+            : latest.riskLevel === 'عالي' ? 'خطر عالي'
+                : (latest.symptoms || []).includes('أفكار انتحارية') ? 'أفكار انتحارية'
+                    : 'إيذاء ذاتي';
 
         msgEl.innerHTML = `يوجد <strong>${criticalNotes.length}</strong> ملاحظة حرجة — آخرها: <strong>${escapeHtml(reason)}</strong> بتاريخ ${escapeHtml(latest.date)} (${escapeHtml(latest.title)})`;
         alertEl.style.display = 'flex';
     }
 
     /* ============================================================
-       8. Confirm Modal
+       6. Confirm Modal
     ============================================================ */
     function showConfirmModal({ title, subtitle, message, confirmText, onConfirm }) {
         const modal = document.getElementById('bnConfirmModal');
+        if (!modal) {
+            if (window.confirm(message?.replace(/<[^>]*>/g, '') || 'هل أنت متأكد؟')) {
+                if (typeof onConfirm === 'function') onConfirm();
+            }
+            return;
+        }
         const titleEl = document.getElementById('bnConfirmModalTitle');
         const subtitleEl = document.getElementById('bnConfirmModalSubtitle');
         const messageEl = document.getElementById('bnConfirmModalMessage');
         const confirmBtn = document.getElementById('bnConfirmModalConfirm');
+        const cancelBtn = document.getElementById('bnConfirmModalCancel');
 
         titleEl.textContent = title || 'تأكيد الحذف';
         subtitleEl.textContent = subtitle || 'لا يمكن التراجع عن هذه العملية';
@@ -512,7 +479,7 @@
         const cleanup = () => {
             modal.classList.remove('show');
             confirmBtn.removeEventListener('click', onConfirmHandler);
-            document.getElementById('bnConfirmModalCancel').removeEventListener('click', onCancelHandler);
+            cancelBtn.removeEventListener('click', onCancelHandler);
             modal.removeEventListener('click', onOverlayClick);
             document.removeEventListener('keydown', onKeyHandler);
         };
@@ -524,40 +491,96 @@
             else if (e.key === 'Enter') { e.preventDefault(); onConfirmHandler(); }
         };
         confirmBtn.addEventListener('click', onConfirmHandler);
-        document.getElementById('bnConfirmModalCancel').addEventListener('click', onCancelHandler);
+        cancelBtn.addEventListener('click', onCancelHandler);
         modal.addEventListener('click', onOverlayClick);
         document.addEventListener('keydown', onKeyHandler);
     }
 
     /* ============================================================
-       9. Load Context Options
+       7. Link Items from API
     ============================================================ */
+    const linkItemsCache = {
+        sessions: [],
+        visits: [],
+        plans: [],
+        medications: []
+    };
+
+    async function loadLinkItems(type) {
+        const patientId = getPatientId();
+        if (!patientId) return [];
+
+        const urls = getApiUrls();
+        const mapUrls = {
+            sessions: urls.sessions,
+            visits: urls.visits,
+            plans: urls.plans,
+            medications: urls.medications
+        };
+
+        const url = mapUrls[type];
+        if (!url) return [];
+
+        const fullUrl = `${url}${url.includes('?') ? '&' : '?'}patientId=${encodeURIComponent(patientId)}`;
+        try {
+            const res = await fetch(fullUrl, {
+                headers: { 'X-Requested-With': 'fetch', 'Accept': 'application/json' },
+                credentials: 'same-origin'
+            });
+            if (!res.ok) return [];
+            const payload = await res.json();
+            const arr = extractArray(payload);
+            const mapped = arr.map(item => {
+                const id = item.id ?? item.Id ?? '';
+                let label = '';
+                if (type === 'sessions') {
+                    const title = item.title ?? item.Title ?? '';
+                    const date = normalizeDateForInput(item.sessionDate ?? item.SessionDate);
+                    label = `${title}${date ? ` (${date})` : ''}`;
+                } else if (type === 'visits') {
+                    const reason = item.reason ?? item.Reason ?? '';
+                    const date = normalizeDateForInput(item.visitDate ?? item.VisitDate);
+                    label = `${reason}${date ? ` (${date})` : ''}`;
+                } else if (type === 'plans') {
+                    label = item.name ?? item.Name ?? '';
+                } else if (type === 'medications') {
+                    label = item.name ?? item.Name ?? '';
+                }
+                return { id, label };
+            }).filter(x => x.id);
+            linkItemsCache[type] = mapped;
+            return mapped;
+        } catch (err) {
+            console.warn('⚠️ فشل تحميل عناصر الربط:', err);
+            return [];
+        }
+    }
+
     function populateLinkItems() {
         const linkType = document.getElementById('noteLinkType');
         const linkItem = document.getElementById('noteLinkItem');
         if (!linkType || !linkItem) return;
 
-        linkType.addEventListener('change', function () {
+        linkType.addEventListener('change', async function () {
             const type = this.value;
             linkItem.innerHTML = '<option value="">اختر العنصر</option>';
             linkItem.disabled = !type;
 
             if (!type) return;
 
-            let items = [];
-            if (type === 'جلسة') {
-                items = storage.get('listeningSessions', []).map(s => ({ value: s.title, label: `${s.title} (${s.date})` }));
-            } else if (type === 'زيارة') {
-                items = storage.get('visits', []).map(v => ({ value: v.reason, label: `${v.reason} (${v.visitDate})` }));
-            } else if (type === 'خطة') {
-                items = storage.get('treatmentPlans', []).map(p => ({ value: p.name, label: p.name }));
-            } else if (type === 'دواء') {
-                items = storage.get('medications', []).map(m => ({ value: m.name, label: m.name }));
-            }
+            const typeKeyMap = {
+                'جلسة': 'sessions',
+                'زيارة': 'visits',
+                'خطة': 'plans',
+                'دواء': 'medications'
+            };
+            const key = typeKeyMap[type];
+            if (!key) return;
 
+            const items = await loadLinkItems(key);
             items.forEach(item => {
                 const opt = document.createElement('option');
-                opt.value = item.value;
+                opt.value = item.id;
                 opt.textContent = item.label;
                 linkItem.appendChild(opt);
             });
@@ -565,75 +588,48 @@
     }
 
     /* ============================================================
-       10. CRUD
+       8. State + Mappers
     ============================================================ */
-    let patientNotesList = storage.get('patientNotes', [
-        {
-            title: 'ملاحظة حول الحالة المزاجية',
-            date: '2024-01-12',
-            category: 'ملاحظة إكلينيكية',
-            priority: 'مهمة',
-            content: 'لاحظ المريض تحسناً ملحوظاً في المزاج العام خلال الأسبوع الأخير، مع زيادة في الدافعية للقيام بالأنشطة اليومية.',
-            noteType: 'Progress',
-            author: 'د. أحمد',
-            authorRole: 'طبيب',
-            visibility: 'خاص',
-            riskLevel: 'منخفض',
-            moodAtNote: 6,
-            symptoms: ['قلق'],
-            nextPlan: 'متابعة أسبوعية',
-            linkType: '',
-            linkItem: ''
-        },
-        {
-            title: 'متابعة النوم',
-            date: '2024-01-18',
-            category: 'ملاحظة سلوكية',
-            priority: 'عادية',
-            content: 'استمرار اضطراب النوم مع صعوبة في النوم المبكر. ينصح بتقليل استخدام الشاشات قبل النوم بساعتين على الأقل.',
-            noteType: 'SOAP',
-            author: 'د. أحمد',
-            authorRole: 'طبيب',
-            visibility: 'للمريض',
-            riskLevel: 'لا',
-            moodAtNote: 5,
-            symptoms: ['أرق'],
-            nextPlan: 'تجربة روتين مسائي',
-            linkType: 'جلسة',
-            linkItem: 'جلسة متابعة أسبوعية'
-        }
-    ]);
+    let patientNotesList = [];
+    let isLoadingList = false;
 
-    // ترحيل البيانات القديمة
-    patientNotesList = patientNotesList.map(n => {
-        if (n.noteType === undefined) n.noteType = 'Other';
-        if (n.author === undefined) n.author = '';
-        if (n.authorRole === undefined) n.authorRole = '';
-        if (n.visibility === undefined) n.visibility = 'خاص';
-        if (n.riskLevel === undefined) n.riskLevel = '';
-        if (n.moodAtNote === undefined) n.moodAtNote = null;
-        if (!Array.isArray(n.symptoms)) n.symptoms = [];
-        if (n.nextPlan === undefined) n.nextPlan = '';
-        if (n.linkType === undefined) n.linkType = '';
-        if (n.linkItem === undefined) n.linkItem = '';
-        return n;
-    });
-    storage.set('patientNotes', patientNotesList);
+    function mapPatientNoteDto(dto) {
+        return {
+            id: dto.id ?? dto.Id ?? '',
+            patientId: dto.patientId ?? dto.PatientId ?? '',
+            title: dto.title ?? dto.Title ?? '',
+            date: normalizeDateForInput(dto.noteDate ?? dto.NoteDate),
+            noteType: dto.noteType ?? dto.NoteType ?? '',
+            category: dto.category ?? dto.Category ?? '',
+            author: dto.author ?? dto.Author ?? '',
+            authorRole: dto.authorRole ?? dto.AuthorRole ?? '',
+            priority: dto.priority ?? dto.Priority ?? 'عادية',
+            riskLevel: dto.riskLevel ?? dto.RiskLevel ?? '',
+            moodAtNote: dto.moodAtNote ?? dto.MoodAtNote ?? 5,
+            visibility: dto.visibility ?? dto.Visibility ?? 'خاص',
+            symptoms: splitCommaString(dto.symptoms ?? dto.Symptoms),
+            linkType: dto.linkType ?? dto.LinkType ?? '',
+            linkItemId: dto.linkItemId ?? dto.LinkItemId ?? '',
+            content: dto.content ?? dto.Content ?? '',
+            nextPlan: dto.nextPlan ?? dto.NextPlan ?? '',
+            createdAt: dto.createdAt ?? dto.CreatedAt ?? null,
+            updatedAt: dto.updatedAt ?? dto.UpdatedAt ?? null
+        };
+    }
 
+    /* ============================================================
+       9. Render
+    ============================================================ */
     function updateNotesCount() {
         const badge = document.getElementById('notesCountBadge');
         if (!badge) return;
         const count = patientNotesList.length;
-        badge.textContent = count === 0 ? '0 ملاحظة' :
-            count === 1 ? 'ملاحظة واحدة' :
-                count === 2 ? 'ملاحظتان' :
-                    count <= 10 ? `${count} ملاحظات` : `${count} ملاحظة`;
+        badge.textContent = count === 0 ? '0 ملاحظة' : count === 1 ? 'ملاحظة واحدة' : count === 2 ? 'ملاحظتان' : count <= 10 ? `${count} ملاحظات` : `${count} ملاحظة`;
     }
 
     function getFilteredNotes() {
         const typeFilter = (document.getElementById('pnFilterType') || {}).value || '';
         const riskFilter = (document.getElementById('pnFilterRisk') || {}).value || '';
-
         return patientNotesList.filter(n => {
             if (typeFilter && n.noteType !== typeFilter) return false;
             if (riskFilter && n.riskLevel !== riskFilter) return false;
@@ -650,34 +646,30 @@
         grid.innerHTML = '';
 
         if (filtered.length === 0) {
-            emptyState.style.display = 'block';
-            emptyState.querySelector('p').textContent = patientNotesList.length === 0
-                ? 'لا توجد ملاحظات مسجلة لهذا المريض حتى الآن.'
-                : 'لا توجد ملاحظات مطابقة للفلتر.';
+            if (emptyState) {
+                emptyState.style.display = 'block';
+                const p = emptyState.querySelector('p');
+                if (p) p.textContent = patientNotesList.length === 0
+                    ? 'لا توجد ملاحظات مسجلة لهذا المريض حتى الآن.'
+                    : 'لا توجد ملاحظات مطابقة للفلتر.';
+            }
             updateNotesCount();
             checkForCriticalNotes();
             return;
         }
-        emptyState.style.display = 'none';
+        if (emptyState) emptyState.style.display = 'none';
 
         filtered.forEach((item) => {
             const realIndex = patientNotesList.indexOf(item);
             const card = document.createElement('div');
             card.className = `note-card ${getNotePriorityClass(item.priority)}`;
 
-            // بناء الـ symptoms tags
             let symptomsHtml = '';
             if (item.symptoms && item.symptoms.length > 0) {
                 symptomsHtml = '<div class="note-symptoms">' + item.symptoms.map(s => {
                     const isCritical = s === 'أفكار انتحارية' || s === 'إيذاء ذاتي';
                     return `<span class="note-symptom-tag ${isCritical ? 'critical' : ''}"><i class="fa-solid ${isCritical ? 'fa-triangle-exclamation' : 'fa-circle-dot'}"></i> ${escapeHtml(s)}</span>`;
                 }).join('') + '</div>';
-            }
-
-            // ربط سياقي
-            let linkBadge = '';
-            if (item.linkType && item.linkItem) {
-                linkBadge = `<span class="note-link-badge"><i class="fa-solid fa-link"></i> ${escapeHtml(item.linkType)}: ${escapeHtml(item.linkItem)}</span>`;
             }
 
             card.innerHTML = `
@@ -699,17 +691,16 @@
                 <div class="note-content">${escapeHtml(item.content)}</div>
                 ${symptomsHtml}
                 ${item.nextPlan ? `<div class="note-next-plan"><i class="fa-solid fa-forward ms-1"></i> ${escapeHtml(item.nextPlan)}</div>` : ''}
-                ${linkBadge ? `<div style="margin-top:0.5rem;">${linkBadge}</div>` : ''}
                 <div class="note-footer">
                     <div class="note-date">
                         <i class="fa-regular fa-calendar"></i>
                         ${escapeHtml(item.date) || '-'}
                     </div>
                     <div class="note-actions">
-                        <button type="button" class="btn btn-edit" onclick="editPatientNote(${realIndex})" aria-label="تعديل">
+                        <button type="button" class="btn btn-edit" data-edit-index="${realIndex}" aria-label="تعديل">
                             <i class="fa-solid fa-pen"></i>
                         </button>
-                        <button type="button" class="btn btn-delete" onclick="deletePatientNote(${realIndex})" aria-label="حذف">
+                        <button type="button" class="btn btn-delete" data-delete-index="${realIndex}" aria-label="حذف">
                             <i class="fa-solid fa-trash"></i>
                         </button>
                     </div>
@@ -718,75 +709,222 @@
             grid.appendChild(card);
         });
 
+        grid.querySelectorAll('[data-edit-index]').forEach(btn => {
+            btn.addEventListener('click', () => editPatientNote(parseInt(btn.dataset.editIndex, 10)));
+        });
+        grid.querySelectorAll('[data-delete-index]').forEach(btn => {
+            btn.addEventListener('click', () => deletePatientNote(parseInt(btn.dataset.deleteIndex, 10)));
+        });
+
         updateNotesCount();
         checkForCriticalNotes();
     }
 
     /* ============================================================
-       11. Form Submit
+       10. Load from API
+    ============================================================ */
+    async function loadPatientNotes() {
+        if (isLoadingList) return;
+        isLoadingList = true;
+        const patientId = getPatientId();
+        if (!patientId) {
+            patientNotesList = [];
+            renderPatientNotes();
+            isLoadingList = false;
+            return;
+        }
+        const urls = getApiUrls();
+        const url = `${urls.list}${urls.list.includes('?') ? '&' : '?'}patientId=${encodeURIComponent(patientId)}`;
+        try {
+            const res = await fetch(url, {
+                headers: { 'X-Requested-With': 'fetch', 'Accept': 'application/json' },
+                credentials: 'same-origin'
+            });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const payload = await res.json();
+            const arr = extractArray(payload);
+            patientNotesList = arr.map(mapPatientNoteDto);
+            console.log('✅ Loaded patient notes:', patientNotesList);
+            renderPatientNotes();
+        } catch (err) {
+            console.error('❌ فشل تحميل ملاحظات المريض:', err);
+            patientNotesList = [];
+            renderPatientNotes();
+            showToast('error', 'فشل التحميل', 'تعذر تحميل ملاحظات المريض.');
+        } finally {
+            isLoadingList = false;
+        }
+    }
+
+    /* ============================================================
+       11. Build payloads
+    ============================================================ */
+    function buildBasePayload() {
+        const symptoms = Array.from(document.querySelectorAll('.pn-symptom:checked')).map(c => c.value);
+        const linkType = document.getElementById('noteLinkType').value || null;
+        const linkItem = document.getElementById('noteLinkItem').value || null;
+
+        return {
+            title: document.getElementById('noteTitle').value.trim(),
+            noteDate: toIsoDateTime(document.getElementById('noteDate').value),
+            noteType: document.getElementById('noteType').value,
+            category: document.getElementById('noteCategory').value || null,
+            author: document.getElementById('noteAuthor').value.trim(),
+            authorRole: document.getElementById('noteAuthorRole').value,
+            priority: document.getElementById('notePriority').value || 'عادية',
+            riskLevel: document.getElementById('noteRiskLevel').value || null,
+            moodAtNote: parseInt(document.getElementById('noteMoodAtNote').value, 10) || 5,
+            visibility: document.getElementById('noteVisibility').value || 'خاص',
+            symptoms: symptoms.length ? symptoms.join(', ') : null,
+            linkType: linkType,
+            linkItemId: linkType && linkItem && isValidGuid(linkItem) ? linkItem : null,
+            content: document.getElementById('noteContent').value.trim(),
+            nextPlan: document.getElementById('noteNextPlan').value.trim() || null
+        };
+    }
+
+    function buildCreatePayload() {
+        const payload = buildBasePayload();
+        payload.patientId = getPatientId();
+        return payload;
+    }
+
+    function buildUpdatePayload() {
+        const payload = buildBasePayload();
+        payload.id = document.getElementById('noteEditId').value.trim();
+        return payload;
+    }
+
+    /* ============================================================
+       12. API CRUD
+    ============================================================ */
+    async function createPatientNoteApi(payload) {
+        const urls = getApiUrls();
+        const res = await fetch(urls.create, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'fetch',
+                'Accept': 'application/json',
+                'RequestVerificationToken': getAntiForgeryToken()
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify(payload)
+        });
+        const text = await res.text();
+        if (!res.ok) throw new Error(`HTTP ${res.status} — ${text}`);
+        return text ? JSON.parse(text) : null;
+    }
+
+    async function updatePatientNoteApi(id, payload) {
+        if (!isValidGuid(id)) throw new Error(`معرّف الملاحظة غير صالح: "${id}"`);
+        const urls = getApiUrls();
+        const url = `${urls.update}${urls.update.includes('?') ? '&' : '?'}id=${encodeURIComponent(id)}`;
+        const res = await fetch(url, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'fetch',
+                'Accept': 'application/json',
+                'RequestVerificationToken': getAntiForgeryToken()
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify(payload)
+        });
+        const text = await res.text();
+        if (!res.ok) throw new Error(`HTTP ${res.status} — ${text}`);
+        return text ? JSON.parse(text) : null;
+    }
+
+    async function deletePatientNoteApi(id) {
+        if (!isValidGuid(id)) throw new Error(`معرّف الملاحظة غير صالح: "${id}"`);
+        const urls = getApiUrls();
+        const url = `${urls.del}${urls.del.includes('?') ? '&' : '?'}id=${encodeURIComponent(id)}`;
+        const res = await fetch(url, {
+            method: 'DELETE',
+            headers: {
+                'X-Requested-With': 'fetch',
+                'Accept': 'application/json',
+                'RequestVerificationToken': getAntiForgeryToken()
+            },
+            credentials: 'same-origin'
+        });
+        const text = await res.text();
+        if (!res.ok) throw new Error(`HTTP ${res.status} — ${text}`);
+        return text ? JSON.parse(text) : null;
+    }
+
+    /* ============================================================
+       13. Form Submit
     ============================================================ */
     const patientNoteForm = document.getElementById('patientNoteForm');
     if (patientNoteForm) {
-        patientNoteForm.addEventListener('submit', function (e) {
+        patientNoteForm.addEventListener('submit', async function (e) {
             e.preventDefault();
 
             const { isValid, errors } = bnValidation.validateForm(this);
             if (!isValid) {
                 bnValidation.showSummary(this, errors);
                 bnValidation.scrollToFirstError(this);
-                showToast('error', 'فشل التحقق', `يوجد ${errors.length} ${errors.length === 1 ? 'خطأ' : 'أخطاء'} في النموذج.`);
+                showToast('error', 'فشل التحقق', `يوجد ${errors.length} أخطاء.`);
                 return;
             }
 
-            const editIndex = parseInt(document.getElementById('noteEditIndex').value);
-            const symptoms = Array.from(document.querySelectorAll('.pn-symptom:checked')).map(c => c.value);
-            const item = {
-                title: document.getElementById('noteTitle').value.trim(),
-                date: document.getElementById('noteDate').value,
-                noteType: document.getElementById('noteType').value,
-                category: document.getElementById('noteCategory').value,
-                author: document.getElementById('noteAuthor').value.trim(),
-                authorRole: document.getElementById('noteAuthorRole').value,
-                priority: document.getElementById('notePriority').value || 'عادية',
-                riskLevel: document.getElementById('noteRiskLevel').value,
-                moodAtNote: parseInt(document.getElementById('noteMoodAtNote').value) || 5,
-                visibility: document.getElementById('noteVisibility').value,
-                symptoms: symptoms,
-                linkType: document.getElementById('noteLinkType').value,
-                linkItem: document.getElementById('noteLinkItem').value,
-                content: document.getElementById('noteContent').value.trim(),
-                nextPlan: document.getElementById('noteNextPlan').value.trim()
-            };
+            const editId = document.getElementById('noteEditId').value.trim();
+            const isEdit = !!editId;
 
-            if (editIndex === -1) {
-                patientNotesList.unshift(item);
-                showToast('success', 'تمت الإضافة', 'تمت إضافة الملاحظة بنجاح.');
-            } else {
-                patientNotesList[editIndex] = item;
-                showToast('success', 'تم التعديل', 'تم تحديث الملاحظة.');
+            if (isEdit && !isValidGuid(editId)) {
+                showToast('error', 'خطأ', `معرّف الملاحظة غير صالح: "${editId}"`);
+                return;
             }
 
-            storage.set('patientNotes', patientNotesList);
-            resetPatientNoteForm();
-            renderPatientNotes();
-            bnConfetti.fire();
+            const payload = isEdit ? buildUpdatePayload() : buildCreatePayload();
+            console.log(`📤 ${isEdit ? 'PUT' : 'POST'} payload:`, payload);
 
-            // تنبيه إضافي إذا كانت حرجة
-            if (item.riskLevel === 'حرج' || item.riskLevel === 'عالي') {
-                setTimeout(() => {
-                    showToast('error', 'تنبيه حرج', 'تم حفظ ملاحظة بمستوى خطر مرتفع — يجب المتابعة الفورية.', 6000);
-                }, 500);
+            const submitBtn = document.getElementById('noteSubmitBtn');
+            const originalHtml = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span> جاري الحفظ...';
+
+            try {
+                if (isEdit) {
+                    await updatePatientNoteApi(editId, payload);
+                    showToast('success', 'تم التعديل', 'تم تحديث الملاحظة.');
+                } else {
+                    await createPatientNoteApi(payload);
+                    showToast('success', 'تمت الإضافة', 'تمت إضافة الملاحظة بنجاح.');
+                }
+                bnConfetti.fire();
+                resetPatientNoteForm();
+                await loadPatientNotes();
+
+                if (payload.riskLevel === 'حرج' || payload.riskLevel === 'عالي') {
+                    setTimeout(() => {
+                        showToast('error', 'تنبيه حرج', 'تم حفظ ملاحظة بمستوى خطر مرتفع — يجب المتابعة الفورية.', 6000);
+                    }, 500);
+                }
+            } catch (err) {
+                console.error('❌ فشل حفظ الملاحظة:', err);
+                showToast('error', 'فشل الحفظ', err.message || 'حدث خطأ أثناء الحفظ.');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalHtml;
             }
         });
     }
 
     /* ============================================================
-       12. Edit / Delete / Reset
+       14. Edit / Delete / Reset
     ============================================================ */
-    window.editPatientNote = function (index) {
+    function editPatientNote(index) {
         const item = patientNotesList[index];
         if (!item) return;
-
+        if (!item.id || !isValidGuid(item.id)) {
+            showToast('error', 'خطأ', 'هذه الملاحظة لا تحتوي على معرّف (id) صالح — لا يمكن تعديلها.');
+            return;
+        }
+        document.getElementById('noteEditId').value = item.id;
+        document.getElementById('noteEditIndex').value = index;
         document.getElementById('noteTitle').value = item.title || '';
         document.getElementById('noteDate').value = item.date || '';
         document.getElementById('noteType').value = item.noteType || 'Other';
@@ -800,51 +938,62 @@
         document.getElementById('noteVisibility').value = item.visibility || 'خاص';
         document.getElementById('noteContent').value = item.content || '';
         document.getElementById('noteNextPlan').value = item.nextPlan || '';
-        document.getElementById('noteLinkType').value = item.linkType || '';
-
-        // تحديث القائمة المنسدلة للعناصر المرتبطة
-        const linkItem = document.getElementById('noteLinkItem');
-        if (item.linkType) {
-            const linkTypeEvent = new Event('change');
-            document.getElementById('noteLinkType').dispatchEvent(linkTypeEvent);
-            setTimeout(() => {
-                linkItem.value = item.linkItem || '';
-            }, 50);
-        }
 
         document.querySelectorAll('.pn-symptom').forEach(c => { c.checked = (item.symptoms || []).includes(c.value); });
 
-        document.getElementById('noteEditIndex').value = index;
+        // تحميل عناصر الربط
+        const linkTypeEl = document.getElementById('noteLinkType');
+        const linkItemEl = document.getElementById('noteLinkItem');
+        linkTypeEl.value = item.linkType || '';
+        if (item.linkType) {
+            linkTypeEl.dispatchEvent(new Event('change'));
+            setTimeout(() => {
+                linkItemEl.value = item.linkItemId || '';
+            }, 600);
+        } else {
+            linkItemEl.innerHTML = '<option value="">اختر نوع الربط أولاً</option>';
+            linkItemEl.disabled = true;
+        }
+
         document.getElementById('noteFormTitle').innerHTML = '<i class="fa-solid fa-pen-to-square"></i> تعديل الملاحظة';
         document.getElementById('noteSubmitBtn').innerHTML = '<i class="fa-solid fa-floppy-disk"></i> حفظ التعديل';
         document.getElementById('noteCancelBtn').classList.remove('d-none');
-        document.getElementById('patientNoteForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        patientNoteForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
         showToast('info', 'وضع التعديل', `يمكنك الآن تعديل: ${item.title}`);
-    };
+    }
 
-    window.deletePatientNote = function (index) {
-        if (index < 0 || index >= patientNotesList.length) return;
+    function deletePatientNote(index) {
         const item = patientNotesList[index];
+        if (!item) return;
+        if (!item.id || !isValidGuid(item.id)) {
+            showToast('error', 'خطأ', 'هذه الملاحظة لا تحتوي على معرّف (id) صالح — لا يمكن حذفها.');
+            return;
+        }
         showConfirmModal({
             title: 'تأكيد حذف الملاحظة',
             subtitle: 'لن تتمكن من استرجاع هذه الملاحظة',
             message: `هل أنت متأكد من حذف الملاحظة <strong>${escapeHtml(item.title)}</strong>؟`,
             confirmText: 'نعم، احذف الملاحظة',
-            onConfirm: () => {
-                patientNotesList.splice(index, 1);
-                storage.set('patientNotes', patientNotesList);
-                renderPatientNotes();
-                resetPatientNoteForm();
-                showToast('success', 'تم الحذف', 'تم حذف الملاحظة.');
+            onConfirm: async () => {
+                try {
+                    await deletePatientNoteApi(item.id);
+                    showToast('success', 'تم الحذف', 'تم حذف الملاحظة.');
+                    resetPatientNoteForm();
+                    await loadPatientNotes();
+                } catch (err) {
+                    console.error('❌ فشل حذف الملاحظة:', err);
+                    showToast('error', 'فشل', err.message || 'حدث خطأ أثناء الحذف.');
+                }
             }
         });
-    };
+    }
 
     window.resetPatientNoteForm = function () {
         const form = document.getElementById('patientNoteForm');
         if (!form) return;
         form.reset();
         document.getElementById('noteEditIndex').value = '-1';
+        document.getElementById('noteEditId').value = '';
         document.getElementById('notePriority').value = 'عادية';
         document.getElementById('noteVisibility').value = 'خاص';
         document.getElementById('noteMoodAtNote').value = 5;
@@ -865,12 +1014,17 @@
     };
 
     /* ============================================================
-       13. Init
+       15. Init
     ============================================================ */
     function doInit() {
-        renderPatientNotes();
         bnValidation.attachToForm(document.getElementById('patientNoteForm'));
         populateLinkItems();
+
+        // ضبط تاريخ اليوم افتراضياً
+        const noteDateEl = document.getElementById('noteDate');
+        if (noteDateEl && !noteDateEl.value) {
+            noteDateEl.value = new Date().toISOString().slice(0, 10);
+        }
 
         // Mood slider
         const moodEl = document.getElementById('noteMoodAtNote');
@@ -894,6 +1048,8 @@
                 document.getElementById('pnCriticalAlert').style.display = 'none';
             });
         }
+
+        loadPatientNotes();
 
         setTimeout(() => {
             showToast('info', 'ملاحظات المريض', 'سجّل الملاحظات مع نوعها، الخطر، الأعراض، والسرية.', 5000);

@@ -47,7 +47,23 @@
                     إضافة ملاحظة جديدة
                 </h3>
 
-                <form id="patientNoteForm" novalidate>
+                <form id="patientNoteForm"
+                      novalidate
+                      data-patient-id="@Model.PatientId"
+                      data-api-list-url="/Doctor?handler=PatientNotes"
+                      data-api-create-url="/Doctor?handler=CreatePatientNote"
+                      data-api-update-url="/Doctor?handler=UpdatePatientNote"
+                      data-api-delete-url="/Doctor?handler=PatientNote"
+                      data-api-sessions-url="/Doctor?handler=ListeningSessions"
+                      data-api-visits-url="/Doctor?handler=Visits"
+                      data-api-plans-url="/Doctor?handler=TreatmentPlans"
+                      data-api-medications-url="/Doctor?handler=Medications">
+
+                    @Html.AntiForgeryToken()
+
+                    <input type="hidden" id="noteEditIndex" value="-1">
+                    <input type="hidden" id="noteEditId" value="">
+                    <input type="hidden" id="patientId" name="patientId" value="@Model.PatientId">
                     <input type="hidden" id="noteEditIndex" value="-1">
 
                     <!-- Section 1: Basic -->

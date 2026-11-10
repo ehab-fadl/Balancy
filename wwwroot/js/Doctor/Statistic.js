@@ -1,12 +1,79 @@
 ﻿/* ============================================================
-   Depression Statistics — Standalone Script
+   Depression Statistics — API-driven
+   - GET من /Doctor?handler=Statistics
+   - يستبدل generateMockData() بـ loadStatsFromServer()
+   - يحافظ على: Chart.js, Filters, Toasts, Trends, Smart Alerts
 ============================================================ */
 
 /* ============================================================
-   1. Toast Notifications
+   1. Utilities
+============================================================ */
+function getPatientId() {
+    return document.getElementById('statisticsPatientId')?.value?.trim()
+        || document.querySelector('.stats-container')?.dataset?.patientId?.trim()
+        || new URLSearchParams(window.location.search).get('id')
+        || new URLSearchParams(window.location.search).get('patientId')
+        || sessionStorage.getItem('bnCurrentPatientId')?.trim()
+        || '';
+}
+
+function getStatsApiUrl() {
+    return document.querySelector('.stats-container')?.dataset?.apiStatsUrl
+        || '/Doctor?handler=Statistics';
+}
+
+function extractArray(payload) {
+    if (payload == null) return [];
+    if (Array.isArray(payload)) return payload;
+    const candidates = [payload.data, payload.items, payload.result, payload.$values, payload.data?.$values, payload.data?.items];
+    for (const c of candidates) if (Array.isArray(c)) return c;
+    for (const key of Object.keys(payload)) {
+        if (Array.isArray(payload[key])) return payload[key];
+    }
+    return [];
+}
+
+/**
+ * يحوّل DTO من الـ API إلى الشكل الداخلي المتوقع.
+ * يتعامل مع camelCase و PascalCase، ويحوّل decimal sleep إلى number.
+ */
+function mapMetricDto(dto) {
+    const dateRaw = dto.date ?? dto.Date ?? '';
+    let dateStr = '';
+    try {
+        const d = new Date(dateRaw);
+        if (!isNaN(d.getTime())) {
+            dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        } else {
+            dateStr = String(dateRaw).slice(0, 10);
+        }
+    } catch {
+        dateStr = String(dateRaw).slice(0, 10);
+    }
+
+    return {
+        date: dateStr,
+        food: Number(dto.food ?? dto.Food ?? 0),
+        sleep: Number(dto.sleep ?? dto.Sleep ?? 0),
+        medication: Number(dto.medication ?? dto.Medication ?? 0),
+        mood: Number(dto.mood ?? dto.Mood ?? 0),
+        negative: Number(dto.negative ?? dto.Negative ?? 0),
+        health: Number(dto.health ?? dto.Health ?? 0),
+        energy: Number(dto.energy ?? dto.Energy ?? 0),
+        motivation: Number(dto.motivation ?? dto.Motivation ?? 0),
+        concentration: Number(dto.concentration ?? dto.Concentration ?? 0),
+        guilt: Number(dto.guilt ?? dto.Guilt ?? 0),
+        hope: Number(dto.hope ?? dto.Hope ?? 0),
+        suicidal: Number(dto.suicidal ?? dto.Suicidal ?? 0)
+    };
+}
+
+/* ============================================================
+   2. Toast Notifications
 ============================================================ */
 function showToast(type, message, duration = 3000) {
     const stack = document.getElementById('toastStack');
+    if (!stack) return;
     const icons = {
         success: 'fa-circle-check',
         error: 'fa-circle-xmark',
@@ -29,72 +96,51 @@ function showToast(type, message, duration = 3000) {
 }
 
 /* ============================================================
-   2. Mock Data Generator — مع مؤشرات الاكتئاب الستة
+   3. Data (from API)
 ============================================================ */
-function generateMockData() {
-    const data = [];
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+let allData = [];
+let isLoadingData = false;
 
-    for (let i = 365; i >= 0; i--) {
-        const date = new Date(today);
-        date.setDate(date.getDate() - i);
+async function loadStatsFromServer(range = 'week', startDate = null, endDate = null) {
+    if (isLoadingData) return [];
+    isLoadingData = true;
 
-        const dayOfWeek = date.getDay();
-        const isWeekend = dayOfWeek === 5 || dayOfWeek === 6;
-        const progress = (365 - i) / 365;
-        const improvement = progress * 15;
-
-        data.push({
-            date: date.toISOString().slice(0, 10),
-            // المؤشرات الأصلية
-            food: Math.min(100, Math.max(20,
-                Math.round(55 + improvement + (Math.random() * 30 - 15) + (isWeekend ? -8 : 0))
-            )),
-            sleep: Math.min(10, Math.max(3,
-                +(5.5 + (improvement / 20) + (Math.random() * 3 - 1.5) + (isWeekend ? 1 : -0.5)).toFixed(1)
-            )),
-            medication: Math.min(100, Math.max(30,
-                Math.round(75 + improvement + (Math.random() * 20 - 10))
-            )),
-            mood: Math.min(10, Math.max(1,
-                Math.round(5 + (improvement / 8) + (Math.random() * 4 - 2))
-            )),
-            negative: Math.max(0,
-                Math.round(9 - (improvement / 4) + (Math.random() * 6 - 3) + (isWeekend ? -1 : 1))
-            ),
-            health: Math.min(100, Math.max(15,
-                Math.round(50 + improvement + (Math.random() * 30 - 15))
-            )),
-
-            // المؤشرات الاكتئابية الجديدة (0-10)
-            energy: Math.min(10, Math.max(0,
-                Math.round(5 + (improvement / 10) + (Math.random() * 4 - 2))
-            )),
-            motivation: Math.min(10, Math.max(0,
-                Math.round(4.5 + (improvement / 9) + (Math.random() * 4 - 2))
-            )),
-            concentration: Math.min(10, Math.max(0,
-                Math.round(5 + (improvement / 11) + (Math.random() * 4 - 2))
-            )),
-            guilt: Math.min(10, Math.max(0,
-                Math.round(6 - (improvement / 12) + (Math.random() * 4 - 2))
-            )),
-            hope: Math.min(10, Math.max(0,
-                Math.round(4 + (improvement / 8) + (Math.random() * 4 - 2))
-            )),
-            suicidal: Math.min(5, Math.max(0,
-                Math.round(1.5 - (improvement / 20) + (Math.random() * 2 - 1) + (isWeekend ? 0.3 : 0))
-            ))
-        });
+    const patientId = getPatientId();
+    if (!patientId) {
+        console.warn('⚠️ لا يوجد patientId في الصفحة');
+        isLoadingData = false;
+        return [];
     }
-    return data;
+
+    const baseUrl = getStatsApiUrl();
+    let url = `${baseUrl}${baseUrl.includes('?') ? '&' : '?'}patientId=${encodeURIComponent(patientId)}&range=${encodeURIComponent(range)}`;
+    if (startDate) url += `&startDate=${encodeURIComponent(startDate)}`;
+    if (endDate) url += `&endDate=${encodeURIComponent(endDate)}`;
+
+    try {
+        const res = await fetch(url, {
+            headers: { 'X-Requested-With': 'fetch', 'Accept': 'application/json' },
+            credentials: 'same-origin'
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const payload = await res.json();
+        const arr = extractArray(payload).map(mapMetricDto);
+        arr.sort((a, b) => new Date(a.date) - new Date(b.date));
+        allData = arr;
+        console.log(`✅ Loaded ${allData.length} metric rows for patient`, patientId);
+        return allData;
+    } catch (err) {
+        console.error('❌ فشل تحميل إحصائيات المريض:', err);
+        allData = [];
+        showToast('error', 'تعذر تحميل إحصائيات المريض');
+        return [];
+    } finally {
+        isLoadingData = false;
+    }
 }
 
-const allData = generateMockData();
-
 /* ============================================================
-   3. Chart Manager
+   4. Chart Manager
 ============================================================ */
 const charts = {};
 
@@ -197,58 +243,11 @@ function createChart(canvasId, config) {
 }
 
 /* ============================================================
-   4. Filter Logic
-============================================================ */
-function filterDataByRange(range, startDate, endDate) {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    let fromDate, toDate = new Date(today);
-
-    switch (range) {
-        case 'week':
-            fromDate = new Date(today);
-            fromDate.setDate(fromDate.getDate() - 7);
-            break;
-        case 'month':
-            fromDate = new Date(today);
-            fromDate.setDate(fromDate.getDate() - 30);
-            break;
-        case 'threeMonths':
-            fromDate = new Date(today);
-            fromDate.setDate(fromDate.getDate() - 90);
-            break;
-        case 'sixMonths':
-            fromDate = new Date(today);
-            fromDate.setDate(fromDate.getDate() - 180);
-            break;
-        case 'custom':
-            if (startDate && endDate) {
-                fromDate = new Date(startDate);
-                fromDate.setHours(0, 0, 0, 0);
-                toDate = new Date(endDate);
-                toDate.setHours(23, 59, 59, 999);
-            } else {
-                fromDate = new Date(today);
-                fromDate.setDate(fromDate.getDate() - 7);
-            }
-            break;
-        default:
-            fromDate = new Date(today);
-            fromDate.setDate(fromDate.getDate() - 7);
-    }
-
-    return allData.filter(d => {
-        const dDate = new Date(d.date);
-        return dDate >= fromDate && dDate <= toDate;
-    });
-}
-
-/* ============================================================
    5. Helpers
 ============================================================ */
 function formatDateShort(dateStr) {
     const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr;
     return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
 }
 
@@ -275,15 +274,12 @@ function calculateTrend(arr) {
    6. Metric Configurations
 ============================================================ */
 const METRIC_CONFIGS = {
-    // المؤشرات الأصلية
     food: { label: 'الغذاء', unit: '%', min: 0, max: 100, color: '#ea580c', gradientFrom: 'rgba(234,88,12,0.35)', gradientTo: 'rgba(234,88,12,0.02)', formatter: (v) => Math.round(v) + '%', tooltip: (v) => `جودة التغذية: ${v}%` },
     sleep: { label: 'النوم', unit: 'س', min: 0, max: 12, color: '#6d28d9', gradientFrom: 'rgba(109,40,217,0.35)', gradientTo: 'rgba(109,40,217,0.02)', formatter: (v) => v.toFixed(1) + ' س', tooltip: (v) => `${v} ساعة` },
     medication: { label: 'الالتزام بالأدوية', unit: '%', min: 0, max: 100, color: '#15803d', gradientFrom: 'rgba(21,128,61,0.35)', gradientTo: 'rgba(21,128,61,0.02)', formatter: (v) => Math.round(v) + '%', tooltip: (v) => `الالتزام: ${v}%` },
     mood: { label: 'المزاج', unit: '/10', min: 0, max: 10, color: '#b45309', gradientFrom: 'rgba(180,83,9,0.35)', gradientTo: 'rgba(180,83,9,0.02)', formatter: (v) => v.toFixed(1) + '/10', tooltip: (v) => `المزاج: ${v}/10` },
     negative: { label: 'الأفكار السلبية', unit: '', min: 0, max: 20, color: '#b91c1c', gradientFrom: 'rgba(185,28,28,0.35)', gradientTo: 'rgba(185,28,28,0.02)', formatter: (v) => Math.round(v), tooltip: (v) => `عدد الأفكار: ${v}` },
     health: { label: 'الاهتمام الجسدي', unit: '%', min: 0, max: 100, color: '#0e7490', gradientFrom: 'rgba(14,116,144,0.35)', gradientTo: 'rgba(14,116,144,0.02)', formatter: (v) => Math.round(v) + '%', tooltip: (v) => `الاهتمام: ${v}%` },
-
-    // المؤشرات الاكتئابية
     energy: { label: 'الطاقة', unit: '/10', min: 0, max: 10, color: '#ca8a04', gradientFrom: 'rgba(202,138,4,0.35)', gradientTo: 'rgba(202,138,4,0.02)', formatter: (v) => v.toFixed(1) + '/10', tooltip: (v) => `الطاقة: ${v}/10` },
     motivation: { label: 'الدافعية', unit: '/10', min: 0, max: 10, color: '#ea580c', gradientFrom: 'rgba(234,88,12,0.35)', gradientTo: 'rgba(234,88,12,0.02)', formatter: (v) => v.toFixed(1) + '/10', tooltip: (v) => `الدافعية: ${v}/10` },
     concentration: { label: 'التركيز', unit: '/10', min: 0, max: 10, color: '#1d4ed8', gradientFrom: 'rgba(29,78,216,0.35)', gradientTo: 'rgba(29,78,216,0.02)', formatter: (v) => v.toFixed(1) + '/10', tooltip: (v) => `التركيز: ${v}/10` },
@@ -292,7 +288,6 @@ const METRIC_CONFIGS = {
     suicidal: { label: 'الأفكار الانتحارية', unit: '/5', min: 0, max: 5, color: '#dc2626', gradientFrom: 'rgba(220,38,38,0.4)', gradientTo: 'rgba(220,38,38,0.02)', formatter: (v) => v.toFixed(1) + '/5', tooltip: (v) => `الخطر: ${v}/5` }
 };
 
-// المؤشرات "السلبية" (تنقص = تحسن)
 const NEGATIVE_METRICS = ['negative', 'guilt', 'suicidal'];
 
 /* ============================================================
@@ -301,11 +296,9 @@ const NEGATIVE_METRICS = ['negative', 'guilt', 'suicidal'];
 function updateTrendPill(metric, trend) {
     const pill = document.querySelector(`[data-trend="${metric}"]`);
     if (!pill) return;
-
     pill.classList.remove('trend-up', 'trend-down', 'trend-stable');
 
     const isNegativeMetric = NEGATIVE_METRICS.includes(metric);
-    // للمؤشرات السلبية: 'up' في البيانات = تدهور
     const effectiveTrend = isNegativeMetric
         ? (trend === 'up' ? 'down' : (trend === 'down' ? 'up' : 'stable'))
         : trend;
@@ -324,7 +317,6 @@ function updateTrendPill(metric, trend) {
 function updateKpiTrend(metric, trend) {
     const kpiTrend = document.querySelector(`[data-kpi-trend="${metric}"]`);
     if (!kpiTrend) return;
-
     kpiTrend.classList.remove('up', 'down', 'stable');
 
     const isNegativeMetric = NEGATIVE_METRICS.includes(metric);
@@ -351,6 +343,14 @@ function updateChartStats(metric, values) {
     const kpiEl = document.querySelector(`[data-kpi="${metric}"]`);
     const minEl = document.querySelector(`[data-min="${metric}"]`);
     const maxEl = document.querySelector(`[data-max="${metric}"]`);
+
+    if (!values.length) {
+        if (avgEl) avgEl.textContent = '—';
+        if (kpiEl) kpiEl.textContent = '—';
+        if (minEl) minEl.textContent = '-';
+        if (maxEl) maxEl.textContent = '-';
+        return { avg: 0, trend: 'stable', values };
+    }
 
     const avg = average(values);
     const min = Math.min(...values);
@@ -407,6 +407,8 @@ function hideSkeletons() {
 function renderCharts(filteredData) {
     if (!filteredData.length) {
         showToast('error', 'لا توجد بيانات في النطاق الزمني المحدد');
+        // امسح الرسوم
+        Object.keys(charts).forEach(k => { charts[k]?.destroy(); charts[k] = null; });
         return;
     }
 
@@ -437,10 +439,7 @@ function renderCharts(filteredData) {
         metricResults[metric] = updateChartStats(metric, values);
     });
 
-    // تحليل الاتجاهات
     updateTrendAnalysis(metricResults);
-
-    // التنبيهات الذكية
     checkSmartAlerts(filteredData);
 }
 
@@ -455,7 +454,6 @@ function updateTrendAnalysis(results) {
 
     if (!bestEl) return;
 
-    // ترتيب المؤشرات حسب التحسن
     const improvements = Object.entries(results).map(([key, r]) => {
         const isNegative = NEGATIVE_METRICS.includes(key);
         const improvementScore = isNegative
@@ -475,7 +473,6 @@ function updateTrendAnalysis(results) {
         worstEl.textContent = `${METRIC_CONFIGS[worst.key].label} (${worst.trend === 'up' ? '↑' : worst.trend === 'down' ? '↓' : '='})`;
     }
 
-    // الاتجاه العام
     const upCount = improvements.filter(i => i.trend === 'up').length;
     const downCount = improvements.filter(i => i.trend === 'down').length;
     const stableCount = improvements.filter(i => i.trend === 'stable').length;
@@ -491,7 +488,6 @@ function updateTrendAnalysis(results) {
         overallEl.style.color = 'var(--bn-text)';
     }
 
-    // مستوى الخطر الانتحاري الحالي
     const suicidalResult = results.suicidal;
     if (suicidalResult) {
         const avgSuicidal = suicidalResult.avg;
@@ -520,58 +516,48 @@ function checkSmartAlerts(filteredData) {
 
     const criticalAlerts = [];
     const warningAlerts = [];
-
     const lastN = (n) => filteredData.slice(-n);
 
-    // 1. خطر انتحاري مرتفع
     const recentSuicidal = lastN(3).map(d => d.suicidal);
     if (recentSuicidal.some(v => v >= 3)) {
         criticalAlerts.push('⚠️ أفكار انتحارية مرتفعة في آخر 3 أيام — تدخل فوري مطلوب');
     }
 
-    // 2. مزاج منخفض لعدة أيام
     const recentMood = lastN(3).map(d => d.mood);
-    if (recentMood.every(v => v < 3)) {
+    if (recentMood.length === 3 && recentMood.every(v => v < 3)) {
         criticalAlerts.push('⚠️ مزاج منخفض جداً (< 3) لآخر 3 أيام متتالية');
     }
 
-    // 3. طاقة منخفضة لعدة أيام
     const recentEnergy = lastN(3).map(d => d.energy);
-    if (recentEnergy.every(v => v < 3)) {
+    if (recentEnergy.length === 3 && recentEnergy.every(v => v < 3)) {
         criticalAlerts.push('⚠️ طاقة منخفضة جداً (< 3) لآخر 3 أيام متتالية');
     }
 
-    // 4. تدهور الأمل
     const recentHope = lastN(3).map(d => d.hope);
-    if (recentHope.every(v => v < 3)) {
+    if (recentHope.length === 3 && recentHope.every(v => v < 3)) {
         warningAlerts.push('انخفاض مستوى الأمل (< 3) لآخر 3 أيام');
     }
 
-    // 5. نوم قليل
     const recentSleep = lastN(3).map(d => d.sleep);
-    if (recentSleep.every(v => v < 4)) {
+    if (recentSleep.length === 3 && recentSleep.every(v => v < 4)) {
         warningAlerts.push('ساعات النوم أقل من 4 لمدة 3 أيام متتالية');
     }
 
-    // 6. التزام دوائي منخفض
     const recentMed = lastN(3).map(d => d.medication);
-    if (recentMed.every(v => v < 50)) {
+    if (recentMed.length === 3 && recentMed.every(v => v < 50)) {
         warningAlerts.push('التزام بالأدوية أقل من 50% لآخر 3 أيام');
     }
 
-    // 7. أفكار سلبية مرتفعة
     const recentNeg = lastN(3).map(d => d.negative);
-    if (recentNeg.every(v => v > 12)) {
+    if (recentNeg.length === 3 && recentNeg.every(v => v > 12)) {
         warningAlerts.push('أفكار سلبية مرتفعة (> 12) لآخر 3 أيام');
     }
 
-    // 8. ذنب مرتفع
     const recentGuilt = lastN(3).map(d => d.guilt);
-    if (recentGuilt.every(v => v > 7)) {
+    if (recentGuilt.length === 3 && recentGuilt.every(v => v > 7)) {
         warningAlerts.push('شعور بالذنب مرتفع (> 7) لآخر 3 أيام');
     }
 
-    // عرض التنبيهات
     if (criticalAlerts.length > 0) {
         criticalEl.style.display = 'flex';
         criticalMsg.innerHTML = criticalAlerts.join(' • ');
@@ -588,20 +574,67 @@ function checkSmartAlerts(filteredData) {
 }
 
 /* ============================================================
-   13. Apply Filter
+   13. Filter Logic (client-side, based on loaded data)
 ============================================================ */
-function applyFilter(range, startDate, endDate, showLoader = true) {
-    if (showLoader) showSkeletons();
+function filterDataByRange(range, startDate, endDate) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-    setTimeout(() => {
-        const filtered = filterDataByRange(range, startDate, endDate);
-        renderCharts(filtered);
-        hideSkeletons();
-    }, showLoader ? 400 : 0);
+    let fromDate, toDate = new Date(today);
+
+    switch (range) {
+        case 'week': fromDate = new Date(today); fromDate.setDate(fromDate.getDate() - 7); break;
+        case 'month': fromDate = new Date(today); fromDate.setDate(fromDate.getDate() - 30); break;
+        case 'threeMonths': fromDate = new Date(today); fromDate.setDate(fromDate.getDate() - 90); break;
+        case 'sixMonths': fromDate = new Date(today); fromDate.setDate(fromDate.getDate() - 180); break;
+        case 'custom':
+            if (startDate && endDate) {
+                fromDate = new Date(startDate); fromDate.setHours(0, 0, 0, 0);
+                toDate = new Date(endDate); toDate.setHours(23, 59, 59, 999);
+            } else {
+                fromDate = new Date(today); fromDate.setDate(fromDate.getDate() - 7);
+            }
+            break;
+        default:
+            fromDate = new Date(today); fromDate.setDate(fromDate.getDate() - 7);
+    }
+
+    return allData.filter(d => {
+        const dDate = new Date(d.date);
+        return dDate >= fromDate && dDate <= toDate;
+    });
 }
 
 /* ============================================================
-   14. Filter Events
+   14. Apply Filter — تحميل من السيرفر + عرض
+============================================================ */
+async function applyFilter(range, startDate, endDate, showLoader = true) {
+    if (showLoader) showSkeletons();
+
+    const result = await loadStatsFromServer(range, startDate, endDate);
+
+    // فلترة إضافية على السيرفر ممكن تكون السبب، لكن لو الـ API رجّع نطاق أوسع،
+    // بنعمل فلترة احتياطية في الفرونت.
+    let filtered = result;
+    if (range !== 'custom') {
+        filtered = filterDataByRange(range, null, null);
+        // لو السيرفر رجّع بيانات أقل، نستخدم اللي رجع
+        if (filtered.length === 0 && result.length > 0) filtered = result;
+    } else if (startDate && endDate) {
+        filtered = filterDataByRange('custom', startDate, endDate);
+        if (filtered.length === 0 && result.length > 0) filtered = result;
+    }
+
+    if (filtered.length === 0) {
+        showToast('info', 'لا توجد بيانات في النطاق المحدد');
+    }
+
+    renderCharts(filtered);
+    hideSkeletons();
+}
+
+/* ============================================================
+   15. Filter Events
 ============================================================ */
 (function initFilters() {
     const chipButtons = document.querySelectorAll('.chip-btn');
@@ -645,7 +678,7 @@ function applyFilter(range, startDate, endDate, showLoader = true) {
 })();
 
 /* ============================================================
-   15. Smart Alert Close Buttons
+   16. Smart Alert Close Buttons
 ============================================================ */
 (function initAlertClose() {
     const criticalClose = document.getElementById('smartAlertCriticalClose');
@@ -664,7 +697,7 @@ function applyFilter(range, startDate, endDate, showLoader = true) {
 })();
 
 /* ============================================================
-   16. Scroll Events
+   17. Scroll Events
 ============================================================ */
 (function initScrollEvents() {
     const scrollTopBtn = document.getElementById('scrollTopBtn');
@@ -690,15 +723,29 @@ function applyFilter(range, startDate, endDate, showLoader = true) {
 })();
 
 /* ============================================================
-   17. Init
+   18. Init
 ============================================================ */
-window.addEventListener('DOMContentLoaded', () => {
-    applyFilter('week');
+window.addEventListener('DOMContentLoaded', async () => {
+    const patientId = getPatientId();
+    if (!patientId) {
+        showToast('error', 'لم يتم تحديد المريض');
+        console.warn('⚠️ لا يوجد patientId في URL أو sessionStorage');
+        return;
+    }
+
+    // عرض اسم المريض في الـ Hero إن أمكن
+    const nameEl = document.getElementById('heroPatientName');
+    if (nameEl) {
+        const name = sessionStorage.getItem('bnLastPatientName') || sessionStorage.getItem('bnCurrentPatientName');
+        if (name) nameEl.textContent = `— ${name}`;
+    }
+
+    await applyFilter('week');
 
     setTimeout(() => {
         showToast('success', 'مرحباً بك في لوحة إحصائيات الاكتئاب');
     }, 600);
 
-    console.log('%c✅ Depression Stats Ready',
+    console.log('%c✅ Depression Stats Ready (API-driven)',
         'background:linear-gradient(135deg,#0891b2,#6366f1);color:#fff;padding:10px 24px;border-radius:10px;font-weight:bold;font-size:13px;');
 });

@@ -2,6 +2,8 @@
 @model Balancy.Areas.Doctor.Pages.AllPatient.AllPatientListeModel
 @{
 }
+@Html.AntiForgeryToken()
+
 <!-- Top Controls -->
 <div class="bn-top-controls">
     <button type="button" class="bn-icon-btn bn-theme-toggle" id="themeToggle" aria-label="تبديل الوضع الليلي">
@@ -221,6 +223,18 @@
         </div>
     </div>
 </div>
+
 @section Scripts {
+    <script>
+        // ✅ حقن مسارات الـ handlers + التوكن في JS
+        window.BALANCY_ENDPOINTS = {
+            patients: '@Url.Page("/AllPatient/AllPatientListe", "Patients")',
+            patient: '@Url.Page("/AllPatient/AllPatientListe", "Patient")',
+            deletePatient: '@Url.Page("/AllPatient/AllPatientListe", "DeletePatient")',
+            patientFile: '@Url.Page("/Index", new { area = "Doctor" })'
+        };
+        window.BALANCY_ANTIFORGERY =
+            document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+    </script>
     <script src="~/js/doctor/AllPatient/AllPatientListe.js"></script>
 }

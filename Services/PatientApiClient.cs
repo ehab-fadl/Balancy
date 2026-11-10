@@ -1029,4 +1029,172 @@ public sealed class PatientApiClient : IPatientApiClient
         }
         return true;
     }
+
+
+    /* =================== Doctor Notes =================== */
+    public async Task<JsonDocument?> GetDoctorNotesRawAsync(string patientId, CancellationToken ct = default)
+    {
+        var response = await _http.GetAsync($"api/DoctorNotes/patient/{patientId}", ct);
+        if (!response.IsSuccessStatusCode)
+        {
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound) return null;
+            _logger.LogWarning("Get doctor notes for {PatientId} returned {Status}",
+                patientId, response.StatusCode);
+            response.EnsureSuccessStatusCode();
+        }
+        var raw = await response.Content.ReadAsStringAsync(ct);
+        return string.IsNullOrWhiteSpace(raw) ? null : JsonDocument.Parse(raw);
+    }
+
+    public async Task<JsonDocument?> CreateDoctorNoteAsync(
+        DoctorNoteCreateRequest request, CancellationToken ct = default)
+    {
+        var response = await _http.PostAsJsonAsync("api/DoctorNotes", request, JsonOpts, ct);
+        var raw = await response.Content.ReadAsStringAsync(ct);
+        if (!response.IsSuccessStatusCode)
+            throw new HttpRequestException($"API returned {(int)response.StatusCode}: {raw}", null, response.StatusCode);
+        return string.IsNullOrWhiteSpace(raw) ? null : JsonDocument.Parse(raw);
+    }
+
+    public async Task<JsonDocument?> UpdateDoctorNoteAsync(
+        string id, DoctorNoteUpdateRequest request, CancellationToken ct = default)
+    {
+        if (request.Id == Guid.Empty && Guid.TryParse(id, out var parsed))
+            request.Id = parsed;
+
+        var response = await _http.PutAsJsonAsync($"api/DoctorNotes/{id}", request, JsonOpts, ct);
+        var raw = await response.Content.ReadAsStringAsync(ct);
+        if (!response.IsSuccessStatusCode)
+            throw new HttpRequestException($"API returned {(int)response.StatusCode}: {raw}", null, response.StatusCode);
+        return string.IsNullOrWhiteSpace(raw) ? null : JsonDocument.Parse(raw);
+    }
+
+    public async Task<bool> DeleteDoctorNoteAsync(string id, CancellationToken ct = default)
+    {
+        var response = await _http.DeleteAsync($"api/DoctorNotes/{id}", ct);
+        if (!response.IsSuccessStatusCode)
+        {
+            var raw = await response.Content.ReadAsStringAsync(ct);
+            throw new HttpRequestException($"API returned {(int)response.StatusCode}: {raw}", null, response.StatusCode);
+        }
+        return true;
+    }
+
+
+
+    /* =================== Patient Notes =================== */
+    public async Task<JsonDocument?> GetPatientNotesRawAsync(string patientId, CancellationToken ct = default)
+    {
+        var response = await _http.GetAsync($"api/PatientNotes/patient/{patientId}", ct);
+        if (!response.IsSuccessStatusCode)
+        {
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound) return null;
+            _logger.LogWarning("Get patient notes for {PatientId} returned {Status}",
+                patientId, response.StatusCode);
+            response.EnsureSuccessStatusCode();
+        }
+        var raw = await response.Content.ReadAsStringAsync(ct);
+        return string.IsNullOrWhiteSpace(raw) ? null : JsonDocument.Parse(raw);
+    }
+
+    public async Task<JsonDocument?> CreatePatientNoteAsync(
+        PatientNoteCreateRequest request, CancellationToken ct = default)
+    {
+        var response = await _http.PostAsJsonAsync("api/PatientNotes", request, JsonOpts, ct);
+        var raw = await response.Content.ReadAsStringAsync(ct);
+        if (!response.IsSuccessStatusCode)
+            throw new HttpRequestException($"API returned {(int)response.StatusCode}: {raw}", null, response.StatusCode);
+        return string.IsNullOrWhiteSpace(raw) ? null : JsonDocument.Parse(raw);
+    }
+
+    public async Task<JsonDocument?> UpdatePatientNoteAsync(
+        string id, PatientNoteUpdateRequest request, CancellationToken ct = default)
+    {
+        if (request.Id == Guid.Empty && Guid.TryParse(id, out var parsed))
+            request.Id = parsed;
+
+        var response = await _http.PutAsJsonAsync($"api/PatientNotes/{id}", request, JsonOpts, ct);
+        var raw = await response.Content.ReadAsStringAsync(ct);
+        if (!response.IsSuccessStatusCode)
+            throw new HttpRequestException($"API returned {(int)response.StatusCode}: {raw}", null, response.StatusCode);
+        return string.IsNullOrWhiteSpace(raw) ? null : JsonDocument.Parse(raw);
+    }
+
+    public async Task<bool> DeletePatientNoteAsync(string id, CancellationToken ct = default)
+    {
+        var response = await _http.DeleteAsync($"api/PatientNotes/{id}", ct);
+        if (!response.IsSuccessStatusCode)
+        {
+            var raw = await response.Content.ReadAsStringAsync(ct);
+            throw new HttpRequestException($"API returned {(int)response.StatusCode}: {raw}", null, response.StatusCode);
+        }
+        return true;
+    }
+
+
+    /* =================== Statistics (Time-Series) =================== */
+    public async Task<JsonDocument?> GetPatientStatisticsRawAsync(
+        string patientId,
+        string range = "week",
+        string? startDate = null,
+        string? endDate = null,
+        CancellationToken ct = default)
+    {
+        var query = new List<string> { $"range={Uri.EscapeDataString(range ?? "week")}" };
+        if (!string.IsNullOrWhiteSpace(startDate)) query.Add($"startDate={Uri.EscapeDataString(startDate)}");
+        if (!string.IsNullOrWhiteSpace(endDate)) query.Add($"endDate={Uri.EscapeDataString(endDate)}");
+
+        var url = $"api/Statistics/patient/{patientId}?{string.Join("&", query)}";
+
+        var response = await _http.GetAsync(url, ct);
+        if (!response.IsSuccessStatusCode)
+        {
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound) return null;
+            _logger.LogWarning("Get statistics for {PatientId} returned {Status}",
+                patientId, response.StatusCode);
+            response.EnsureSuccessStatusCode();
+        }
+        var raw = await response.Content.ReadAsStringAsync(ct);
+        return string.IsNullOrWhiteSpace(raw) ? null : JsonDocument.Parse(raw);
+    }
+
+
+    public async Task<bool> DeletePatientAsync(string id, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(id))
+            throw new ArgumentException("معرّف المريض مطلوب", nameof(id));
+
+        var response = await _http.DeleteAsync($"api/PatientPersonalInfo/{id}", ct);
+        if (!response.IsSuccessStatusCode)
+        {
+            var raw = await response.Content.ReadAsStringAsync(ct);
+            throw new HttpRequestException($"API returned {(int)response.StatusCode}: {raw}", null, response.StatusCode);
+        }
+        return true;
+    }
+
+    /* =================== Clinic =================== */
+    public async Task<JsonDocument?> GetClinicPatientsRawAsync(CancellationToken ct = default)
+    {
+        var response = await _http.GetAsync("api/Clinic/patients", ct);
+        if (!response.IsSuccessStatusCode)
+        {
+            _logger.LogWarning("Get clinic patients returned {Status}", response.StatusCode);
+            response.EnsureSuccessStatusCode();
+        }
+        var stream = await response.Content.ReadAsStreamAsync(ct);
+        return await JsonDocument.ParseAsync(stream, cancellationToken: ct);
+    }
+
+    public async Task<JsonDocument?> GetClinicStatisticsRawAsync(CancellationToken ct = default)
+    {
+        var response = await _http.GetAsync("api/Clinic/statistics", ct);
+        if (!response.IsSuccessStatusCode)
+        {
+            _logger.LogWarning("Get clinic statistics returned {Status}", response.StatusCode);
+            response.EnsureSuccessStatusCode();
+        }
+        var stream = await response.Content.ReadAsStreamAsync(ct);
+        return await JsonDocument.ParseAsync(stream, cancellationToken: ct);
+    }
 }

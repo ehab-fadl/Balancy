@@ -5,6 +5,9 @@
     ViewData["Title"] = "إحصائيات الاكتئاب | بالنسي";
 }
 
+<!-- Hidden patient id للحصول على بيانات المريض من الـ API -->
+<input type="hidden" id="statisticsPatientId" value="@Model.PatientId" />
+
 <!-- Animated Aurora Background -->
 <div class="bg-aurora">
     <div class="aurora-blob aurora-1"></div>
@@ -27,7 +30,9 @@
 <!-- ============================================================
      Main Container
 ============================================================ -->
-<div class="stats-container">
+<div class="stats-container"
+     data-patient-id="@Model.PatientId"
+     data-api-stats-url="/Doctor?handler=Statistics">
 
     <!-- Hero Header -->
     <section class="hero-header">
@@ -40,7 +45,10 @@
                 </div>
                 <div>
                     <h1>إحصائيات الاكتئاب</h1>
-                    <p>متابعة شاملة لمؤشرات الحالة الصحية والنفسية</p>
+                    <p>
+                        متابعة شاملة لمؤشرات الحالة الصحية والنفسية
+                        <span id="heroPatientName" style="font-weight:900; color:#fff;"></span>
+                    </p>
                 </div>
             </div>
         </div>

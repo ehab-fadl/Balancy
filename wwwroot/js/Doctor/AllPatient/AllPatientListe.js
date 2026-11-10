@@ -1,5 +1,5 @@
 ﻿/* ============================================================
-   0. Safe DOM Helpers — بأسماء فريدة لتجنّب تعارض jQuery
+   0. Safe DOM Helpers
 ============================================================ */
 const bnGet = (id) => document.getElementById(id);
 const bnOn = (id, event, handler) => {
@@ -118,25 +118,328 @@ const bnConfetti = {
 };
 
 /* ============================================================
-   4. Mock Patients Data
+   4. API Client
 ============================================================ */
-const mockPatients = [
-    { id: 1, firstName: 'أحمد', lastName: 'محمد علي', code: 'AB123456', age: 32, dateOfBirth: '1992-05-15', gender: 'male', phone: '+49 151 12345678', email: 'ahmed@example.com', city: 'برلين', address: 'شارع المثال 25', maritalStatus: 'متزوج', status: 'active', diagnosis: 'اكتئاب متوسط', medications: 2, visits: 8, lastVisit: '2024-01-15', nextVisit: '2024-02-15', riskLevel: 'low', createdAt: '2023-06-10' },
-    { id: 2, firstName: 'سارة', lastName: 'عبدالله حسن', code: 'CD234567', age: 27, dateOfBirth: '1997-08-22', gender: 'female', phone: '+49 152 23456789', email: 'sara@example.com', city: 'هامبورغ', address: 'شارع النور 12', maritalStatus: 'عزباء', status: 'active', diagnosis: 'قلق عام', medications: 1, visits: 5, lastVisit: '2024-01-20', nextVisit: '2024-02-20', riskLevel: 'low', createdAt: '2023-08-15' },
-    { id: 3, firstName: 'خالد', lastName: 'إبراهيم سالم', code: 'EF345678', age: 41, dateOfBirth: '1983-03-10', gender: 'male', phone: '+49 153 34567890', email: 'khaled@example.com', city: 'ميونخ', address: 'شارع الأمل 8', maritalStatus: 'متزوج', status: 'critical', diagnosis: 'اكتئاب حاد مع أفكار انتحارية', medications: 4, visits: 15, lastVisit: '2024-01-25', nextVisit: '2024-02-01', riskLevel: 'high', createdAt: '2023-03-20' },
-    { id: 4, firstName: 'فاطمة', lastName: 'حسن مصطفى', code: 'GH456789', age: 23, dateOfBirth: '2001-11-05', gender: 'female', phone: '+49 154 45678901', email: 'fatima@example.com', city: 'كولونيا', address: 'شارع السلام 33', maritalStatus: 'عزباء', status: 'active', diagnosis: 'اكتئاب خفيف', medications: 1, visits: 3, lastVisit: '2024-01-18', nextVisit: '2024-02-18', riskLevel: 'low', createdAt: '2023-11-10' },
-    { id: 5, firstName: 'عمر', lastName: 'يوسف النجار', code: 'IJ567890', age: 35, dateOfBirth: '1989-07-12', gender: 'male', phone: '+49 155 56789012', email: 'omar@example.com', city: 'فرانكفورت', address: 'شارع الوحدة 5', maritalStatus: 'متزوج', status: 'inactive', diagnosis: 'اضطراب ثنائي القطب', medications: 3, visits: 12, lastVisit: '2023-12-10', nextVisit: null, riskLevel: 'medium', createdAt: '2023-05-01' },
-    { id: 6, firstName: 'مريم', lastName: 'سعيد رمضان', code: 'KL678901', age: 26, dateOfBirth: '1998-02-28', gender: 'female', phone: '+49 156 67890123', email: 'mariam@example.com', city: 'شتوتغارت', address: 'شارع النصر 17', maritalStatus: 'متزوجة', status: 'active', diagnosis: 'اكتئاب ما بعد الولادة', medications: 2, visits: 6, lastVisit: '2024-01-22', nextVisit: '2024-02-05', riskLevel: 'medium', createdAt: '2023-09-15' }
-];
+const bnEndpoints = window.BALANCY_ENDPOINTS || {
+    patients: '?handler=Patients',
+    patient: '?handler=Patient',
+    deletePatient: '?handler=DeletePatient',
+    patientFile: '/Doctor'
+};
 
-let allPatients = [...mockPatients];
-let filteredPatients = [...allPatients];
+const bnApi = {
+    async _request(url, options = {}) {
+        const res = await fetch(url, {
+            headers: { 'Accept': 'application/json', ...(options.headers || {}) },
+            ...options
+        });
+
+        const text = await res.text();
+        let data = null;
+        try { data = text ? JSON.parse(text) : null; } catch { data = null; }
+
+        if (!res.ok) {
+            const msg = (data && (data.error || data.detail)) || `HTTP ${res.status}`;
+            const e = new Error(msg);
+            e.status = res.status;
+            throw e;
+        }
+        return data;
+    },
+
+    async getPatients() {
+        const data = await this._request(bnEndpoints.patients);
+        if (Array.isArray(data)) return data;
+        if (data && Array.isArray(data.items)) return data.items;
+        if (data && Array.isArray(data.data)) return data.data;
+        if (data && Array.isArray(data.patients)) return data.patients;
+        return [];
+    },
+
+    async deletePatient(id) {
+        if (!id) throw new Error('معرّف المريض مطلوب');
+        const sep = bnEndpoints.deletePatient.includes('?') ? '&' : '?';
+        const url = `${bnEndpoints.deletePatient}${sep}id=${encodeURIComponent(id)}`;
+        console.log('🌐 Delete request (POST) →', url);
+
+        const headers = {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'fetch'
+        };
+
+        // ✅ إضافة Antiforgery token إذا كان متوفراً
+        if (window.BALANCY_ANTIFORGERY) {
+            headers['RequestVerificationToken'] = window.BALANCY_ANTIFORGERY;
+        }
+
+        try {
+            return await this._request(url, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({ id: String(id) })
+            });
+        } catch (err) {
+            const status = err?.status || 0;
+            if (status === 405) throw new Error('العملية غير مسموحة — OnPostDeletePatientAsync غير موجود');
+            if (status === 404) throw new Error('المريض غير موجود — قد يكون محذوفاً مسبقاً');
+            if (status === 403) throw new Error('غير مصرّح بحذف هذا المريض');
+            if (status === 401) throw new Error('جلسة غير صالحة — أعد تسجيل الدخول');
+            if (status === 400) throw new Error('طلب غير صالح — قد يكون Antiforgery Token مفقوداً');
+            if (status === 502) throw new Error('تعذر الاتصال بخدمة المرضى');
+            if (status >= 500) throw new Error(`خطأ في الخادم: ${err.message || status}`);
+            throw err;
+        }
+    }
+};
+
+/* ============================================================
+   5. Mapper
+============================================================ */
+function pickValue(obj, keys) {
+    if (!obj || typeof obj !== 'object') return undefined;
+    for (const k of keys) {
+        const v = obj[k];
+        if (v !== undefined && v !== null && v !== '') return v;
+    }
+    return undefined;
+}
+
+function pickString(obj, keys) {
+    const v = pickValue(obj, keys);
+    if (v === undefined || v === null) return '';
+    if (typeof v === 'string') return v;
+    if (typeof v === 'number' || typeof v === 'boolean') return String(v);
+    if (typeof v === 'object') {
+        return String(v.name ?? v.Name ?? v.text ?? v.Text ?? v.title ?? v.Title ?? v.value ?? v.Value ?? '');
+    }
+    return String(v);
+}
+
+function pickNumber(obj, keys, fallback = 0) {
+    const v = pickValue(obj, keys);
+    if (v === undefined || v === null || v === '') return fallback;
+    if (typeof v === 'number' && !isNaN(v)) return v;
+    if (typeof v === 'string') {
+        const n = parseInt(v, 10);
+        return isNaN(n) ? fallback : n;
+    }
+    if (typeof v === 'object') {
+        const n = v.count ?? v.Count ?? v.total ?? v.Total ?? v.value ?? v.Value ?? v.length ?? v.Length;
+        if (typeof n === 'number') return n;
+    }
+    return fallback;
+}
+
+function pickDate(obj, keys) {
+    const v = pickValue(obj, keys);
+    if (v === undefined || v === null || v === '') return null;
+    if (typeof v === 'string') return v;
+    if (typeof v === 'object') {
+        const y = v.year ?? v.Year;
+        const m = v.month ?? v.Month;
+        const d = v.day ?? v.Day;
+        if (y && m && d) {
+            return `${String(y).padStart(4, '0')}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        }
+        return null;
+    }
+    return null;
+}
+
+function extractFromObject(obj) {
+    if (!obj || typeof obj !== 'object') return '';
+    const candidates = [
+        'name', 'Name', 'text', 'Text', 'title', 'Title', 'value', 'Value',
+        'label', 'Label', 'displayName', 'DisplayName',
+        'mainType', 'MainType', 'subType', 'SubType',
+        'diagnosisType', 'DiagnosisType', 'description', 'Description',
+        'code', 'Code', 'icdCode', 'IcdCode', 'icd10Code', 'Icd10Code'
+    ];
+    for (const key of candidates) {
+        const v = obj[key];
+        if (v === undefined || v === null || v === '') continue;
+        if (typeof v === 'string') return v.trim();
+        if (typeof v === 'number') return String(v);
+        if (typeof v === 'object' && !Array.isArray(v)) {
+            const inner = extractFromObject(v);
+            if (inner) return inner;
+        }
+    }
+    const main = obj.mainType ?? obj.MainType;
+    const sub = obj.subType ?? obj.SubType;
+    if (main && sub) return `${main} - ${sub}`;
+    if (main) return String(main);
+    return '';
+}
+
+function extractFromArray(arr) {
+    for (const item of arr) {
+        if (!item) continue;
+        if (typeof item === 'string') {
+            const s = item.trim();
+            if (s) return s;
+        }
+        if (typeof item === 'object') {
+            const fromObj = extractFromObject(item);
+            if (fromObj) return fromObj;
+        }
+    }
+    return '';
+}
+
+function extractDiagnosis(raw, nested) {
+    const directKeys = [
+        'diagnosis', 'Diagnosis', 'primaryDiagnosis', 'PrimaryDiagnosis',
+        'mainDiagnosis', 'MainDiagnosis', 'currentDiagnosis', 'CurrentDiagnosis',
+        'lastDiagnosis', 'LastDiagnosis', 'latestDiagnosis', 'LatestDiagnosis',
+        'diagnosisName', 'DiagnosisName', 'diagnosisTitle', 'DiagnosisTitle',
+        'diagnosisType', 'DiagnosisType', 'mainType', 'MainType',
+        'disorder', 'Disorder', 'condition', 'Condition', 'primaryCondition', 'PrimaryCondition'
+    ];
+    for (const key of directKeys) {
+        const v = raw[key];
+        if (v === undefined || v === null || v === '') continue;
+        if (typeof v === 'string') return v.trim();
+        if (typeof v === 'number' || typeof v === 'boolean') return String(v);
+        if (typeof v === 'object' && !Array.isArray(v)) {
+            const fromObj = extractFromObject(v);
+            if (fromObj) return fromObj;
+        }
+        if (Array.isArray(v) && v.length > 0) {
+            const fromArr = extractFromArray(v);
+            if (fromArr) return fromArr;
+        }
+    }
+    const arrayKeys = [
+        'diagnoses', 'Diagnoses', 'patientDiagnoses', 'PatientDiagnoses',
+        'diagnosisList', 'DiagnosisList', 'medicalDiagnoses', 'MedicalDiagnoses',
+        'conditions', 'Conditions'
+    ];
+    for (const key of arrayKeys) {
+        const v = raw[key];
+        if (Array.isArray(v) && v.length > 0) {
+            const fromArr = extractFromArray(v);
+            if (fromArr) return fromArr;
+        }
+    }
+    if (nested && typeof nested === 'object') {
+        for (const key of directKeys) {
+            const v = nested[key];
+            if (v === undefined || v === null || v === '') continue;
+            if (typeof v === 'string') return v.trim();
+            if (typeof v === 'object' && !Array.isArray(v)) {
+                const fromObj = extractFromObject(v);
+                if (fromObj) return fromObj;
+            }
+            if (Array.isArray(v) && v.length > 0) {
+                const fromArr = extractFromArray(v);
+                if (fromArr) return fromArr;
+            }
+        }
+    }
+    return '';
+}
+
+function mapApiPatient(raw) {
+    if (!raw || typeof raw !== 'object') return null;
+
+    const id = pickValue(raw, ['id', 'Id', 'patientId', 'PatientId']);
+    if (!id) return null;
+
+    const nested = raw.patientPersonalInfo ?? raw.PatientPersonalInfo ?? raw.personalInfo ?? raw.PersonalInfo ?? {};
+    const fullName = pickString(raw, ['fullName', 'FullName', 'name', 'Name']) ||
+        pickString(nested, ['fullName', 'FullName', 'name', 'Name']) || '';
+    const nameParts = fullName.split(/\s+/).filter(Boolean);
+
+    const firstName = pickString(raw, ['firstName', 'FirstName', 'givenName', 'GivenName']) ||
+        pickString(nested, ['firstName', 'FirstName']) || nameParts[0] || '';
+    const lastName = pickString(raw, ['lastName', 'LastName', 'familyName', 'FamilyName', 'surname', 'Surname']) ||
+        pickString(nested, ['lastName', 'LastName']) || nameParts.slice(1).join(' ') || '';
+
+    const statusRaw = pickString(raw, ['status', 'Status', 'patientStatus', 'PatientStatus']) || 'active';
+    let status = statusRaw.toLowerCase();
+    if (['active', 'نشط'].includes(status)) status = 'active';
+    else if (['critical', 'حرج', 'danger', 'high'].includes(status)) status = 'critical';
+    else if (['inactive', 'غير نشط', 'paused'].includes(status)) status = 'inactive';
+
+    const riskRaw = pickString(raw, ['riskLevel', 'RiskLevel', 'risk', 'Risk', 'riskCategory', 'RiskCategory']) || 'low';
+    let riskLevel = riskRaw.toLowerCase();
+    if (['high', 'مرتفع', 'critical', 'severe'].includes(riskLevel)) riskLevel = 'high';
+    else if (['medium', 'متوسط', 'moderate'].includes(riskLevel)) riskLevel = 'medium';
+    else riskLevel = 'low';
+
+    const diagnosis = extractDiagnosis(raw, nested);
+
+    const medicationsCount = pickNumber(raw, [
+        'medications', 'Medications', 'medicationsCount', 'MedicationsCount',
+        'activeMedications', 'ActiveMedications', 'activeMedicationsCount', 'ActiveMedicationsCount',
+        'medicationCount', 'MedicationCount', 'currentMedicationsCount', 'CurrentMedicationsCount'
+    ], 0);
+
+    const visitsCount = pickNumber(raw, [
+        'visits', 'Visits', 'visitsCount', 'VisitsCount',
+        'totalVisits', 'TotalVisits', 'visitCount', 'VisitCount'
+    ], 0);
+
+    const lastVisit = pickDate(raw, [
+        'lastVisit', 'LastVisit', 'lastVisitDate', 'LastVisitDate',
+        'lastVisitAt', 'LastVisitAt', 'mostRecentVisit', 'MostRecentVisit'
+    ]);
+
+    const nextVisit = pickDate(raw, [
+        'nextVisit', 'NextVisit', 'nextVisitDate', 'NextVisitDate',
+        'nextAppointment', 'NextAppointment', 'upcomingAppointment', 'UpcomingAppointment',
+        'nextAppointmentDate', 'NextAppointmentDate'
+    ]);
+
+    const age = pickNumber(raw, ['age', 'Age'], 0);
+    const genderRaw = pickString(raw, ['gender', 'Gender', 'sex', 'Sex']).toLowerCase();
+
+    return {
+        id: id,
+        firstName: firstName,
+        lastName: lastName,
+        code: pickString(raw, ['patientCode', 'PatientCode', 'code', 'Code']) ||
+            pickString(nested, ['patientCode', 'PatientCode', 'code', 'Code']) || '',
+        age: age || null,
+        dateOfBirth: pickDate(raw, ['dateOfBirth', 'DateOfBirth', 'birthDate', 'BirthDate']) ||
+            pickDate(nested, ['dateOfBirth', 'DateOfBirth', 'birthDate', 'BirthDate']),
+        gender: genderRaw || null,
+        phone: pickString(raw, ['phone', 'Phone', 'phoneNumber', 'PhoneNumber', 'mobile', 'Mobile']) ||
+            pickString(nested, ['phone', 'Phone', 'phoneNumber', 'PhoneNumber']) || '',
+        email: pickString(raw, ['email', 'Email', 'emailAddress', 'EmailAddress']) ||
+            pickString(nested, ['email', 'Email']) || '',
+        city: pickString(raw, ['city', 'City', 'town', 'Town']) ||
+            pickString(nested, ['city', 'City']) || '',
+        address: pickString(raw, ['address', 'Address', 'street', 'Street']) ||
+            pickString(nested, ['address', 'Address']) || '',
+        maritalStatus: pickString(raw, ['maritalStatus', 'MaritalStatus', 'marriageStatus', 'MarriageStatus']) ||
+            pickString(nested, ['maritalStatus', 'MaritalStatus']) || '',
+        status: status,
+        diagnosis: diagnosis,
+        medications: medicationsCount,
+        visits: visitsCount,
+        lastVisit: lastVisit,
+        nextVisit: nextVisit,
+        riskLevel: riskLevel,
+        createdAt: pickDate(raw, ['createdAt', 'CreatedAt', 'registrationDate', 'RegistrationDate', 'createdDate', 'CreatedDate'])
+    };
+}
+
+/* ============================================================
+   6. State
+============================================================ */
+let allPatients = [];
+let filteredPatients = [];
 let currentView = 'grid';
 let pendingDeleteId = null;
 let currentDetailsPatientId = null;
+let isLoading = false;
+let isDeleting = false;
 
 /* ============================================================
-   5. Utilities
+   7. Utilities
 ============================================================ */
 function escapeHtml(value) {
     const div = document.createElement('div');
@@ -157,7 +460,7 @@ function getRiskBadgeClass(l) { return { high: 'danger', medium: 'warning', low:
 function getRiskText(l) { return { high: 'مرتفع', medium: 'متوسط', low: 'منخفض' }[l] || 'غير محدد'; }
 
 /* ============================================================
-   6. Statistics
+   8. Statistics
 ============================================================ */
 function updateStatistics() {
     const total = allPatients.length;
@@ -168,7 +471,7 @@ function updateStatistics() {
     const visitsThisMonth = allPatients.filter(p => {
         if (!p.lastVisit) return false;
         const d = new Date(p.lastVisit);
-        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+        return !isNaN(d) && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
     }).length;
 
     bnSetText('statTotal', total);
@@ -178,7 +481,7 @@ function updateStatistics() {
 }
 
 /* ============================================================
-   7. Filters
+   9. Filters
 ============================================================ */
 function applyFilters() {
     const searchEl = bnGet('globalSearch');
@@ -194,9 +497,9 @@ function applyFilters() {
     filteredPatients = allPatients.filter(p => {
         const mQ = !q ||
             `${p.firstName} ${p.lastName}`.toLowerCase().includes(q) ||
-            p.code.toLowerCase().includes(q) ||
-            (p.phone && p.phone.toLowerCase().includes(q)) ||
-            (p.city && p.city.toLowerCase().includes(q));
+            (p.code && String(p.code).toLowerCase().includes(q)) ||
+            (p.phone && String(p.phone).toLowerCase().includes(q)) ||
+            (p.city && String(p.city).toLowerCase().includes(q));
         const mG = !g || p.gender === g;
         const mS = !s || p.status === s;
         return mQ && mG && mS;
@@ -206,10 +509,10 @@ function applyFilters() {
         switch (sort) {
             case 'name': return `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`, 'ar');
             case 'nameDesc': return `${b.firstName} ${b.lastName}`.localeCompare(`${a.firstName} ${a.lastName}`, 'ar');
-            case 'dateNewest': return new Date(b.createdAt) - new Date(a.createdAt);
-            case 'dateOldest': return new Date(a.createdAt) - new Date(b.createdAt);
-            case 'ageAsc': return a.age - b.age;
-            case 'ageDesc': return b.age - a.age;
+            case 'dateNewest': return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+            case 'dateOldest': return new Date(a.createdAt || 0) - new Date(b.createdAt || 0);
+            case 'ageAsc': return (a.age || 0) - (b.age || 0);
+            case 'ageDesc': return (b.age || 0) - (a.age || 0);
             default: return 0;
         }
     });
@@ -223,7 +526,9 @@ function updateResultsText() {
     const count = filteredPatients.length;
     const total = allPatients.length;
     let text = '';
-    if (count === total) text = `عرض جميع المرضى (${count})`;
+    if (isLoading) text = 'جاري تحميل المرضى...';
+    else if (count === total && total > 0) text = `عرض جميع المرضى (${count})`;
+    else if (total === 0) text = 'لا يوجد مرضى مسجّلون بعد';
     else if (count === 0) text = 'لا توجد نتائج مطابقة';
     else text = `عرض ${count} من أصل ${total} مريض`;
     bnSetText('resultsText', text);
@@ -245,7 +550,7 @@ function toggleResetButton() {
 }
 
 /* ============================================================
-   8. Render
+   10. Render
 ============================================================ */
 function render() {
     const grid = bnGet('patientsGrid');
@@ -300,7 +605,7 @@ function renderGrid() {
             <div class="patient-card-details">
                 <div class="detail-item">
                     <span class="detail-item-label"><i class="fa-solid fa-cake-candles"></i> العمر</span>
-                    <span class="detail-item-value">${p.age} سنة</span>
+                    <span class="detail-item-value">${p.age ?? '-'} سنة</span>
                 </div>
                 <div class="detail-item">
                     <span class="detail-item-label"><i class="fa-solid fa-venus-mars"></i> الجنس</span>
@@ -308,15 +613,15 @@ function renderGrid() {
                 </div>
                 <div class="detail-item">
                     <span class="detail-item-label"><i class="fa-solid fa-phone"></i> الهاتف</span>
-                    <span class="detail-item-value">${escapeHtml(p.phone)}</span>
+                    <span class="detail-item-value">${escapeHtml(p.phone || '-')}</span>
                 </div>
                 <div class="detail-item">
                     <span class="detail-item-label"><i class="fa-solid fa-city"></i> المدينة</span>
-                    <span class="detail-item-value">${escapeHtml(p.city)}</span>
+                    <span class="detail-item-value">${escapeHtml(p.city || '-')}</span>
                 </div>
                 <div class="detail-item">
                     <span class="detail-item-label"><i class="fa-solid fa-stethoscope"></i> التشخيص</span>
-                    <span class="detail-item-value">${escapeHtml(p.diagnosis)}</span>
+                    <span class="detail-item-value">${escapeHtml(p.diagnosis || '-')}</span>
                 </div>
                 <div class="detail-item">
                     <span class="detail-item-label"><i class="fa-solid fa-calendar-check"></i> آخر زيارة</span>
@@ -330,7 +635,6 @@ function renderGrid() {
                 </span>
                 <div class="patient-card-actions">
                     <button type="button" class="action-btn action-view" data-action="view" data-id="${p.id}" title="عرض"><i class="fa-solid fa-eye"></i></button>
-                    <button type="button" class="action-btn action-edit" data-action="edit" data-id="${p.id}" title="تعديل"><i class="fa-solid fa-pen"></i></button>
                     <button type="button" class="action-btn action-delete" data-action="delete" data-id="${p.id}" title="حذف"><i class="fa-solid fa-trash"></i></button>
                 </div>
             </div>
@@ -352,15 +656,15 @@ function renderTable() {
                     <div class="table-avatar">${getInitials(p.firstName, p.lastName)}</div>
                     <div>
                         <p class="table-patient-name">${escapeHtml(p.firstName)} ${escapeHtml(p.lastName)}</p>
-                        <p class="table-patient-sub">${escapeHtml(p.diagnosis)}</p>
+                        <p class="table-patient-sub">${escapeHtml(p.diagnosis || '-')}</p>
                     </div>
                 </div>
             </td>
             <td><span class="table-code">${escapeHtml(p.code)}</span></td>
-            <td>${p.age}</td>
+            <td>${p.age ?? '-'}</td>
             <td>${getGenderText(p.gender)}</td>
-            <td>${escapeHtml(p.phone)}</td>
-            <td>${escapeHtml(p.city)}</td>
+            <td>${escapeHtml(p.phone || '-')}</td>
+            <td>${escapeHtml(p.city || '-')}</td>
             <td>
                 <span class="patient-card-status status-${p.status}">
                     <i class="fa-solid ${getStatusIcon(p.status)}"></i>
@@ -371,7 +675,6 @@ function renderTable() {
             <td>
                 <div class="table-actions">
                     <button type="button" class="action-btn action-view" data-action="view" data-id="${p.id}"><i class="fa-solid fa-eye"></i></button>
-                    <button type="button" class="action-btn action-edit" data-action="edit" data-id="${p.id}"><i class="fa-solid fa-pen"></i></button>
                     <button type="button" class="action-btn action-delete" data-action="delete" data-id="${p.id}"><i class="fa-solid fa-trash"></i></button>
                 </div>
             </td>
@@ -381,17 +684,16 @@ function renderTable() {
 }
 
 /* ============================================================
-   9. Actions
+   11. Actions — Delete
 ============================================================ */
-function editPatient(id) {
-    showToast('info', 'تعديل المريض', 'سيتم فتح صفحة التعديل...');
-}
-
 function openDeleteModal(id) {
-    const p = allPatients.find(x => x.id === id);
-    if (!p) return;
+    const p = allPatients.find(x => String(x.id) === String(id));
+    if (!p) {
+        console.warn('⚠️ المريض غير موجود بالقائمة:', id);
+        return;
+    }
 
-    pendingDeleteId = id;
+    pendingDeleteId = String(id);
     const msgEl = bnGet('deleteModalMessage');
     if (msgEl) {
         msgEl.innerHTML = `هل أنت متأكد من حذف المريض <strong>${escapeHtml(p.firstName)} ${escapeHtml(p.lastName)}</strong> نهائياً من النظام؟`;
@@ -415,27 +717,91 @@ function closeDeleteModal() {
     if (btn) btn.disabled = true;
 }
 
-function confirmDelete() {
-    if (!pendingDeleteId) return;
-    const p = allPatients.find(x => x.id === pendingDeleteId);
-    if (!p) return;
+async function confirmDelete() {
+    console.log('🔍 confirmDelete START');
+    console.log('  - isDeleting:', isDeleting);
+    console.log('  - pendingDeleteId:', pendingDeleteId);
 
-    allPatients = allPatients.filter(x => x.id !== pendingDeleteId);
-    closeDeleteModal();
-    applyFilters();
-    updateStatistics();
-    bnConfetti.fire();
-    showToast('success', 'تم الحذف بنجاح', `تم حذف المريض ${p.firstName} ${p.lastName} نهائياً من النظام.`, 4500);
+    if (isDeleting) {
+        console.warn('⚠️ حذف قيد التنفيذ — تجاهل الضغطة المكررة');
+        return;
+    }
+    if (!pendingDeleteId) {
+        console.warn('⚠️ pendingDeleteId فارغ');
+        return;
+    }
+
+    const p = allPatients.find(x => String(x.id) === String(pendingDeleteId));
+    if (!p) {
+        console.warn('⚠️ المريض غير موجود بالقائمة:', pendingDeleteId);
+        closeDeleteModal();
+        showToast('error', 'خطأ', 'المريض غير موجود في القائمة الحالية.', 4000);
+        return;
+    }
+
+    isDeleting = true;
+
+    const btn = bnGet('deleteConfirmBtn');
+    const originalHtml = btn ? btn.innerHTML : '';
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري الحذف...';
+    }
+
+    try {
+        const id = String(pendingDeleteId);
+        console.log('🗑️ Deleting patient:', id);
+
+        const result = await bnApi.deletePatient(id);
+        console.log('✅ Delete API result:', result);
+
+        allPatients = allPatients.filter(x => String(x.id) !== id);
+        closeDeleteModal();
+        applyFilters();
+        updateStatistics();
+        bnConfetti.fire();
+        showToast('success', 'تم الحذف بنجاح',
+            `تم حذف المريض ${p.firstName} ${p.lastName} نهائياً من النظام.`, 4500);
+    } catch (err) {
+        console.error('❌ Delete failed:', err);
+
+        const status = err?.status || '?';
+        const msg = err?.message || 'تعذر حذف المريض';
+
+        console.group('❌ Delete Error Details');
+        console.error('Status Code:', status);
+        console.error('Message:', msg);
+        console.error('Full error:', err);
+        console.groupEnd();
+
+        // ✅ رسالة خطأ مفصّلة مع Status Code
+        let userMessage = msg;
+        if (status === 400) userMessage = 'طلب غير صالح — قد يكون Antiforgery Token مفقوداً';
+        else if (status === 404) userMessage = 'OnPostDeletePatientAsync غير موجود أو المريض غير موجود';
+        else if (status === 401) userMessage = 'جلسة غير صالحة — أعد تسجيل الدخول';
+        else if (status === 403) userMessage = 'غير مصرّح بحذف هذا المريض';
+        else if (status === 500) userMessage = 'خطأ في الخادم — قد توجد سجلات مرتبطة';
+        else if (status === 502) userMessage = 'تعذر الاتصال بخدمة المرضى';
+
+        showToast('error', 'فشل الحذف', `[${status}] ${userMessage}`, 8000);
+
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = originalHtml || '<i class="fa-solid fa-trash"></i> حذف نهائي';
+        }
+    } finally {
+        isDeleting = false;
+    }
 }
 
 /* ============================================================
-   10. Details Modal
+   12. Details Modal
 ============================================================ */
 function openDetails(id) {
-    const p = allPatients.find(x => x.id === id);
+    const p = allPatients.find(x => String(x.id) === String(id));
     if (!p) return;
 
-    currentDetailsPatientId = id;
+    currentDetailsPatientId = String(id);
 
     const subtitle = bnGet('detailsModalSubtitle');
     if (subtitle) subtitle.textContent = `${p.firstName} ${p.lastName} · ${p.code}`;
@@ -448,7 +814,7 @@ function openDetails(id) {
             <div class="details-avatar">${getInitials(p.firstName, p.lastName)}</div>
             <div class="details-header-info">
                 <h4>${escapeHtml(p.firstName)} ${escapeHtml(p.lastName)}</h4>
-                <p><i class="fa-solid fa-hashtag"></i> ${escapeHtml(p.code)} · ${p.age} سنة · ${getGenderText(p.gender)}</p>
+                <p><i class="fa-solid fa-hashtag"></i> ${escapeHtml(p.code)} · ${p.age ?? '-'} سنة · ${getGenderText(p.gender)}</p>
             </div>
             <span class="details-badge badge-${getRiskBadgeClass(p.riskLevel)}">
                 <i class="fa-solid ${getStatusIcon(p.status)}"></i>
@@ -459,30 +825,30 @@ function openDetails(id) {
         <div class="details-grid">
             <div class="details-item">
                 <div class="details-item-icon"><i class="fa-solid fa-phone"></i></div>
-                <div class="details-item-content"><span class="details-item-label">الهاتف</span><span class="details-item-value">${escapeHtml(p.phone)}</span></div>
+                <div class="details-item-content"><span class="details-item-label">الهاتف</span><span class="details-item-value">${escapeHtml(p.phone || '-')}</span></div>
             </div>
             <div class="details-item">
                 <div class="details-item-icon"><i class="fa-solid fa-envelope"></i></div>
-                <div class="details-item-content"><span class="details-item-label">البريد</span><span class="details-item-value">${escapeHtml(p.email)}</span></div>
+                <div class="details-item-content"><span class="details-item-label">البريد</span><span class="details-item-value">${escapeHtml(p.email || '-')}</span></div>
             </div>
             <div class="details-item">
                 <div class="details-item-icon"><i class="fa-solid fa-city"></i></div>
-                <div class="details-item-content"><span class="details-item-label">المدينة</span><span class="details-item-value">${escapeHtml(p.city)}</span></div>
+                <div class="details-item-content"><span class="details-item-label">المدينة</span><span class="details-item-value">${escapeHtml(p.city || '-')}</span></div>
             </div>
             <div class="details-item">
                 <div class="details-item-icon"><i class="fa-solid fa-heart"></i></div>
-                <div class="details-item-content"><span class="details-item-label">الحالة الاجتماعية</span><span class="details-item-value">${escapeHtml(p.maritalStatus)}</span></div>
+                <div class="details-item-content"><span class="details-item-label">الحالة الاجتماعية</span><span class="details-item-value">${escapeHtml(p.maritalStatus || '-')}</span></div>
             </div>
             <div class="details-item" style="grid-column: 1 / -1;">
                 <div class="details-item-icon"><i class="fa-solid fa-location-dot"></i></div>
-                <div class="details-item-content"><span class="details-item-label">العنوان</span><span class="details-item-value">${escapeHtml(p.address)}</span></div>
+                <div class="details-item-content"><span class="details-item-label">العنوان</span><span class="details-item-value">${escapeHtml(p.address || '-')}</span></div>
             </div>
         </div>
         <div class="details-section-title"><i class="fa-solid fa-notes-medical"></i> المعلومات الطبية</div>
         <div class="details-grid">
             <div class="details-item" style="grid-column: 1 / -1;">
                 <div class="details-item-icon"><i class="fa-solid fa-stethoscope"></i></div>
-                <div class="details-item-content"><span class="details-item-label">التشخيص</span><span class="details-item-value">${escapeHtml(p.diagnosis)}</span></div>
+                <div class="details-item-content"><span class="details-item-label">التشخيص</span><span class="details-item-value">${escapeHtml(p.diagnosis || 'غير محدد')}</span></div>
             </div>
             <div class="details-item">
                 <div class="details-item-icon"><i class="fa-solid fa-pills"></i></div>
@@ -529,11 +895,10 @@ function closeDetailsModal() {
 }
 
 /* ============================================================
-   11. Event Delegation — جميع الأحداث في مكان واحد
+   13. Event Delegation
 ============================================================ */
 document.addEventListener('click', (e) => {
 
-    // زر الوضع الليلي
     if (e.target.closest('#themeToggle')) {
         e.preventDefault();
         const t = bnTheme.toggle();
@@ -541,73 +906,55 @@ document.addEventListener('click', (e) => {
         return;
     }
 
-    // زر إغلاق Toast
     if (e.target.closest('#toastCloseBtn')) {
         e.preventDefault();
         hideToast();
         return;
     }
 
-    // زر إغلاق نافذة التفاصيل (X)
     if (e.target.closest('#detailsCloseBtn')) {
         e.preventDefault();
         closeDetailsModal();
         return;
     }
 
-    // زر إغلاق نافذة التفاصيل (في الأسفل)
     if (e.target.closest('#detailsCloseFooterBtn')) {
         e.preventDefault();
         closeDetailsModal();
         return;
     }
 
-    // زر فتح الملف الطبي
     if (e.target.closest('#detailsOpenFileBtn')) {
         e.preventDefault();
         if (!currentDetailsPatientId) return;
-        const p = allPatients.find(x => x.id === currentDetailsPatientId);
-        if (!p) return;
-        closeDetailsModal();
-        showToast('info', 'فتح الملف الطبي', `جارٍ فتح ملف: ${p.firstName} ${p.lastName}`, 3000);
+        const sep = bnEndpoints.patientFile.includes('?') ? '&' : '?';
+        const url = `${bnEndpoints.patientFile}${sep}patientId=${encodeURIComponent(currentDetailsPatientId)}`;
+        window.location.href = url;
         return;
     }
 
-    // زر حذف مريض
     const deleteBtn = e.target.closest('.action-btn.action-delete');
     if (deleteBtn) {
         e.preventDefault();
         e.stopPropagation();
-        openDeleteModal(parseInt(deleteBtn.dataset.id));
+        openDeleteModal(deleteBtn.dataset.id);
         return;
     }
 
-    // زر عرض تفاصيل
     const viewBtn = e.target.closest('.action-btn.action-view');
     if (viewBtn) {
         e.preventDefault();
         e.stopPropagation();
-        openDetails(parseInt(viewBtn.dataset.id));
+        openDetails(viewBtn.dataset.id);
         return;
     }
 
-    // زر تعديل
-    const editBtn = e.target.closest('.action-btn.action-edit');
-    if (editBtn) {
-        e.preventDefault();
-        e.stopPropagation();
-        editPatient(parseInt(editBtn.dataset.id));
-        return;
-    }
-
-    // نقر على البطاقة
     const patientCard = e.target.closest('.patient-card');
     if (patientCard && !e.target.closest('.action-btn')) {
-        openDetails(parseInt(patientCard.dataset.id));
+        openDetails(patientCard.dataset.id);
         return;
     }
 
-    // زر تبديل العرض
     const viewToggleBtn = e.target.closest('.view-btn');
     if (viewToggleBtn) {
         e.preventDefault();
@@ -618,7 +965,6 @@ document.addEventListener('click', (e) => {
         return;
     }
 
-    // زر مسح البحث
     if (e.target.closest('#clearSearch')) {
         e.preventDefault();
         const searchEl = bnGet('globalSearch');
@@ -629,34 +975,29 @@ document.addEventListener('click', (e) => {
         return;
     }
 
-    // زر إعادة تعيين
     if (e.target.closest('#resetFilters') || e.target.closest('#emptyResetBtn')) {
         e.preventDefault();
         resetFilters();
         return;
     }
 
-    // زر إلغاء الحذف
     if (e.target.closest('#deleteCancelBtn')) {
         e.preventDefault();
         closeDeleteModal();
         return;
     }
 
-    // زر تأكيد الحذف
     if (e.target.closest('#deleteConfirmBtn')) {
         e.preventDefault();
         confirmDelete();
         return;
     }
 
-    // خلفية modal الحذف
     if (e.target.id === 'deleteModal') {
         closeDeleteModal();
         return;
     }
 
-    // خلفية modal التفاصيل
     if (e.target.id === 'detailsModal') {
         closeDetailsModal();
         return;
@@ -664,7 +1005,7 @@ document.addEventListener('click', (e) => {
 });
 
 /* ============================================================
-   12. Input Events — Delegation
+   14. Input Events
 ============================================================ */
 document.addEventListener('input', (e) => {
     if (e.target.id === 'deleteConfirmInput') {
@@ -679,7 +1020,7 @@ document.addEventListener('input', (e) => {
 });
 
 /* ============================================================
-   13. Change Events — Delegation
+   15. Change Events
 ============================================================ */
 document.addEventListener('change', (e) => {
     if (['filterGender', 'filterStatus', 'filterSort'].includes(e.target.id)) {
@@ -688,7 +1029,7 @@ document.addEventListener('change', (e) => {
 });
 
 /* ============================================================
-   14. Keyboard Shortcuts
+   16. Keyboard Shortcuts
 ============================================================ */
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
@@ -708,7 +1049,7 @@ document.addEventListener('keydown', (e) => {
 });
 
 /* ============================================================
-   15. Reset Filters Function
+   17. Reset Filters
 ============================================================ */
 function resetFilters() {
     const searchEl = bnGet('globalSearch');
@@ -727,16 +1068,56 @@ function resetFilters() {
 }
 
 /* ============================================================
-   16. Init
+   18. Load Patients from API
+============================================================ */
+async function loadPatients() {
+    isLoading = true;
+    updateResultsText();
+
+    try {
+        const raw = await bnApi.getPatients();
+
+        if (Array.isArray(raw) && raw.length > 0) {
+            console.groupCollapsed('🔍 [Balancy] أول عنصر من API');
+            console.log('raw[0] =', raw[0]);
+            console.log('keys =', Object.keys(raw[0]));
+            console.groupEnd();
+        }
+
+        allPatients = raw.map(mapApiPatient).filter(Boolean);
+        isLoading = false;
+
+        updateStatistics();
+        applyFilters();
+
+        if (allPatients.length === 0) {
+            showToast('info', 'لا يوجد مرضى', 'لم يتم العثور على أي مريض مسجّل حالياً.', 4000);
+        } else {
+            showToast('info', 'مرحباً بك', `تم تحميل ${allPatients.length} مريض من النظام.`, 4000);
+        }
+    } catch (err) {
+        isLoading = false;
+        allPatients = [];
+        filteredPatients = [];
+        updateStatistics();
+        render();
+        updateResultsText();
+        showToast('error', 'فشل تحميل البيانات', err.message || 'تعذر الاتصال بخدمة المرضى.', 6000);
+    }
+}
+
+/* ============================================================
+   19. Init
 ============================================================ */
 window.addEventListener('DOMContentLoaded', () => {
     bnTheme.init();
-    updateStatistics();
-    applyFilters();
+    bnSetText('statTotal', '…');
+    bnSetText('statActive', '…');
+    bnSetText('statCritical', '…');
+    bnSetText('statVisits', '…');
+    bnSetText('resultsText', 'جاري تحميل المرضى...');
 
-    setTimeout(() => {
-        showToast('info', 'مرحباً بك', `يوجد حالياً ${allPatients.length} مريض مسجّل في النظام.`, 4500);
-    }, 800);
+    loadPatients();
 
     console.log('%c✅ All Patients Page Loaded',
         'background:#0891b2;color:#fff;padding:6px 16px;border-radius:6px;font-weight:bold;font-size:12px;');

@@ -52,7 +52,6 @@ wwwroot\js\Admin\AssignRole.js
 wwwroot\js\Admin\EditView.js
 wwwroot\js\Admin\Index.js
 wwwroot\js\Doctor\Alerts\Alert.js
-wwwroot\js\Doctor\AllPatient\AllPatientListe.js
 wwwroot\js\Doctor\Appointments\Appointments.js
 wwwroot\js\Doctor\ClinicStatistics\ClinicStatistics.js
 wwwroot\js\Doctor\Dashboard\Dashboard.js
@@ -71,6 +70,7 @@ wwwroot\js\Doctor\Tabs\diagnosis.js
 wwwroot\js\Doctor\Tabs\doctornotes.js
 wwwroot\js\Doctor\Tabs\familyhistory.js
 wwwroot\js\Doctor\Tabs\gad7.js
+wwwroot\js\Doctor\Tabs\listeningsessions.js
 wwwroot\js\Doctor\Tabs\mdq.js
 wwwroot\js\Doctor\Tabs\medications.js
 wwwroot\js\Doctor\Tabs\patientnotes.js
@@ -147,7 +147,7 @@ wwwroot\lib\jquery\dist\jquery.slim.js
 wwwroot\lib\jquery\dist\jquery.slim.min.js
 wwwroot\lib\jquery\dist\jquery.slim.min.map
 wwwroot\lib\jquery\LICENSE.txt
-wwwroot\js\Doctor\Tabs\listeningsessions.js
+wwwroot\js\Doctor\AllPatient\AllPatientListe.js
 D:\Projects\Asp.Net_Core_Projects\MicroservivesDepressionProject\Frondend\Balancy\Balancy\wwwroot\css\AccountDeactivated.css
 D:\Projects\Asp.Net_Core_Projects\MicroservivesDepressionProject\Frondend\Balancy\Balancy\wwwroot\css\Admin\AssignRole.css
 D:\Projects\Asp.Net_Core_Projects\MicroservivesDepressionProject\Frondend\Balancy\Balancy\wwwroot\css\Admin\Auditlog.css
@@ -202,7 +202,6 @@ D:\Projects\Asp.Net_Core_Projects\MicroservivesDepressionProject\Frondend\Balanc
 D:\Projects\Asp.Net_Core_Projects\MicroservivesDepressionProject\Frondend\Balancy\Balancy\wwwroot\js\Admin\EditView.js
 D:\Projects\Asp.Net_Core_Projects\MicroservivesDepressionProject\Frondend\Balancy\Balancy\wwwroot\js\Admin\Index.js
 D:\Projects\Asp.Net_Core_Projects\MicroservivesDepressionProject\Frondend\Balancy\Balancy\wwwroot\js\Doctor\Alerts\Alert.js
-D:\Projects\Asp.Net_Core_Projects\MicroservivesDepressionProject\Frondend\Balancy\Balancy\wwwroot\js\Doctor\AllPatient\AllPatientListe.js
 D:\Projects\Asp.Net_Core_Projects\MicroservivesDepressionProject\Frondend\Balancy\Balancy\wwwroot\js\Doctor\Appointments\Appointments.js
 D:\Projects\Asp.Net_Core_Projects\MicroservivesDepressionProject\Frondend\Balancy\Balancy\wwwroot\js\Doctor\ClinicStatistics\ClinicStatistics.js
 D:\Projects\Asp.Net_Core_Projects\MicroservivesDepressionProject\Frondend\Balancy\Balancy\wwwroot\js\Doctor\Dashboard\Dashboard.js
@@ -221,6 +220,7 @@ D:\Projects\Asp.Net_Core_Projects\MicroservivesDepressionProject\Frondend\Balanc
 D:\Projects\Asp.Net_Core_Projects\MicroservivesDepressionProject\Frondend\Balancy\Balancy\wwwroot\js\Doctor\Tabs\doctornotes.js
 D:\Projects\Asp.Net_Core_Projects\MicroservivesDepressionProject\Frondend\Balancy\Balancy\wwwroot\js\Doctor\Tabs\familyhistory.js
 D:\Projects\Asp.Net_Core_Projects\MicroservivesDepressionProject\Frondend\Balancy\Balancy\wwwroot\js\Doctor\Tabs\gad7.js
+D:\Projects\Asp.Net_Core_Projects\MicroservivesDepressionProject\Frondend\Balancy\Balancy\wwwroot\js\Doctor\Tabs\listeningsessions.js
 D:\Projects\Asp.Net_Core_Projects\MicroservivesDepressionProject\Frondend\Balancy\Balancy\wwwroot\js\Doctor\Tabs\mdq.js
 D:\Projects\Asp.Net_Core_Projects\MicroservivesDepressionProject\Frondend\Balancy\Balancy\wwwroot\js\Doctor\Tabs\medications.js
 D:\Projects\Asp.Net_Core_Projects\MicroservivesDepressionProject\Frondend\Balancy\Balancy\wwwroot\js\Doctor\Tabs\patientnotes.js
@@ -296,4 +296,4 @@ D:\Projects\Asp.Net_Core_Projects\MicroservivesDepressionProject\Frondend\Balanc
 D:\Projects\Asp.Net_Core_Projects\MicroservivesDepressionProject\Frondend\Balancy\Balancy\wwwroot\lib\jquery\dist\jquery.slim.min.js
 D:\Projects\Asp.Net_Core_Projects\MicroservivesDepressionProject\Frondend\Balancy\Balancy\wwwroot\lib\jquery\dist\jquery.slim.min.map
 D:\Projects\Asp.Net_Core_Projects\MicroservivesDepressionProject\Frondend\Balancy\Balancy\wwwroot\lib\jquery\LICENSE.txt
-D:\Projects\Asp.Net_Core_Projects\MicroservivesDepressionProject\Frondend\Balancy\Balancy\wwwroot\js\Doctor\Tabs\listeningsessions.js
+D:\Projects\Asp.Net_Core_Projects\MicroservivesDepressionProject\Frondend\Balancy\Balancy\wwwroot\js\Doctor\AllPatient\AllPatientListe.js
