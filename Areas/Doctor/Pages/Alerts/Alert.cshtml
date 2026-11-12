@@ -108,6 +108,19 @@
 
 
 
+@Html.AntiForgeryToken()
+
 @section Scripts {
+    <script>
+        // ✅ حقن مسارات الـ handlers + Anti-Forgery Token
+        window.BALANCY_ENDPOINTS = {
+            alerts: '@Url.Page("/Alerts/Alert", "Alerts")',
+            refresh: '@Url.Page("/Alerts/Alert", "Refresh")',
+            dismiss: '@Url.Page("/Alerts/Alert", "Dismiss")',
+            dismissAll: '@Url.Page("/Alerts/Alert", "DismissAll")'
+        };
+        window.BALANCY_ANTIFORGERY =
+            document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+    </script>
     <script src="~/js/doctor/Alerts/Alert.js" asp-append-version="true"></script>
 }

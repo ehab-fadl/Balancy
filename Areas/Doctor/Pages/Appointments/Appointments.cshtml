@@ -94,7 +94,9 @@
 
                     <div class="form-group">
                         <label for="aptPatient"><i class="fa-solid fa-user"></i> اسم المريض</label>
-                        <input type="text" id="aptPatient" name="aptPatient" placeholder="مثال: أحمد محمد" required>
+                    <select id="aptPatientId" name="aptPatientId" required style="width: 100%; padding: 0.6rem; border-radius: 8px; border: 1px solid var(--bn-border);">
+                        <option value="">جاري تحميل المرضى...</option>
+                    </select>
                     </div>
 
                     <div class="form-row">
@@ -168,6 +170,17 @@
             </div>
         </div>
     </div>
+@Html.AntiForgeryToken()
+
 @section Scripts {
+    <script>
+        window.BALANCY_ENDPOINTS = {
+            getAppointments: '@Url.Page("/Appointments/Appointments", "Appointments")',
+            create: '@Url.Page("/Appointments/Appointments", "Create")',
+            confirm: '@Url.Page("/Appointments/Appointments", "Confirm")',
+            delete: '@Url.Page("/Appointments/Appointments", "Delete")'
+        };
+        window.BALANCY_ANTIFORGERY = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+    </script>
     <script src="~/js/doctor/Appointments/Appointments.js" defer></script>
 }

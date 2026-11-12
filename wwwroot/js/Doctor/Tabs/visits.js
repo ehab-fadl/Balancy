@@ -883,14 +883,16 @@
         const inlineForm = document.getElementById('inlineAppointmentForm');
         const inlineCancel = document.getElementById('inlineAptCancel');
         const inlineModal = document.getElementById('inlineAppointmentModal');
+
         if (inlineForm) {
-            inlineForm.addEventListener('submit', function (e) {
+            inlineForm.addEventListener('submit', async function (e) {
                 e.preventDefault();
                 const patient = document.getElementById('inlineAptPatient')?.value.trim() || '';
                 const date = document.getElementById('inlineAptDate')?.value || '';
                 const time = document.getElementById('inlineAptTime')?.value || '';
                 const reason = document.getElementById('inlineAptReason')?.value.trim() || '';
                 const notes = document.getElementById('inlineAptNotes')?.value.trim() || '';
+
                 if (!patient || !date || !time || !reason) {
                     showToast('error', 'حقول ناقصة', 'يرجى ملء جميع الحقول المطلوبة.');
                     return;
@@ -901,29 +903,57 @@
                     return;
                 }
 
-                // ✅ 1) تحديث NextVisitDate في الـ Visit
-                pendingNextVisitDate = date;
-                updateNextVisitPreview();
+                const saveBtn = document.getElementById('inlineAptSave');
+                const originalHtml = saveBtn.innerHTML;
+                saveBtn.disabled = true;
+                saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري الحفظ...';
 
-                // ✅ 2) إضافة للـ localStorage (احتياطي لصفحة المواعيد)
-                const apt = {
-                    id: 'apt_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
-                    patientName: patient, date: date, time: time, reason: reason, notes: notes,
-                    source: 'visits', createdAt: new Date().toISOString()
-                };
-                const savedLocal = saveAppointmentToLocalStorage(apt);
+                try {
+                    // ✅ 1) إرسال الموعد إلى الباك إند ليُحفظ في جدول Appointments
+                    const patientId = getPatientId();
+                    const response = await fetch('/Doctor/Appointments/Appointments?handler=Create', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'RequestVerificationToken': getAntiForgeryToken()
+                        },
+                        body: JSON.stringify({
+                            patientId: patientId,
+                            scheduledDate: new Date(date).toISOString(),
+                            scheduledTime: time,
+                            reason: reason,
+                            notes: notes,
+                            visitType: "متابعة",
+                            visitLocation: "عيادة"
+                        })
+                    });
 
-                closeInlineAppointmentModal();
-                showToast('success', 'تم حفظ الموعد',
-                    `${patient} — ${formatDateArabic(date)} ${time}`,
-                    4000);
-                bnConfetti.fire();
+                    if (!response.ok) {
+                        const errData = await response.json().catch(() => null);
+                        throw new Error(errData?.error || `HTTP ${response.status}`);
+                    }
 
-                if (savedLocal) {
-                    window.dispatchEvent(new CustomEvent('appointmentAdded', { detail: apt }));
+                    // ✅ 2) تحديث NextVisitDate في الـ Visit
+                    pendingNextVisitDate = date;
+                    updateNextVisitPreview();
+
+                    closeInlineAppointmentModal();
+                    showToast('success', 'تم حفظ الموعد',
+                        `تمت إضافة الموعد إلى العيادة: ${formatDateArabic(date)} ${time}`,
+                        4000);
+                    bnConfetti.fire();
+
+                } catch (err) {
+                    console.error('❌ فشل حجز الموعد:', err);
+                    showToast('error', 'فشل الحجز', err.message || 'تعذر حفظ الموعد في النظام.');
+                } finally {
+                    saveBtn.disabled = false;
+                    saveBtn.innerHTML = originalHtml;
                 }
             });
         }
+
         if (inlineCancel) inlineCancel.addEventListener('click', closeInlineAppointmentModal);
         if (inlineModal) inlineModal.addEventListener('click', (e) => { if (e.target.id === 'inlineAppointmentModal') closeInlineAppointmentModal(); });
         document.addEventListener('keydown', (e) => {

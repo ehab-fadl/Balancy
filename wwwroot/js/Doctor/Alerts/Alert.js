@@ -2,14 +2,12 @@
    0. Safe DOM Helpers
 ============================================================ */
 const bnGet = (id) => document.getElementById(id);
-const bnOn = (id, event, handler) => {
-    const el = bnGet(id);
-    if (el) {
-        el.addEventListener(event, handler);
-    } else {
-        console.warn(`⚠️ عنصر #${id} غير موجود`);
-    }
-};
+
+function escapeHtml(value) {
+    const div = document.createElement('div');
+    div.textContent = value ?? '';
+    return div.innerHTML;
+}
 
 /* ============================================================
    1. Toast System
@@ -55,138 +53,179 @@ function showToast(type, title, message, duration = 3500) {
 }
 
 /* ============================================================
-   2. Mock Patients Data
+   2. API Client
 ============================================================ */
-const mockPatients = [
-    { id: 1, firstName: 'خالد', lastName: 'إبراهيم سالم', code: 'EF345678', age: 41, gender: 'male', status: 'critical', diagnosis: 'اكتئاب حاد', cssrsScore: 4, phq9Score: 22, gad7Score: 18, phq9Trend: 12, lastVisit: '2024-01-25', nextVisit: null, lastAssessmentDate: '2024-01-20', activeMedications: 4, missedAppointments: 3, dateOfBirth: '1983-03-10', suicideAttemptDate: null, severeSideEffects: true },
-    { id: 2, firstName: 'أحمد', lastName: 'محمد علي', code: 'AB123456', age: 32, gender: 'male', status: 'active', diagnosis: 'اكتئاب متوسط', cssrsScore: 0, phq9Score: 12, gad7Score: 10, phq9Trend: -3, lastVisit: '2024-01-15', nextVisit: new Date().toISOString().slice(0, 10), lastAssessmentDate: '2024-01-10', activeMedications: 2, missedAppointments: 0, dateOfBirth: '1992-05-15', severeSideEffects: false },
-    { id: 3, firstName: 'سارة', lastName: 'عبدالله حسن', code: 'CD234567', age: 27, gender: 'female', status: 'active', diagnosis: 'قلق عام', cssrsScore: 1, phq9Score: 8, gad7Score: 14, phq9Trend: 0, lastVisit: '2023-11-20', nextVisit: null, lastAssessmentDate: '2023-11-15', activeMedications: 1, missedAppointments: 1, dateOfBirth: '1997-08-22', severeSideEffects: false },
-    { id: 4, firstName: 'فاطمة', lastName: 'حسن مصطفى', code: 'GH456789', age: 23, gender: 'female', status: 'active', diagnosis: 'اكتئاب خفيف', cssrsScore: 0, phq9Score: 6, gad7Score: 5, phq9Trend: -5, lastVisit: '2024-01-18', nextVisit: '2024-02-18', lastAssessmentDate: '2024-01-15', activeMedications: 1, missedAppointments: 0, dateOfBirth: '2001-11-05', severeSideEffects: false },
-    { id: 5, firstName: 'عمر', lastName: 'يوسف النجار', code: 'IJ567890', age: 35, gender: 'male', status: 'inactive', diagnosis: 'اضطراب ثنائي القطب', cssrsScore: 2, phq9Score: 16, gad7Score: 12, phq9Trend: 5, lastVisit: '2023-12-10', nextVisit: null, lastAssessmentDate: '2023-12-01', activeMedications: 0, missedAppointments: 4, dateOfBirth: '1989-07-12', severeSideEffects: false },
-    { id: 6, firstName: 'مريم', lastName: 'سعيد رمضان', code: 'KL678901', age: 26, gender: 'female', status: 'active', diagnosis: 'اكتئاب ما بعد الولادة', cssrsScore: 0, phq9Score: 14, gad7Score: 11, phq9Trend: -2, lastVisit: '2024-01-22', nextVisit: '2024-02-05', lastAssessmentDate: '2024-01-20', activeMedications: 2, missedAppointments: 0, dateOfBirth: '1998-02-28', severeSideEffects: false }
-];
+const bnEndpoints = window.BALANCY_ENDPOINTS || {
+    alerts: '?handler=Alerts',
+    refresh: '?handler=Refresh',
+    dismiss: '?handler=Dismiss',
+    dismissAll: '?handler=DismissAll'
+};
 
-/* ============================================================
-   3. Alert Rules
-============================================================ */
-const alertRules = [
-    {
-        id: 'cssrs-high',
-        level: 'critical',
-        icon: 'fa-shield-heart',
-        title: '🚨 خطر انتحار مرتفع',
-        check: (p) => p.cssrsScore >= 3,
-        getMessage: (p) => `المريض ${p.firstName} ${p.lastName} لديه تقييم C-SSRS = ${p.cssrsScore}. يحتاج تدخل فوري.`,
-        actionLabel: 'مراجعة فورية'
+const bnApi = {
+    _headers(extra = {}) {
+        const h = {
+            'Accept': 'application/json',
+            'X-Requested-With': 'fetch',
+            ...extra
+        };
+        // ✅ إضافة Anti-Forgery Token لكل طلب
+        if (window.BALANCY_ANTIFORGERY) {
+            h['RequestVerificationToken'] = window.BALANCY_ANTIFORGERY;
+        }
+        return h;
     },
-    {
-        id: 'rapid-deterioration',
-        level: 'critical',
-        icon: 'fa-arrow-trend-down',
-        title: '🚨 تدهور سريع في الحالة',
-        check: (p) => p.phq9Trend >= 10,
-        getMessage: (p) => `ارتفع مؤشر PHQ-9 بمقدار ${p.phq9Trend} نقطة خلال شهر. تحتاج مراجعة عاجلة.`,
-        actionLabel: 'مراجعة الخطة'
+
+    async _request(url, options = {}) {
+        const res = await fetch(url, {
+            ...options,
+            headers: this._headers(options.headers || {})
+        });
+        const text = await res.text();
+        let data = null;
+        try { data = text ? JSON.parse(text) : null; } catch { data = null; }
+
+        if (!res.ok) {
+            const msg = (data && (data.error || data.detail || data.message)) || `HTTP ${res.status}`;
+            const e = new Error(msg);
+            e.status = res.status;
+            throw e;
+        }
+        return data;
     },
-    {
-        id: 'severe-side-effects',
-        level: 'critical',
-        icon: 'fa-triangle-exclamation',
-        title: '🚨 أعراض جانبية حادة',
-        check: (p) => p.severeSideEffects === true,
-        getMessage: (p) => `المريض يعاني من أعراض جانبية حادة للأدوية. يجب تعديل الجرعة أو تغيير الدواء.`,
-        actionLabel: 'تعديل الدواء'
+
+    async getAlerts() {
+        return this._request(bnEndpoints.alerts);
     },
-    {
-        id: 'suicide-attempt-recent',
-        level: 'critical',
-        icon: 'fa-heart-crack',
-        title: '🚨 محاولة انتحار حديثة',
-        check: (p) => {
-            if (!p.suicideAttemptDate) return false;
-            const days = Math.floor((new Date() - new Date(p.suicideAttemptDate)) / 86400000);
-            return days < 180;
-        },
-        getMessage: (p) => `محاولة انتحار قبل ${Math.floor((new Date() - new Date(p.suicideAttemptDate)) / 86400000)} يوم. تحتاج متابعة يومية.`,
-        actionLabel: 'متابعة عاجلة'
+
+    async refresh() {
+        return this._request(bnEndpoints.refresh, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: '{}'   // ✅ body صالح لـ POST
+        });
     },
-    {
-        id: 'appointment-today',
-        level: 'warning',
-        icon: 'fa-calendar-check',
-        title: '📅 موعد اليوم',
-        check: (p) => p.nextVisit === new Date().toISOString().slice(0, 10),
-        getMessage: (p) => `موعد المريض ${p.firstName} ${p.lastName} اليوم. تأكد من تأكيد الحضور.`,
-        actionLabel: 'عرض الموعد'
+
+    async dismiss(id) {
+        if (!id) throw new Error('معرّف التنبيه مطلوب');
+        const sep = bnEndpoints.dismiss.includes('?') ? '&' : '?';
+        return this._request(`${bnEndpoints.dismiss}${sep}id=${encodeURIComponent(id)}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: '{}'
+        });
     },
-    {
-        id: 'overdue-visit',
-        level: 'warning',
-        icon: 'fa-user-clock',
-        title: '⚠️ مريض متأخر عن المتابعة',
-        check: (p) => {
-            if (!p.lastVisit) return false;
-            const days = Math.floor((new Date() - new Date(p.lastVisit)) / 86400000);
-            return days > 45;
-        },
-        getMessage: (p) => `آخر زيارة منذ ${Math.floor((new Date() - new Date(p.lastVisit)) / 86400000)} يوم. يُنصح بالتواصل.`,
-        actionLabel: 'اتصال'
-    },
-    {
-        id: 'missing-appointments',
-        level: 'warning',
-        icon: 'fa-user-slash',
-        title: '⚠️ التزام ضعيف بالعلاج',
-        check: (p) => p.missedAppointments >= 3,
-        getMessage: (p) => `فاته ${p.missedAppointments} مواعيد متتالية. يحتاج متابعة.`,
-        actionLabel: 'متابعة'
-    },
-    {
-        id: 'no-medications',
-        level: 'warning',
-        icon: 'fa-pills',
-        title: '⚠️ لا يوجد دواء نشط',
-        check: (p) => p.activeMedications === 0 && p.status !== 'active',
-        getMessage: (p) => `المريض لا يتناول أي أدوية حالياً. تأكد من مراجعة الخطة العلاجية.`,
-        actionLabel: 'مراجعة الأدوية'
-    },
-    {
-        id: 'birthday',
-        level: 'info',
-        icon: 'fa-cake-candles',
-        title: '🎂 عيد ميلاد المريض',
-        check: (p) => isBirthdayToday(p.dateOfBirth),
-        getMessage: (p) => `اليوم عيد ميلاد ${p.firstName} ${p.lastName}. يمكنك إرسال تهنئة.`,
-        actionLabel: 'إرسال تهنئة'
-    },
-    {
-        id: 'assessment-due',
-        level: 'info',
-        icon: 'fa-clipboard-question',
-        title: '📋 موعد إعادة التقييم',
-        check: (p) => {
-            if (!p.lastAssessmentDate) return false;
-            const days = Math.floor((new Date() - new Date(p.lastAssessmentDate)) / 86400000);
-            return days > 30;
-        },
-        getMessage: (p) => `مر شهر على آخر تقييم نفسي. يُنصح بإعادة التقييم.`,
-        actionLabel: 'طلب تقييم'
+
+    async dismissAll() {
+        return this._request(bnEndpoints.dismissAll, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: '{}'
+        });
     }
-];
-
+};
 /* ============================================================
-   4. Helper Functions
+   3. Mapper — توحيد البيانات
 ============================================================ */
-function isBirthdayToday(dateStr) {
-    if (!dateStr) return false;
-    const today = new Date();
-    const dob = new Date(dateStr);
-    return today.getDate() === dob.getDate() && today.getMonth() === dob.getMonth();
+function pickValue(obj, keys) {
+    if (!obj || typeof obj !== 'object') return undefined;
+    for (const k of keys) {
+        const v = obj[k];
+        if (v !== undefined && v !== null && v !== '') return v;
+    }
+    return undefined;
 }
 
+function pickNumber(obj, keys, fallback = 0) {
+    const v = pickValue(obj, keys);
+    if (v === undefined || v === null || v === '') return fallback;
+    const n = typeof v === 'number' ? v : parseFloat(v);
+    return isNaN(n) ? fallback : n;
+}
+
+function pickArray(obj, keys) {
+    const v = pickValue(obj, keys);
+    return Array.isArray(v) ? v : [];
+}
+
+function unwrapResponse(raw) {
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return raw;
+    if (raw.data && typeof raw.data === 'object' && !Array.isArray(raw.data)) return raw.data;
+    if (raw.result && typeof raw.result === 'object' && !Array.isArray(raw.result)) return raw.result;
+    return raw;
+}
+
+/**
+ * يحوّل AlertDto من الـ API إلى شكل العرض.
+ */
+function mapAlertDto(raw) {
+    if (!raw || typeof raw !== 'object') return null;
+
+    const id = pickValue(raw, ['id', 'Id']);
+    if (!id) return null;
+
+    const level = String(pickValue(raw, ['level', 'Level']) || 'info').toLowerCase();
+    const validLevel = ['critical', 'warning', 'info'].includes(level) ? level : 'info';
+
+    // icon حسب level (لأن الـ AlertDto لا يحتوي icon)
+    const iconMap = {
+        critical: 'fa-circle-exclamation',
+        warning: 'fa-triangle-exclamation',
+        info: 'fa-circle-info'
+    };
+
+    return {
+        id: String(id),
+        ruleId: pickValue(raw, ['ruleId', 'RuleId']) || '',
+        level: validLevel,
+        icon: iconMap[validLevel],
+        title: pickValue(raw, ['title', 'Title']) || 'تنبيه',
+        message: pickValue(raw, ['message', 'Message']) || '',
+        actionLabel: pickValue(raw, ['actionLabel', 'ActionLabel']) || 'عرض',
+        patientId: pickValue(raw, ['patientId', 'PatientId']) || '',
+        patientName: pickValue(raw, ['patientName', 'PatientName']) || 'غير محدد',
+        patientCode: pickValue(raw, ['patientCode', 'PatientCode']) || '-',
+        isDismissed: pickValue(raw, ['isDismissed', 'IsDismissed']) === true,
+        createdAt: pickValue(raw, ['createdAt', 'CreatedAt']) || new Date().toISOString()
+    };
+}
+
+/**
+ * يحوّل AlertsSummaryDto كامل.
+ */
+function mapAlertsSummary(raw) {
+    raw = unwrapResponse(raw);
+    if (!raw || typeof raw !== 'object') {
+        return { alerts: [], criticalCount: 0, warningCount: 0, infoCount: 0, lastUpdated: new Date().toISOString() };
+    }
+
+    const alertsRaw = pickArray(raw, ['alerts', 'Alerts']);
+    const alerts = alertsRaw.map(mapAlertDto).filter(Boolean);
+
+    return {
+        alerts,
+        criticalCount: pickNumber(raw, ['criticalCount', 'CriticalCount']),
+        warningCount: pickNumber(raw, ['warningCount', 'WarningCount']),
+        infoCount: pickNumber(raw, ['infoCount', 'InfoCount']),
+        lastUpdated: pickValue(raw, ['lastUpdated', 'LastUpdated']) || new Date().toISOString()
+    };
+}
+
+/* ============================================================
+   4. State
+============================================================ */
+let currentFilter = 'all';
+let currentSummary = { alerts: [], criticalCount: 0, warningCount: 0, infoCount: 0, lastUpdated: null };
+let isLoading = false;
+let dismissInProgress = new Set();
+
+/* ============================================================
+   5. Helper Functions
+============================================================ */
 function getTimeAgo(dateStr) {
     if (!dateStr) return 'الآن';
     const date = new Date(dateStr);
+    if (isNaN(date)) return 'الآن';
     const diff = Math.floor((new Date() - date) / 1000);
     if (diff < 60) return 'الآن';
     if (diff < 3600) return `قبل ${Math.floor(diff / 60)} دقيقة`;
@@ -196,109 +235,8 @@ function getTimeAgo(dateStr) {
 }
 
 /* ============================================================
-   5. Alert Engine
-============================================================ */
-const bnAlertEngine = {
-    alerts: [],
-    dismissed: [],
-
-    // ✅ تحميل من localStorage
-    loadDismissed() {
-        try {
-            const saved = localStorage.getItem('balancy_dismissedAlerts');
-            this.dismissed = saved ? JSON.parse(saved) : [];
-        } catch (e) {
-            this.dismissed = [];
-        }
-        console.log(`📦 تم تحميل ${this.dismissed.length} تنبيه مُتجاهَل من localStorage`);
-    },
-
-    // ✅ حفظ في localStorage
-    saveDismissed() {
-        try {
-            localStorage.setItem('balancy_dismissedAlerts', JSON.stringify(this.dismissed));
-        } catch (e) {
-            console.warn('⚠️ لا يمكن الحفظ في localStorage');
-        }
-    },
-
-    generate() {
-        this.loadDismissed();  // ← تحميل أولاً
-
-        const patients = mockPatients;
-        const newAlerts = [];
-
-        patients.forEach(patient => {
-            alertRules.forEach(rule => {
-                try {
-                    if (rule.check(patient)) {
-                        const alertId = `${rule.id}_${patient.id}`;
-                        if (this.dismissed.includes(alertId)) return;
-
-                        newAlerts.push({
-                            id: alertId,
-                            ruleId: rule.id,
-                            level: rule.level,
-                            icon: rule.icon,
-                            title: rule.title,
-                            message: rule.getMessage(patient),
-                            actionLabel: rule.actionLabel,
-                            patientId: patient.id,
-                            patientName: `${patient.firstName} ${patient.lastName}`,
-                            patientCode: patient.code,
-                            createdAt: new Date().toISOString()
-                        });
-                    }
-                } catch (e) {
-                    console.warn(`خطأ في القاعدة ${rule.id}:`, e);
-                }
-            });
-        });
-
-        const priority = { critical: 1, warning: 2, info: 3 };
-        newAlerts.sort((a, b) => priority[a.level] - priority[b.level]);
-
-        this.alerts = newAlerts;
-        return newAlerts;
-    },
-
-    dismiss(alertId) {
-        if (!this.dismissed.includes(alertId)) {
-            this.dismissed.push(alertId);
-            this.saveDismissed();  // ✅ حفظ فوري
-        }
-        this.alerts = this.alerts.filter(a => a.id !== alertId);
-    },
-
-    dismissAll() {
-        this.alerts.forEach(a => {
-            if (!this.dismissed.includes(a.id)) {
-                this.dismissed.push(a.id);
-            }
-        });
-        this.saveDismissed();  // ✅ حفظ فوري
-        this.alerts = [];
-    },
-
-    resetDismissed() {
-        this.dismissed = [];
-        this.saveDismissed();  // ✅ حفظ فوري
-        this.generate();
-    },
-
-    countByLevel(level) {
-        return this.alerts.filter(a => a.level === level).length;
-    },
-
-    count() {
-        return this.alerts.length;
-    }
-};
-/* ============================================================
    6. Render
 ============================================================ */
-let currentFilter = 'all';
-
 function render() {
     const container = bnGet('alertsContainer');
     if (!container) {
@@ -306,11 +244,13 @@ function render() {
         return;
     }
 
-    const critical = bnAlertEngine.countByLevel('critical');
-    const warning = bnAlertEngine.countByLevel('warning');
-    const info = bnAlertEngine.countByLevel('info');
-    const total = bnAlertEngine.count();
+    const alerts = currentSummary.alerts;
+    const critical = currentSummary.criticalCount || alerts.filter(a => a.level === 'critical').length;
+    const warning = currentSummary.warningCount || alerts.filter(a => a.level === 'warning').length;
+    const info = currentSummary.infoCount || alerts.filter(a => a.level === 'info').length;
+    const total = alerts.length;
 
+    // ─── تحديث الإحصائيات
     const statCritical = bnGet('statCritical');
     const statWarning = bnGet('statWarning');
     const statInfo = bnGet('statInfo');
@@ -327,29 +267,35 @@ function render() {
     if (countWarning) countWarning.textContent = warning;
     if (countInfo) countInfo.textContent = info;
 
-    // تمييز بطاقة الإحصائية النشطة
+    // ─── تمييز بطاقة الإحصائية النشطة
     document.querySelectorAll('.stat-card').forEach(card => {
         card.classList.toggle('active-filter', card.dataset.filterStat === currentFilter);
     });
 
-    let filtered = bnAlertEngine.alerts;
+    // ─── الفلترة
+    let filtered = alerts;
     if (currentFilter !== 'all') {
-        filtered = filtered.filter(a => a.level === currentFilter);
+        filtered = alerts.filter(a => a.level === currentFilter);
     }
 
     if (filtered.length === 0) {
+        const emptyMsg = currentFilter === 'all'
+            ? 'لا توجد تنبيهات نشطة — جميع المرضى في حالة مستقرة.'
+            : `لا توجد تنبيهات من نوع "${currentFilter === 'critical' ? 'حرجة' : currentFilter === 'warning' ? 'مهمة' : 'معلومات'}" حالياً.`;
+
         container.innerHTML = `
             <div class="empty-state">
                 <div class="empty-icon">
                     <i class="fa-solid fa-check-circle"></i>
                 </div>
                 <h3>لا توجد تنبيهات</h3>
-                <p>جميع المرضى في حالة مستقرة — لا يحتاجون أي متابعة حالياً.</p>
+                <p>${escapeHtml(emptyMsg)}</p>
             </div>
         `;
         return;
     }
 
+    // ─── رسم البطاقات
     container.innerHTML = '';
     filtered.forEach((alert, index) => {
         const card = document.createElement('div');
@@ -369,38 +315,38 @@ function render() {
 
             <div class="alert-content">
                 <div class="alert-header">
-                    <h3 class="alert-title">${alert.title}</h3>
+                    <h3 class="alert-title">${escapeHtml(alert.title)}</h3>
                     <span class="alert-level-badge ${alert.level}">
                         <i class="fa-solid fa-circle"></i>
                         ${levelText}
                     </span>
                 </div>
 
-                <div class="alert-message">${alert.message}</div>
+                <div class="alert-message">${escapeHtml(alert.message)}</div>
 
                 <div class="alert-meta">
                     <span class="alert-meta-item">
                         <i class="fa-solid fa-user"></i>
-                        ${alert.patientName}
+                        ${escapeHtml(alert.patientName)}
                     </span>
                     <span class="alert-meta-item">
                         <i class="fa-solid fa-hashtag"></i>
-                        ${alert.patientCode}
+                        ${escapeHtml(alert.patientCode)}
                     </span>
                     <span class="alert-time">
                         <i class="fa-regular fa-clock"></i>
-                        ${getTimeAgo(alert.createdAt)}
+                        ${escapeHtml(getTimeAgo(alert.createdAt))}
                     </span>
                 </div>
 
                 <div class="alert-actions">
                     <button type="button" class="alert-action-btn alert-action-primary"
-                            onclick="handleAction('${alert.actionLabel}', '${alert.patientName}', ${alert.patientId})">
+                            data-action="goto" data-patient-id="${escapeHtml(alert.patientId)}" data-patient-name="${escapeHtml(alert.patientName)}">
                         <i class="fa-solid fa-arrow-left"></i>
-                        ${alert.actionLabel}
+                        ${escapeHtml(alert.actionLabel)}
                     </button>
                     <button type="button" class="alert-action-btn alert-action-ghost"
-                            onclick="dismissAlert('${alert.id}')">
+                            data-action="dismiss" data-alert-id="${escapeHtml(alert.id)}">
                         <i class="fa-solid fa-check"></i>
                         تم الاطلاع
                     </button>
@@ -415,41 +361,98 @@ function render() {
 /* ============================================================
    7. Actions
 ============================================================ */
-function handleAction(actionLabel, patientName, patientId) {
-    showToast('success', 'تم تنفيذ الإجراء', `${actionLabel} — المريض: ${patientName}`, 3000);
-    console.log(`🎯 الإجراء: ${actionLabel} | المريض: ${patientName} (ID: ${patientId})`);
+function handleAction(patientId, patientName) {
+    if (!patientId) {
+        showToast('warning', 'لا يوجد مريض', 'التنبيه غير مرتبط بمريض محدد.', 3000);
+        return;
+    }
+    showToast('success', 'فتح الملف الطبي', `جارٍ فتح ملف: ${patientName}`, 3000);
+    setTimeout(() => {
+        window.location.href = `/Doctor?patientId=${encodeURIComponent(patientId)}`;
+    }, 500);
 }
 
-function dismissAlert(alertId) {
-    bnAlertEngine.dismiss(alertId);
-    render();
-    showToast('info', 'تم الاطلاع', 'تم نقل التنبيه إلى المُتجاهَلة.', 2500);
+async function dismissAlert(alertId) {
+    if (!alertId) return;
+    if (dismissInProgress.has(alertId)) return;
+    dismissInProgress.add(alertId);
+
+    try {
+        await bnApi.dismiss(alertId);
+        // ✅ إزالة محلياً + تحديث العداد
+        currentSummary.alerts = currentSummary.alerts.filter(a => a.id !== alertId);
+        render();
+        showToast('info', 'تم الاطلاع', 'تم نقل التنبيه إلى المُتجاهَلة.', 2500);
+    } catch (err) {
+        console.error('❌ فشل تجاهل التنبيه:', err);
+        showToast('error', 'فشل التجاهل', `[${err?.status ?? '?'}] ${err.message || 'تعذر تجاهل التنبيه'}`, 5000);
+    } finally {
+        dismissInProgress.delete(alertId);
+    }
 }
 
-function dismissAll() {
-    const count = bnAlertEngine.count();
+async function dismissAll() {
+    const count = currentSummary.alerts.length;
     if (count === 0) {
         showToast('info', 'لا توجد تنبيهات', 'لا يوجد ما يمكن تجاهله.', 2500);
         return;
     }
-    bnAlertEngine.dismissAll();
-    render();
-    showToast('success', 'تم تجاهل الكل', `تم تجاهل ${count} تنبيه بنجاح.`, 3000);
+
+    try {
+        await bnApi.dismissAll();
+        currentSummary.alerts = [];
+        render();
+        showToast('success', 'تم تجاهل الكل', `تم تجاهل ${count} تنبيه بنجاح.`, 3000);
+    } catch (err) {
+        console.error('❌ فشل تجاهل الكل:', err);
+        showToast('error', 'فشل التجاهل', `[${err?.status ?? '?'}] ${err.message || 'تعذر تجاهل التنبيهات'}`, 5000);
+    }
+}
+
+async function refreshAlerts() {
+    if (isLoading) return;
+    isLoading = true;
+
+    try {
+        // ✅ 1. أعد توليد التنبيهات على السيرفر
+        await bnApi.refresh();
+        // ✅ 2. اجلب القائمة المحدّثة
+        const raw = await bnApi.getAlerts();
+        currentSummary = mapAlertsSummary(raw);
+        render();
+        updateLastUpdate(currentSummary.lastUpdated);
+
+        showToast('success', 'تم التحديث', `تم إعادة توليد ${currentSummary.alerts.length} تنبيه.`, 3000);
+    } catch (err) {
+        console.error('❌ فشل تحديث التنبيهات:', err);
+        showToast('error', 'فشل التحديث', `[${err?.status ?? '?'}] ${err.message || 'تعذر تحديث التنبيهات'}`, 5000);
+    } finally {
+        isLoading = false;
+    }
 }
 
 function resetAll() {
-    const dismissedCount = bnAlertEngine.dismissed.length;
-    if (dismissedCount === 0) {
-        showToast('info', 'لا يوجد', 'لا توجد تنبيهات مُتجاهَلة لاستعادتها.', 2500);
+    // "استعادة المُتجاهَلة" = إعادة توليد التنبيهات من السيرفر (لأن التجاهل محفوظ في DB)
+    refreshAlerts();
+}
+
+function updateLastUpdate(lastUpdated) {
+    const el = bnGet('lastUpdate');
+    if (!el) return;
+    if (!lastUpdated) {
+        el.textContent = 'الآن';
         return;
     }
-    bnAlertEngine.resetDismissed();
-    render();
-    showToast('success', 'تم الاستعادة', `تم استعادة ${dismissedCount} تنبيه مُتجاهَل.`, 3000);
+    const date = new Date(lastUpdated);
+    if (isNaN(date)) {
+        el.textContent = 'الآن';
+        return;
+    }
+    el.textContent = date.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
 }
 
 /* ============================================================
-   8. Events — Event Delegation (يعمل دائماً)
+   8. Events — Event Delegation
 ============================================================ */
 document.addEventListener('click', (e) => {
 
@@ -469,13 +472,10 @@ document.addEventListener('click', (e) => {
     if (statCard && !e.target.closest('.filter-tab')) {
         e.preventDefault();
         const filter = statCard.dataset.filterStat;
-        document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('.filter-tab').forEach(t => {
-            if (t.dataset.filter === filter) {
-                t.classList.add('active');
-                currentFilter = filter;
-            }
+            t.classList.toggle('active', t.dataset.filter === filter);
         });
+        currentFilter = filter;
         render();
         return;
     }
@@ -493,23 +493,84 @@ document.addEventListener('click', (e) => {
         resetAll();
         return;
     }
+
+    // زر الإجراء على التنبيه
+    const actionBtn = e.target.closest('[data-action]');
+    if (actionBtn) {
+        e.preventDefault();
+        const action = actionBtn.dataset.action;
+        if (action === 'goto') {
+            handleAction(actionBtn.dataset.patientId, actionBtn.dataset.patientName);
+        } else if (action === 'dismiss') {
+            dismissAlert(actionBtn.dataset.alertId);
+        }
+        return;
+    }
 });
 
 /* ============================================================
-   9. Init
+   9. Load Alerts from API
+============================================================ */
+async function loadAlerts() {
+    if (isLoading) return;
+    isLoading = true;
+
+    try {
+        // ✅ 1. إعادة توليد التنبيهات أولاً (بناءً على البيانات الحالية)
+        try {
+            console.log('🔄 إعادة توليد التنبيهات...');
+            const refreshResult = await bnApi.refresh();
+            console.log('✅ Refresh result:', refreshResult);
+        } catch (refreshErr) {
+            // لا نوقف التحميل إذا فشل refresh — نكمل بجلب التنبيهات الحالية
+            console.warn('⚠️ فشل إعادة التوليد، متابعة بجلب التنبيهات الحالية:', refreshErr);
+        }
+
+        // ✅ 2. جلب التنبيهات
+        const raw = await bnApi.getAlerts();
+        console.log('📦 Alerts API response:', raw);
+        console.log('🔍 Keys:', raw && typeof raw === 'object' ? Object.keys(raw) : '—');
+
+        currentSummary = mapAlertsSummary(raw);
+        console.log('✅ Mapped summary:', currentSummary);
+
+        render();
+        updateLastUpdate(currentSummary.lastUpdated);
+
+        if (currentSummary.alerts.length === 0) {
+            showToast('info', 'لا توجد تنبيهات',
+                'جميع المرضى في حالة مستقرة حالياً.', 4000);
+        } else {
+            showToast('info', 'مرحباً بك',
+                `تم تحميل ${currentSummary.alerts.length} تنبيه من النظام.`, 4000);
+        }
+    } catch (err) {
+        console.error('❌ فشل تحميل التنبيهات:', err);
+        currentSummary = { alerts: [], criticalCount: 0, warningCount: 0, infoCount: 0, lastUpdated: null };
+        render();
+        showToast('error', 'فشل التحميل',
+            `[${err?.status ?? '?'}] ${err.message || 'تعذر تحميل التنبيهات'}`, 6000);
+    } finally {
+        isLoading = false;
+    }
+}
+/* ============================================================
+   10. Init
 ============================================================ */
 window.addEventListener('DOMContentLoaded', () => {
     console.log('🚀 بدء تشغيل صفحة التنبيهات...');
 
-    bnAlertEngine.generate();
-    render();
+    // حالة تحميل مبدئية
+    bnGet('statCritical')?.replaceChildren(document.createTextNode('…'));
+    bnGet('statWarning')?.replaceChildren(document.createTextNode('…'));
+    bnGet('statInfo')?.replaceChildren(document.createTextNode('…'));
+    bnGet('countAll')?.replaceChildren(document.createTextNode('…'));
+    bnGet('countCritical')?.replaceChildren(document.createTextNode('…'));
+    bnGet('countWarning')?.replaceChildren(document.createTextNode('…'));
+    bnGet('countInfo')?.replaceChildren(document.createTextNode('…'));
 
-    const now = new Date();
-    const timeStr = now.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
-    const el = bnGet('lastUpdate');
-    if (el) el.textContent = timeStr;
+    loadAlerts();
 
-    console.log('%c✅ Alerts Page Loaded',
+    console.log('%c✅ Alerts Page Loaded (API-driven)',
         'background:#0891b2;color:#fff;padding:6px 16px;border-radius:6px;font-weight:bold;font-size:12px;');
-    console.log(`🔔 التنبيهات: ${bnAlertEngine.count()}`);
 });

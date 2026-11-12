@@ -171,17 +171,7 @@
                 </div>
                 <div class="panel-body">
                     <div class="quick-actions-grid">
-                        <a href="#" class="quick-action-card" data-action="add-patient">
-                            <div class="quick-action-icon"><i class="fa-solid fa-user-plus"></i></div>
-                            <p class="quick-action-title">مريض جديد</p>
-                            <p class="quick-action-desc">إضافة ملف جديد</p>
-                        </a>
-
-                        <a href="#" class="quick-action-card" data-action="new-session">
-                            <div class="quick-action-icon"><i class="fa-solid fa-headphones"></i></div>
-                            <p class="quick-action-title">جلسة استماع</p>
-                            <p class="quick-action-desc">بدء جلسة جديدة</p>
-                        </a>
+                       
 
                         <a href="#" class="quick-action-card" data-action="search-patient">
                             <div class="quick-action-icon"><i class="fa-solid fa-magnifying-glass"></i></div>
@@ -215,6 +205,15 @@
         </div>
     </div>
 @section Scripts {
-   
+    <script>
+             window.BALANCY_ENDPOINTS = {
+            dashboard: '@Url.Page("/Dashboard/Dashboard", "Dashboard")',
+            todayAppointments: '@Url.Page("/Dashboard/Dashboard", "TodayAppointments")',   // ← موجود
+            patientFile: '@Url.Page("/Index", new { area = "Doctor" })',
+            alertsPage: '@Url.Page("/Alerts/Alert", new { area = "Doctor" })',
+            allPatientsPage: '@Url.Page("/AllPatient/AllPatientListe", new { area = "Doctor" })',
+            statisticsPage: '@Url.Page("/ClinicStatistics/ClinicStatistics", new { area = "Doctor" })'
+        };
+    </script>
     <script src="~/js/doctor/Dashboard/Dashboard.js"></script>
 }

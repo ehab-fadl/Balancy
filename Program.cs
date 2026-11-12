@@ -40,7 +40,7 @@ builder.Services.AddHttpClient("BackendApi", client =>
 // 4. إضافة HttpClient جديد لخدمة Balancy Patient Service (تم تحديث البورت إلى 5003)
 builder.Services.AddHttpClient("BalancyPatientApi", client =>
 {
-    client.BaseAddress = new Uri("http://192.168.0.16:5003/"); // ⬅️ تم التعديل إلى 5003 هنا
+    client.BaseAddress = new Uri("http://192.168.0.16:5002/"); // ⬅️ تم التعديل إلى 5003 هنا
     client.Timeout = TimeSpan.FromSeconds(60); // مهلة أطول للـ ETL والتقارير
 })
 .AddHttpMessageHandler<PatientHeaderHandler>();          // ✅ يستخدم X-Doctor-Id

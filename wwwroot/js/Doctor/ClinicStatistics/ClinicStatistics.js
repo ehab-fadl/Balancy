@@ -3,39 +3,14 @@
 ============================================================ */
 const bnGet = (id) => document.getElementById(id);
 
-/* ============================================================
-   1. Storage Layer
-============================================================ */
-const bnStorage = {
-    prefix: 'balancy_',
-    isAvailable() {
-        try {
-            const t = '__bn_test__';
-            localStorage.setItem(t, t);
-            localStorage.removeItem(t);
-            return true;
-        } catch (e) { return false; }
-    },
-    get(key, defaultValue = null) {
-        if (!this.isAvailable()) return defaultValue;
-        try {
-            const raw = localStorage.getItem(this.prefix + key);
-            return raw ? JSON.parse(raw) : defaultValue;
-        } catch (e) { return defaultValue; }
-    },
-    // ✅ أيضًا ابحث في المفاتيح بدون بادئة
-    getAny(key, defaultValue = null) {
-        let val = this.get(key, null);
-        if (val !== null) return val;
-        try {
-            const raw = localStorage.getItem(key);
-            return raw ? JSON.parse(raw) : defaultValue;
-        } catch (e) { return defaultValue; }
-    }
-};
+function escapeHtml(value) {
+    const div = document.createElement('div');
+    div.textContent = value ?? '';
+    return div.innerHTML;
+}
 
 /* ============================================================
-   2. Toast
+   1. Toast
 ============================================================ */
 let toastTimeoutId = null, toastHideTimeoutId = null;
 
@@ -97,332 +72,242 @@ function hideToast() {
 }
 
 /* ============================================================
-   3. Fallback Mock Data
+   2. API Client
 ============================================================ */
-const mockPatients = [
-    { id: 1, firstName: 'أحمد', lastName: 'محمد علي', code: 'AB123456', age: 32, gender: 'male', status: 'active', diagnosis: 'اكتئاب متوسط', visits: 8, lastVisit: '2024-01-15', createdAt: '2023-06-10' },
-    { id: 2, firstName: 'سارة', lastName: 'عبدالله حسن', code: 'CD234567', age: 27, gender: 'female', status: 'active', diagnosis: 'قلق عام', visits: 5, lastVisit: '2024-01-20', createdAt: '2023-08-15' },
-    { id: 3, firstName: 'خالد', lastName: 'إبراهيم سالم', code: 'EF345678', age: 41, gender: 'male', status: 'critical', diagnosis: 'اكتئاب حاد', visits: 15, lastVisit: '2024-01-25', createdAt: '2023-03-20' },
-    { id: 4, firstName: 'فاطمة', lastName: 'حسن مصطفى', code: 'GH456789', age: 23, gender: 'female', status: 'active', diagnosis: 'اكتئاب خفيف', visits: 3, lastVisit: '2024-01-18', createdAt: '2023-11-10' },
-    { id: 5, firstName: 'عمر', lastName: 'يوسف النجار', code: 'IJ567890', age: 35, gender: 'male', status: 'inactive', diagnosis: 'اضطراب ثنائي القطب', visits: 12, lastVisit: '2023-12-10', createdAt: '2023-05-01' },
-    { id: 6, firstName: 'مريم', lastName: 'سعيد رمضان', code: 'KL678901', age: 26, gender: 'female', status: 'active', diagnosis: 'اكتئاب ما بعد الولادة', visits: 6, lastVisit: '2024-01-22', createdAt: '2023-09-15' }
-];
+const bnEndpoints = window.BALANCY_ENDPOINTS || {
+    statistics: '?handler=Statistics'
+};
+
+const bnApi = {
+    async _request(url, options = {}) {
+        const res = await fetch(url, {
+            headers: { 'Accept': 'application/json', ...(options.headers || {}) },
+            ...options
+        });
+        const text = await res.text();
+        let data = null;
+        try { data = text ? JSON.parse(text) : null; } catch { data = null; }
+
+        if (!res.ok) {
+            const msg = (data && (data.error || data.detail)) || `HTTP ${res.status}`;
+            const e = new Error(msg);
+            e.status = res.status;
+            throw e;
+        }
+        return data;
+    },
+
+    async getStatistics() {
+        return this._request(bnEndpoints.statistics);
+    }
+};
 
 /* ============================================================
-   4. Load Data (LocalStorage + Fallback)
+   3. Mapper
 ============================================================ */
-function loadRealData() {
-    console.log('%c🔍 البحث عن بيانات في localStorage...',
-        'background:#0891b2;color:#fff;padding:4px 10px;border-radius:6px;font-weight:bold;');
-
-    // ✅ عرض جميع مفاتيح localStorage
-    const allKeys = Object.keys(localStorage);
-    console.log('📦 المفاتيح المتوفرة:', allKeys);
-
-    // ✅ البحث عن المرضى بعدة مفاتيح محتملة
-    let patients = null;
-
-    const possibleKeys = [
-        'balancy_allPatients',
-        'balancy_patients',
-        'balancy_mockPatients',
-        'allPatients',
-        'patients',
-        'mockPatients'
-    ];
-
-    for (const key of possibleKeys) {
-        const data = bnStorage.getAny(key, null);
-        if (data && Array.isArray(data) && data.length > 0) {
-            patients = data;
-            console.log(`%c✅ وجدت ${data.length} مريض في المفتاح: ${key}`,
-                'background:#10b981;color:#fff;padding:4px 10px;border-radius:6px;font-weight:bold;');
-            break;
-        }
+function pickValue(obj, keys) {
+    if (!obj || typeof obj !== 'object') return undefined;
+    for (const k of keys) {
+        const v = obj[k];
+        if (v !== undefined && v !== null && v !== '') return v;
     }
-
-    // إذا لم توجد بيانات
-    if (!patients) {
-        patients = [...mockPatients];
-        console.warn('%c⚠️ لا توجد بيانات مرضى في localStorage — يتم استخدام بيانات تجريبية',
-            'background:#f59e0b;color:#fff;padding:6px 12px;border-radius:6px;font-weight:bold;');
-        console.log('💡 لربط البيانات الحقيقية، تأكد من حفظ المرضى في localStorage بمفتاح "balancy_allPatients"');
-    }
-
-    // قراءة باقي البيانات
-    const visits = bnStorage.getAny('visits', []) || bnStorage.getAny('balancy_visits', []) || [];
-    const sessions = bnStorage.getAny('listeningSessions', []) || bnStorage.getAny('balancy_listeningSessions', []) || [];
-
-    return { patients, visits, sessions };
+    return undefined;
 }
 
-/* ============================================================
-   5. Compute Statistics
-============================================================ */
-function computeClinicData() {
-    const { patients, visits, sessions } = loadRealData();
+function pickNumber(obj, keys, fallback = 0) {
+    const v = pickValue(obj, keys);
+    if (v === undefined || v === null || v === '') return fallback;
+    const n = typeof v === 'number' ? v : parseFloat(v);
+    return isNaN(n) ? fallback : n;
+}
 
-    const now = new Date();
-    const todayStr = now.toISOString().slice(0, 10);
+function pickArray(obj, keys) {
+    const v = pickValue(obj, keys);
+    return Array.isArray(v) ? v : [];
+}
 
-    // ============ KPI ============
-    const totalPatients = patients.length;
+function pickObject(obj, keys) {
+    const v = pickValue(obj, keys);
+    return (v && typeof v === 'object' && !Array.isArray(v)) ? v : {};
+}
 
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    const activePatients = patients.filter(p => {
-        if (!p.lastVisit) return false;
-        return new Date(p.lastVisit) >= thirtyDaysAgo;
-    }).length;
+function unwrapResponse(raw) {
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return raw;
 
-    const criticalPatients = patients.filter(p =>
-        p.status === 'critical' || p.riskLevel === 'high'
-    ).length;
+    if (raw.data && typeof raw.data === 'object' && !Array.isArray(raw.data)) {
+        return raw.data;
+    }
+    if (raw.result && typeof raw.result === 'object' && !Array.isArray(raw.result)) {
+        return raw.result;
+    }
+    if (raw.value && typeof raw.value === 'object' && !Array.isArray(raw.value)) {
+        return raw.value;
+    }
+    return raw;
+}
 
-    const todayVisits = visits.filter(v => v.visitDate === todayStr).length;
+/**
+ * يحوّل استجابة ClinicStatisticsDto إلى شكل العرض.
+ */
+function mapApiStatistics(raw) {
+    if (!raw || typeof raw !== 'object') return null;
 
-    const weekAgo = new Date();
-    weekAgo.setDate(weekAgo.getDate() - 7);
-    const weekVisits = visits.filter(v => v.visitDate && new Date(v.visitDate) >= weekAgo).length;
+    raw = unwrapResponse(raw);
 
-    const monthAgo = new Date();
-    monthAgo.setMonth(monthAgo.getMonth() - 1);
-    const newPatients = patients.filter(p => {
-        if (!p.createdAt) return false;
-        return new Date(p.createdAt) >= monthAgo;
-    }).length;
-
-    const adherenceRate = totalPatients > 0
-        ? Math.round((activePatients / totalPatients) * 100)
-        : 0;
-
-    const avgSessionDuration = sessions.length > 0
-        ? Math.round(sessions.reduce((sum, s) => sum + (parseInt(s.duration) || 0), 0) / sessions.length)
-        : 0;
-
-    // ============ Visits Chart ============
-    const visitsChart = generateVisitsData(visits);
-
-    // ============ Diagnoses ============
-    const diagnosisCount = {};
-    patients.forEach(p => {
-        const d = p.diagnosis || 'غير محدد';
-        diagnosisCount[d] = (diagnosisCount[d] || 0) + 1;
-    });
-
-    const diagnosesEntries = Object.entries(diagnosisCount)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 6);
-
-    const diagnosesData = diagnosesEntries.length > 0 ? {
-        labels: diagnosesEntries.map(e => e[0]),
-        values: diagnosesEntries.map(e => Math.round((e[1] / totalPatients) * 100))
-    } : {
-        labels: ['لا توجد بيانات'],
-        values: [100]
+    // ─── KPIs ───
+    const kpi = {
+        totalPatients: pickNumber(raw, ['totalPatients', 'TotalPatients']),
+        activePatients: pickNumber(raw, ['activePatients', 'ActivePatients']),
+        criticalPatients: pickNumber(raw, ['criticalPatients', 'CriticalPatients']),
+        todayVisits: pickNumber(raw, ['todayVisits', 'TodayVisits']),
+        weekVisits: pickNumber(raw, ['weekVisits', 'WeekVisits']),
+        newPatients: pickNumber(raw, ['newPatientsThisMonth', 'NewPatientsThisMonth', 'newPatients', 'NewPatients']),
+        adherenceRate: pickNumber(raw, ['adherenceRate', 'AdherenceRate']),
+        avgSessionDuration: pickNumber(raw, ['avgSessionDuration', 'AvgSessionDuration'])
     };
 
-    // ============ Ages ============
-    const ageGroups = { '18-25': 0, '26-35': 0, '36-45': 0, '46-55': 0, '56-65': 0, '65+': 0 };
-    patients.forEach(p => {
-        const age = p.age || 0;
-        if (age <= 25) ageGroups['18-25']++;
-        else if (age <= 35) ageGroups['26-35']++;
-        else if (age <= 45) ageGroups['36-45']++;
-        else if (age <= 55) ageGroups['46-55']++;
-        else if (age <= 65) ageGroups['56-65']++;
-        else ageGroups['65+']++;
-    });
-
-    // ============ Genders ============
-    const maleCount = patients.filter(p => p.gender === 'male').length;
-    const femaleCount = patients.filter(p => p.gender === 'female').length;
-
-    // ============ Health ============
-    const improvedCount = patients.filter(p => p.status === 'active').length;
-    const stableCount = patients.filter(p => p.status === 'inactive').length;
-    const worsenedCount = patients.filter(p => p.status === 'critical').length;
-    const healthTotal = improvedCount + stableCount + worsenedCount || 1;
-
-    const healthData = {
-        labels: ['تحسن', 'مستقر', 'تراجع'],
-        values: [
-            Math.round((improvedCount / healthTotal) * 100),
-            Math.round((stableCount / healthTotal) * 100),
-            Math.round((worsenedCount / healthTotal) * 100)
-        ]
+    // ─── Visits by period ───
+    const visitsByPeriodRaw = pickObject(raw, ['visitsByPeriod', 'VisitsByPeriod']);
+    const normalizeChartData = (cd, fallbackLabels = [], fallbackValues = []) => {
+        if (!cd || typeof cd !== 'object') {
+            return { labels: fallbackLabels, values: fallbackValues };
+        }
+        const labels = pickArray(cd, ['labels', 'Labels']);
+        const values = pickArray(cd, ['values', 'Values']);
+        return {
+            labels: labels.length ? labels : fallbackLabels,
+            values: values.length ? values : fallbackValues
+        };
     };
 
-    // ============ Assessments ============
-    const assessmentsData = {
-        labels: ['أسبوع 1', 'أسبوع 2', 'أسبوع 3', 'أسبوع 4', 'أسبوع 5', 'أسبوع 6'],
-        gad7: [14, 13, 12, 11, 9, 8],
-        phq9: [18, 17, 15, 14, 12, 10],
-        sds: [20, 18, 17, 15, 13, 11]
+    const visits = {
+        7: normalizeChartData(
+            pickObject(visitsByPeriodRaw, ['last7Days', 'Last7Days']),
+            ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'],
+            [0, 0, 0, 0, 0, 0, 0]
+        ),
+        30: normalizeChartData(
+            pickObject(visitsByPeriodRaw, ['last30Days', 'Last30Days']),
+            ['أسبوع 1', 'أسبوع 2', 'أسبوع 3', 'أسبوع 4'],
+            [0, 0, 0, 0]
+        ),
+        90: normalizeChartData(
+            pickObject(visitsByPeriodRaw, ['last90Days', 'Last90Days']),
+            ['شهر 1', 'شهر 2', 'شهر 3'],
+            [0, 0, 0]
+        ),
+        365: normalizeChartData(
+            pickObject(visitsByPeriodRaw, ['last365Days', 'Last365Days']),
+            ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
+                'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'],
+            new Array(12).fill(0)
+        )
     };
 
-    // ============ Top Diagnoses ============
-    const topDiagnoses = diagnosesEntries.map(e => ({
-        name: e[0],
-        count: e[1],
-        percent: Math.round((e[1] / totalPatients) * 100)
+    // ─── Distributions ───
+    const diagDistRaw = pickObject(raw, ['diagnosesDistribution', 'DiagnosesDistribution']);
+    const ageDistRaw = pickObject(raw, ['ageDistribution', 'AgeDistribution']);
+    const genderDistRaw = pickObject(raw, ['genderDistribution', 'GenderDistribution']);
+    const healthDistRaw = pickObject(raw, ['healthDistribution', 'HealthDistribution']);
+
+    const diagnoses = {
+        labels: pickArray(diagDistRaw, ['labels', 'Labels']),
+        values: pickArray(diagDistRaw, ['values', 'Values'])
+    };
+    if (diagnoses.labels.length === 0) {
+        diagnoses.labels = ['لا توجد بيانات'];
+        diagnoses.values = [100];
+    }
+
+    const ages = {
+        labels: pickArray(ageDistRaw, ['labels', 'Labels']),
+        values: pickArray(ageDistRaw, ['values', 'Values'])
+    };
+    if (ages.labels.length === 0) {
+        ages.labels = ['18-25', '26-35', '36-45', '46-55', '56-65', '65+'];
+        ages.values = [0, 0, 0, 0, 0, 0];
+    }
+
+    const genders = {
+        labels: pickArray(genderDistRaw, ['labels', 'Labels']),
+        values: pickArray(genderDistRaw, ['values', 'Values'])
+    };
+    if (genders.labels.length === 0) {
+        genders.labels = ['ذكور', 'إناث'];
+        genders.values = [0, 0];
+    }
+
+    const health = {
+        labels: pickArray(healthDistRaw, ['labels', 'Labels']),
+        values: pickArray(healthDistRaw, ['values', 'Values'])
+    };
+    if (health.labels.length === 0) {
+        health.labels = ['تحسن', 'مستقر', 'تراجع'];
+        health.values = [0, 0, 0];
+    }
+
+    // ─── Assessment averages ───
+    const assessmentsRaw = pickObject(raw, ['assessmentAverages', 'AssessmentAverages']);
+    const assessments = {
+        labels: pickArray(assessmentsRaw, ['labels', 'Labels']).length
+            ? pickArray(assessmentsRaw, ['labels', 'Labels'])
+            : ['أسبوع 1', 'أسبوع 2', 'أسبوع 3', 'أسبوع 4', 'أسبوع 5', 'أسبوع 6'],
+        gad7: pickArray(assessmentsRaw, ['gad7', 'Gad7', 'GAD7']),
+        phq9: pickArray(assessmentsRaw, ['phq9', 'Phq9', 'PHQ9']),
+        sds: pickArray(assessmentsRaw, ['sds', 'Sds', 'SDS'])
+    };
+    const labelCount = assessments.labels.length;
+    const padArray = (arr, len) => {
+        const out = [...arr];
+        while (out.length < len) out.push(0);
+        return out.slice(0, len);
+    };
+    assessments.gad7 = padArray(assessments.gad7, labelCount);
+    assessments.phq9 = padArray(assessments.phq9, labelCount);
+    assessments.sds = padArray(assessments.sds, labelCount);
+
+    // ─── Top lists ───
+    const topDiagnoses = pickArray(raw, ['topDiagnoses', 'TopDiagnoses']).map(d => ({
+        name: pickValue(d, ['name', 'Name']) || 'غير محدد',
+        count: pickNumber(d, ['count', 'Count']),
+        percent: pickNumber(d, ['percent', 'Percent'])
     }));
 
-    // ============ Top Patients ============
-    const topPatients = [...patients]
-        .sort((a, b) => (b.visits || 0) - (a.visits || 0))
-        .slice(0, 5)
-        .map(p => ({
-            name: `${p.firstName || ''} ${p.lastName || ''}`.trim() || 'غير محدد',
-            visits: p.visits || 0,
-            code: p.code || p.patientCode || '-'
-        }));
+    const topPatients = pickArray(raw, ['topPatients', 'TopPatients']).map(p => ({
+        name: pickValue(p, ['name', 'Name']) || 'غير محدد',
+        code: pickValue(p, ['code', 'Code']) || '-',
+        visits: pickNumber(p, ['visits', 'Visits'])
+    }));
 
-    // ============ Activities ============
-    const activities = generateActivities(patients, visits, sessions);
+    const activities = pickArray(raw, ['recentActivities', 'RecentActivities']).map(a => ({
+        title: pickValue(a, ['title', 'Title']) || '',
+        time: pickValue(a, ['time', 'Time']) || '',
+        type: (pickValue(a, ['type', 'Type']) || 'primary').toLowerCase()
+    }));
+
+    // ─── Insights ───
+    const insights = pickArray(raw, ['insights', 'Insights']).map(i => ({
+        type: (pickValue(i, ['type', 'Type']) || 'info').toLowerCase(),
+        title: pickValue(i, ['title', 'Title']) || '',
+        text: pickValue(i, ['text', 'Text']) || '',
+        badge: pickValue(i, ['badge', 'Badge']) || ''
+    }));
 
     return {
-        kpi: {
-            totalPatients,
-            activePatients,
-            criticalPatients,
-            todayVisits,
-            weekVisits,
-            newPatients,
-            adherenceRate,
-            avgSessionDuration
-        },
-        visits: visitsChart,
-        diagnoses: diagnosesData,
-        ages: { labels: Object.keys(ageGroups), values: Object.values(ageGroups) },
-        genders: { labels: ['ذكور', 'إناث'], values: [maleCount, femaleCount] },
-        health: healthData,
-        assessments: assessmentsData,
-        topDiagnoses,
-        topPatients,
-        activities
+        kpi, visits, diagnoses, ages, genders, health, assessments,
+        topDiagnoses, topPatients, activities, insights
     };
 }
 
 /* ============================================================
-   6. Visits Chart Data
+   4. State
 ============================================================ */
-function generateVisitsData(visits) {
-    const days = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
-
-    // آخر 7 أيام
-    const last7Days = { labels: days, values: [0, 0, 0, 0, 0, 0, 0] };
-    const weekAgo = new Date();
-    weekAgo.setDate(weekAgo.getDate() - 7);
-
-    visits.forEach(v => {
-        if (!v.visitDate) return;
-        const d = new Date(v.visitDate);
-        if (d >= weekAgo) last7Days.values[d.getDay()]++;
-    });
-
-    // إذا كان فارغاً، استخدم قيم افتراضية
-    if (last7Days.values.every(v => v === 0)) {
-        last7Days.values = [8, 14, 18, 12, 15, 9, 5];
-    }
-
-    // آخر 30 يوم
-    const last30Days = { labels: ['أسبوع 1', 'أسبوع 2', 'أسبوع 3', 'أسبوع 4'], values: [0, 0, 0, 0] };
-    visits.forEach(v => {
-        if (!v.visitDate) return;
-        const d = new Date(v.visitDate);
-        const daysAgo = Math.floor((new Date() - d) / (1000 * 60 * 60 * 24));
-        if (daysAgo >= 0 && daysAgo < 28) {
-            const weekIndex = Math.floor(daysAgo / 7);
-            last30Days.values[3 - weekIndex]++;
-        }
-    });
-
-    if (last30Days.values.every(v => v === 0)) {
-        last30Days.values = [62, 78, 71, 84];
-    }
-
-    // آخر سنة
-    const monthNames = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
-    const last365Days = { labels: monthNames, values: new Array(12).fill(0) };
-    visits.forEach(v => {
-        if (!v.visitDate) return;
-        const d = new Date(v.visitDate);
-        const daysAgo = Math.floor((new Date() - d) / (1000 * 60 * 60 * 24));
-        if (daysAgo >= 0 && daysAgo < 365) last365Days.values[d.getMonth()]++;
-    });
-
-    if (last365Days.values.every(v => v === 0)) {
-        last365Days.values = [240, 268, 295, 310, 285, 320, 340, 305, 355, 380, 365, 410];
-    }
-
-    return {
-        7: last7Days,
-        30: last30Days,
-        90: { labels: ['يناير', 'فبراير', 'مارس'], values: [240, 268, 295] },
-        365: last365Days
-    };
-}
+let clinicData = null;
+let currentPeriod = 7;
+let charts = {};
 
 /* ============================================================
-   7. Activities
-============================================================ */
-function generateActivities(patients, visits, sessions) {
-    const activities = [];
-
-    patients.slice(-3).forEach(p => {
-        if (p.createdAt) {
-            activities.push({
-                title: `إضافة مريض جديد: ${p.firstName || ''} ${p.lastName || ''}`.trim(),
-                time: formatTime(p.createdAt),
-                type: 'primary'
-            });
-        }
-    });
-
-    visits.slice(-3).forEach(v => {
-        activities.push({
-            title: `زيارة: ${v.reason || 'زيارة دورية'}`,
-            time: formatTime(v.visitDate),
-            type: 'success'
-        });
-    });
-
-    sessions.slice(-2).forEach(s => {
-        activities.push({
-            title: `جلسة استماع: ${s.title || 'جلسة'}`,
-            time: formatTime(s.date),
-            type: 'warning'
-        });
-    });
-
-    if (activities.length === 0) {
-        activities.push(
-            { title: 'مرحباً بك في نظام بالنسي', time: 'الآن', type: 'primary' },
-            { title: 'ابدأ بإضافة مرضى لعرض الإحصائيات', time: 'الآن', type: 'warning' }
-        );
-    }
-
-    return activities;
-}
-
-function formatTime(dateStr) {
-    if (!dateStr) return 'غير محدد';
-    const date = new Date(dateStr);
-    if (isNaN(date)) return dateStr;
-
-    const now = new Date();
-    const diff = Math.floor((now - date) / 1000);
-
-    if (diff < 60) return 'الآن';
-    if (diff < 3600) return `قبل ${Math.floor(diff / 60)} دقيقة`;
-    if (diff < 86400) return `قبل ${Math.floor(diff / 3600)} ساعة`;
-    if (diff < 604800) return `قبل ${Math.floor(diff / 86400)} يوم`;
-    return date.toLocaleDateString('ar-EG');
-}
-
-/* ============================================================
-   8. Animated Number
+   5. Animated Number
 ============================================================ */
 function animateNumber(element, target, duration = 1200, suffix = '') {
     if (!element) return;
@@ -444,15 +329,12 @@ function animateNumber(element, target, duration = 1200, suffix = '') {
 }
 
 /* ============================================================
-   9. Update KPIs
+   6. Update KPIs
 ============================================================ */
-let clinicData = null;
-let currentPeriod = 7;
-let charts = {};
-
 function updateKPIs() {
-    clinicData = computeClinicData();
+    if (!clinicData) return;
     const kpi = clinicData.kpi;
+
     animateNumber(bnGet('kpiTotal'), kpi.totalPatients);
     animateNumber(bnGet('kpiActive'), kpi.activePatients);
     animateNumber(bnGet('kpiCritical'), kpi.criticalPatients);
@@ -464,7 +346,7 @@ function updateKPIs() {
 }
 
 /* ============================================================
-   10. Chart Colors
+   7. Chart Colors
 ============================================================ */
 function getChartColors() {
     return {
@@ -485,7 +367,7 @@ function getChartColors() {
 }
 
 /* ============================================================
-   11. Chart.js Global Config
+   8. Chart.js Global Config
 ============================================================ */
 function setupChartDefaults() {
     Chart.defaults.font.family = 'Tajawal, sans-serif';
@@ -500,7 +382,7 @@ function setupChartDefaults() {
 }
 
 /* ============================================================
-   12. Visits Chart
+   9. Visits Chart
 ============================================================ */
 function createVisitsChart() {
     const canvas = bnGet('visitsChart');
@@ -569,7 +451,7 @@ function createVisitsChart() {
 }
 
 /* ============================================================
-   13. Diagnoses Chart
+   10. Diagnoses Chart
 ============================================================ */
 function createDiagnosesChart() {
     const canvas = bnGet('diagnosesChart');
@@ -625,7 +507,7 @@ function createDiagnosesChart() {
 }
 
 /* ============================================================
-   14. Age Chart
+   11. Age Chart
 ============================================================ */
 function createAgeChart() {
     const canvas = bnGet('ageChart');
@@ -688,7 +570,7 @@ function createAgeChart() {
 }
 
 /* ============================================================
-   15. Gender Chart
+   12. Gender Chart
 ============================================================ */
 function createGenderChart() {
     const canvas = bnGet('genderChart');
@@ -744,7 +626,7 @@ function createGenderChart() {
 }
 
 /* ============================================================
-   16. Health Chart
+   13. Health Chart
 ============================================================ */
 function createHealthChart() {
     const canvas = bnGet('healthChart');
@@ -804,7 +686,7 @@ function createHealthChart() {
 }
 
 /* ============================================================
-   17. Assessments Chart
+   14. Assessments Chart
 ============================================================ */
 function createAssessmentsChart() {
     const canvas = bnGet('assessmentsChart');
@@ -910,7 +792,7 @@ function createAssessmentsChart() {
 }
 
 /* ============================================================
-   18. Create All Charts
+   15. Create All Charts
 ============================================================ */
 function createAllCharts() {
     requestAnimationFrame(() => {
@@ -926,12 +808,74 @@ function createAllCharts() {
 }
 
 /* ============================================================
-   19. Render Top Lists
+   16. Render Insights (الرؤى الذكية) — من API
+============================================================ */
+function renderInsights() {
+    const container = bnGet('insightsGrid');
+    if (!container || !clinicData) return;
+    container.innerHTML = '';
+
+    const insights = clinicData.insights || [];
+
+    if (insights.length === 0) {
+        container.innerHTML = `
+            <div class="insight-card" style="grid-column: 1 / -1; text-align: center; justify-content: center;">
+                <div class="insight-icon icon-info"><i class="fa-solid fa-info-circle"></i></div>
+                <div class="insight-content" style="flex: 1; text-align: center;">
+                    <div class="insight-title">لا توجد رؤى حالياً</div>
+                    <div class="insight-text">لم يولّد النظام أي رؤى ذكية بناءً على البيانات الحالية.</div>
+                </div>
+            </div>
+        `;
+        return;
+    }
+
+    const iconMap = {
+        success: 'fa-arrow-trend-up',
+        warning: 'fa-triangle-exclamation',
+        danger: 'fa-bell',
+        info: 'fa-lightbulb'
+    };
+
+    const badgeStyleMap = {
+        success: 'background: var(--bn-success-light); color: #047857;',
+        warning: 'background: var(--bn-warning-light); color: #b45309;',
+        danger: 'background: var(--bn-danger-light); color: #b91c1c;',
+        info: 'background: var(--bn-primary-light); color: var(--bn-primary-dark);'
+    };
+
+    insights.forEach((item, index) => {
+        const type = ['success', 'warning', 'danger', 'info'].includes(item.type) ? item.type : 'info';
+        const iconClass = iconMap[type];
+        const badgeStyle = badgeStyleMap[type];
+
+        const el = document.createElement('div');
+        el.className = 'insight-card';
+        el.style.animationDelay = `${index * 0.05}s`;
+        el.innerHTML = `
+            <div class="insight-icon icon-${type}"><i class="fa-solid ${iconClass}"></i></div>
+            <div class="insight-content">
+                <div class="insight-title">${escapeHtml(item.title || '')}</div>
+                <div class="insight-text">${escapeHtml(item.text || '')}</div>
+                ${item.badge ? `<span class="insight-badge" style="${badgeStyle}">${escapeHtml(item.badge)}</span>` : ''}
+            </div>
+        `;
+        container.appendChild(el);
+    });
+}
+
+/* ============================================================
+   17. Render Top Lists
 ============================================================ */
 function renderTopDiagnoses() {
     const container = bnGet('topDiagnosesList');
     if (!container || !clinicData) return;
     container.innerHTML = '';
+
+    if (!clinicData.topDiagnoses || clinicData.topDiagnoses.length === 0) {
+        container.innerHTML = '<div style="padding:20px;text-align:center;color:#94a3b8;font-size:0.85rem;">لا توجد بيانات</div>';
+        return;
+    }
 
     clinicData.topDiagnoses.forEach((item, index) => {
         const el = document.createElement('div');
@@ -939,7 +883,7 @@ function renderTopDiagnoses() {
         el.innerHTML = `
             <div class="top-rank rank-${index + 1}">${index + 1}</div>
             <div class="top-info">
-                <div class="top-name">${item.name}</div>
+                <div class="top-name">${escapeHtml(item.name)}</div>
                 <div class="top-meta">${item.percent}% من الحالات</div>
             </div>
             <div class="top-value">${item.count}</div>
@@ -953,14 +897,19 @@ function renderTopPatients() {
     if (!container || !clinicData) return;
     container.innerHTML = '';
 
+    if (!clinicData.topPatients || clinicData.topPatients.length === 0) {
+        container.innerHTML = '<div style="padding:20px;text-align:center;color:#94a3b8;font-size:0.85rem;">لا توجد بيانات</div>';
+        return;
+    }
+
     clinicData.topPatients.forEach((item, index) => {
         const el = document.createElement('div');
         el.className = 'top-item';
         el.innerHTML = `
             <div class="top-rank rank-${index + 1}">${index + 1}</div>
             <div class="top-info">
-                <div class="top-name">${item.name}</div>
-                <div class="top-meta">${item.code}</div>
+                <div class="top-name">${escapeHtml(item.name)}</div>
+                <div class="top-meta">${escapeHtml(item.code)}</div>
             </div>
             <div class="top-value">${item.visits}</div>
         `;
@@ -973,14 +922,19 @@ function renderActivities() {
     if (!container || !clinicData) return;
     container.innerHTML = '';
 
+    if (!clinicData.activities || clinicData.activities.length === 0) {
+        container.innerHTML = '<div style="padding:20px;text-align:center;color:#94a3b8;font-size:0.85rem;">لا توجد أنشطة حديثة</div>';
+        return;
+    }
+
     clinicData.activities.forEach(item => {
         const el = document.createElement('div');
         el.className = 'activity-item';
         el.innerHTML = `
             <div class="activity-dot dot-${item.type}"></div>
             <div class="activity-content">
-                <div class="activity-title">${item.title}</div>
-                <div class="activity-time"><i class="fa-regular fa-clock"></i> ${item.time}</div>
+                <div class="activity-title">${escapeHtml(item.title)}</div>
+                <div class="activity-time"><i class="fa-regular fa-clock"></i> ${escapeHtml(item.time)}</div>
             </div>
         `;
         container.appendChild(el);
@@ -988,7 +942,7 @@ function renderActivities() {
 }
 
 /* ============================================================
-   20. Events — فقط Period Filter + Toast Close
+   18. Events — Period Filter + Toast Close
 ============================================================ */
 document.addEventListener('click', (e) => {
 
@@ -1011,7 +965,7 @@ document.addEventListener('click', (e) => {
 });
 
 /* ============================================================
-   21. Resize
+   19. Resize
 ============================================================ */
 let resizeTimeout;
 window.addEventListener('resize', () => {
@@ -1024,24 +978,88 @@ window.addEventListener('resize', () => {
 });
 
 /* ============================================================
-   22. Init
+   20. Load Statistics from API
+============================================================ */
+async function loadStatistics() {
+    try {
+        const fullUrl = new URL(bnEndpoints.statistics, window.location.origin).href;
+        console.log('%c🌐 GET → ' + fullUrl, 'background:#0891b2;color:#fff;padding:4px 10px;border-radius:4px;');
+
+        const raw = await bnApi.getStatistics();
+
+        console.group('%c📦 Clinic Statistics API response', 'background:#10b981;color:#fff;padding:4px 10px;border-radius:4px;');
+        console.log('typeof raw:', typeof raw);
+        console.log('Keys:', raw && typeof raw === 'object' ? Object.keys(raw) : '—');
+        console.log('Full object:', raw);
+        console.log('JSON:', JSON.stringify(raw, null, 2));
+        console.groupEnd();
+
+        // فحص insights مباشرة
+        const rawInsights = raw?.insights ?? raw?.Insights ?? raw?.data?.insights ?? raw?.data?.Insights;
+        console.log('%c🎯 Insights from API:', 'background:#8b5cf6;color:#fff;padding:4px 10px;border-radius:4px;',
+            Array.isArray(rawInsights) ? `${rawInsights.length} عنصر` : 'MISSING', rawInsights);
+
+        clinicData = mapApiStatistics(raw);
+        if (!clinicData) {
+            console.warn('⚠️ استجابة API فارغة أو غير صالحة — استخدام fallback');
+            clinicData = mapApiStatistics({});
+        }
+
+        console.log('%c✅ clinicData بعد الـ mapping:', 'background:#6366f1;color:#fff;padding:4px 10px;border-radius:4px;');
+        console.log('  KPI:', clinicData.kpi);
+        console.log('  Insights:', clinicData.insights);
+
+        updateKPIs();
+        createAllCharts();
+        renderInsights();
+        renderTopDiagnoses();
+        renderTopPatients();
+        renderActivities();
+
+        const total = clinicData.kpi.totalPatients;
+        if (total === 0) {
+            showToast('warning', 'لا توجد بيانات',
+                'الـ API رجع بيانات فارغة (0 مرضى). تحقق من DoctorId في الجلسة أو بيانات DB.', 8000);
+        } else {
+            showToast('info', 'مرحباً بك',
+                `تم تحميل إحصائيات ${total} مريض من النظام.`, 4500);
+        }
+
+    } catch (err) {
+        console.error('%c❌ فشل تحميل الإحصائيات:', 'background:#ef4444;color:#fff;padding:4px 10px;border-radius:4px;', err);
+        console.error('  Status:', err?.status ?? '—');
+        console.error('  Message:', err?.message ?? '—');
+
+        clinicData = mapApiStatistics({});
+        updateKPIs();
+        createAllCharts();
+        renderInsights();
+        renderTopDiagnoses();
+        renderTopPatients();
+        renderActivities();
+
+        showToast('error', 'فشل تحميل البيانات',
+            `[${err?.status ?? '?'}] ${err.message || 'تعذر الاتصال بخدمة الإحصائيات.'}`, 8000);
+    }
+}
+
+/* ============================================================
+   21. Init
 ============================================================ */
 window.addEventListener('DOMContentLoaded', () => {
     setupChartDefaults();
 
-    setTimeout(() => {
-        updateKPIs();
-        createAllCharts();
-        renderTopDiagnoses();
-        renderTopPatients();
-        renderActivities();
-    }, 400);
+    bnGet('kpiTotal')?.replaceChildren(document.createTextNode('…'));
+    bnGet('kpiActive')?.replaceChildren(document.createTextNode('…'));
+    bnGet('kpiCritical')?.replaceChildren(document.createTextNode('…'));
+    bnGet('kpiToday')?.replaceChildren(document.createTextNode('…'));
+    bnGet('kpiWeek')?.replaceChildren(document.createTextNode('…'));
+    bnGet('kpiNew')?.replaceChildren(document.createTextNode('…'));
+    bnGet('kpiAdherence')?.replaceChildren(document.createTextNode('…'));
+    bnGet('kpiSessionDuration')?.replaceChildren(document.createTextNode('…'));
 
-    setTimeout(() => {
-        const count = clinicData?.kpi?.totalPatients || 0;
-        showToast('info', 'مرحباً بك', `تم تحميل إحصائيات ${count} مريض من النظام.`, 4500);
-    }, 1200);
+    setTimeout(loadStatistics, 400);
 
-    console.log('%c✅ Clinic Statistics Page Loaded',
+    console.log('%c✅ Clinic Statistics Page Loaded (API-driven)',
         'background:#0891b2;color:#fff;padding:6px 16px;border-radius:6px;font-weight:bold;font-size:12px;');
 });

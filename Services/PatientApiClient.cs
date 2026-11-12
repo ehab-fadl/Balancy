@@ -1197,4 +1197,109 @@ public sealed class PatientApiClient : IPatientApiClient
         var stream = await response.Content.ReadAsStreamAsync(ct);
         return await JsonDocument.ParseAsync(stream, cancellationToken: ct);
     }
+
+
+    /* =================== Alerts =================== */
+    public async Task<JsonDocument?> GetAlertsRawAsync(CancellationToken ct = default)
+    {
+        var response = await _http.GetAsync("api/Alerts", ct);
+        if (!response.IsSuccessStatusCode)
+        {
+            _logger.LogWarning("Get alerts returned {Status}", response.StatusCode);
+            response.EnsureSuccessStatusCode();
+        }
+        var stream = await response.Content.ReadAsStreamAsync(ct);
+        return await JsonDocument.ParseAsync(stream, cancellationToken: ct);
+    }
+
+    public async Task<JsonDocument?> RefreshAlertsAsync(CancellationToken ct = default)
+    {
+        var response = await _http.PostAsync("api/Alerts/refresh", null, ct);
+        var raw = await response.Content.ReadAsStringAsync(ct);
+        if (!response.IsSuccessStatusCode)
+            throw new HttpRequestException($"API returned {(int)response.StatusCode}: {raw}", null, response.StatusCode);
+        return string.IsNullOrWhiteSpace(raw) ? null : JsonDocument.Parse(raw);
+    }
+
+    public async Task<bool> DismissAlertAsync(string id, CancellationToken ct = default)
+    {
+        var response = await _http.PutAsync($"api/Alerts/{id}/dismiss", null, ct);
+        if (!response.IsSuccessStatusCode)
+        {
+            var raw = await response.Content.ReadAsStringAsync(ct);
+            throw new HttpRequestException($"API returned {(int)response.StatusCode}: {raw}", null, response.StatusCode);
+        }
+        return true;
+    }
+
+    public async Task<bool> DismissAllAlertsAsync(CancellationToken ct = default)
+    {
+        var response = await _http.PutAsync("api/Alerts/dismiss-all", null, ct);
+        if (!response.IsSuccessStatusCode)
+        {
+            var raw = await response.Content.ReadAsStringAsync(ct);
+            throw new HttpRequestException($"API returned {(int)response.StatusCode}: {raw}", null, response.StatusCode);
+        }
+        return true;
+    }
+
+
+    /* =================== Dashboard =================== */
+    public async Task<JsonDocument?> GetDashboardRawAsync(CancellationToken ct = default)
+    {
+        var response = await _http.GetAsync("api/Dashboard", ct);
+        if (!response.IsSuccessStatusCode)
+        {
+            _logger.LogWarning("Get dashboard returned {Status}", response.StatusCode);
+            response.EnsureSuccessStatusCode();
+        }
+        var stream = await response.Content.ReadAsStreamAsync(ct);
+        return await JsonDocument.ParseAsync(stream, cancellationToken: ct);
+    }
+    /* =================== Appointments (raw) =================== */
+    public async Task<JsonDocument?> GetAppointmentsRawAsync(CancellationToken ct = default)
+    {
+        var response = await _http.GetAsync("api/Appointments", ct);
+        if (!response.IsSuccessStatusCode)
+        {
+            _logger.LogWarning("Get appointments returned {Status}", response.StatusCode);
+            response.EnsureSuccessStatusCode();
+        }
+        var stream = await response.Content.ReadAsStreamAsync(ct);
+        return await JsonDocument.ParseAsync(stream, cancellationToken: ct);
+    }
+
+
+
+    public async Task<JsonDocument?> CreateAppointmentAsync(AppointmentCreateRequest request, CancellationToken ct = default)
+    {
+        var response = await _http.PostAsJsonAsync("api/Appointments", request, JsonOpts, ct);
+        var raw = await response.Content.ReadAsStringAsync(ct);
+        if (!response.IsSuccessStatusCode)
+            throw new HttpRequestException($"API returned {(int)response.StatusCode}: {raw}", null, response.StatusCode);
+        return string.IsNullOrWhiteSpace(raw) ? null : JsonDocument.Parse(raw);
+    }
+
+    public async Task<bool> ConfirmAppointmentAsync(string id, CancellationToken ct = default)
+    {
+        var response = await _http.PutAsync($"api/Appointments/{id}/confirm", null, ct);
+        if (!response.IsSuccessStatusCode)
+        {
+            var raw = await response.Content.ReadAsStringAsync(ct);
+            throw new HttpRequestException($"API returned {(int)response.StatusCode}: {raw}", null, response.StatusCode);
+        }
+        return true;
+    }
+
+    public async Task<bool> DeleteAppointmentAsync(string id, CancellationToken ct = default)
+    {
+        var response = await _http.DeleteAsync($"api/Appointments/{id}", ct);
+        if (!response.IsSuccessStatusCode)
+        {
+            var raw = await response.Content.ReadAsStringAsync(ct);
+            throw new HttpRequestException($"API returned {(int)response.StatusCode}: {raw}", null, response.StatusCode);
+        }
+        return true;
+    }
+
 }

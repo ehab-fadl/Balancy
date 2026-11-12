@@ -20,7 +20,6 @@
                 <p>نظرة شاملة على أداء العيادة ومؤشرات المرضى</p>
             </div>
         </div>
-     
     </section>
 
     <!-- Period Filter -->
@@ -195,43 +194,9 @@
         </div>
     </div>
 
-    <!-- Insights Section -->
-    <section class="insights-grid">
-        <div class="insight-card" style="animation-delay: 0.05s">
-            <div class="insight-icon icon-success"><i class="fa-solid fa-arrow-trend-up"></i></div>
-            <div class="insight-content">
-                <div class="insight-title">تحسن ملحوظ في الالتزام</div>
-                <div class="insight-text">ارتفعت نسبة التزام المرضى بالعلاج بنسبة 15% مقارنة بالشهر الماضي.</div>
-                <span class="insight-badge" style="background: var(--bn-success-light); color: #047857;">إيجابي</span>
-            </div>
-        </div>
-
-        <div class="insight-card" style="animation-delay: 0.1s">
-            <div class="insight-icon icon-warning"><i class="fa-solid fa-triangle-exclamation"></i></div>
-            <div class="insight-content">
-                <div class="insight-title">مرضى يحتاجون متابعة</div>
-                <div class="insight-text">يوجد 5 مرضى لم يزوروا العيادة منذ أكثر من 45 يوماً.</div>
-                <span class="insight-badge" style="background: var(--bn-warning-light); color: #b45309;">يحتاج إجراء</span>
-            </div>
-        </div>
-
-        <div class="insight-card" style="animation-delay: 0.15s">
-            <div class="insight-icon icon-danger"><i class="fa-solid fa-bell"></i></div>
-            <div class="insight-content">
-                <div class="insight-title">تنبيه: حالات حرجة</div>
-                <div class="insight-text">تم رصد 3 حالات بتقييم C-SSRS مرتفع، تحتاج مراجعة عاجلة.</div>
-                <span class="insight-badge" style="background: var(--bn-danger-light); color: #b91c1c;">عاجل</span>
-            </div>
-        </div>
-
-        <div class="insight-card" style="animation-delay: 0.2s">
-            <div class="insight-icon icon-info"><i class="fa-solid fa-lightbulb"></i></div>
-            <div class="insight-content">
-                <div class="insight-title">ذروة الزيارات</div>
-                <div class="insight-text">أعلى نسبة زيارات أيام الأحد والاثنين بين 10 ص و12 ظهراً.</div>
-                <span class="insight-badge" style="background: var(--bn-primary-light); color: var(--bn-primary-dark);">معلومة</span>
-            </div>
-        </div>
+    <!-- Insights Section — من API ديناميكياً -->
+    <section class="insights-grid" id="insightsGrid">
+        <!-- يتم تعبئتها ديناميكياً من API -->
     </section>
 
     <!-- Top Lists Row -->
@@ -291,7 +256,14 @@
         <div class="toast-progress"><div class="toast-progress-bar" id="toastProgressBar"></div></div>
     </div>
 </div>
+
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script>
+        // ✅ حقن مسار الـ handler في JS
+        window.BALANCY_ENDPOINTS = {
+            statistics: '@Url.Page("/ClinicStatistics/ClinicStatistics", "Statistics")'
+        };
+    </script>
     <script src="~/js/doctor/ClinicStatistics/ClinicStatistics.js"></script>
 }
